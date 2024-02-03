@@ -179,6 +179,14 @@ class Hub:
 
         return devs
 
+    def get_model_id(self, deviceId: int) -> int:
+        """Get model ID."""
+        for dev in self._devices:
+            if dev["deviceId"] == deviceId:
+                return dev["modelId"]
+
+        return -1
+
     def get_model_name(self, deviceId: int) -> str:
         """Get model name."""
         for dev in self._devices:
@@ -205,7 +213,7 @@ class Hub:
                         dev["modelId"], capability["capabilityId"]
                     )
 
-                    if len(capability_infos) == 0 and self._create_unknown:
+                    if capability_infos is None and self._create_unknown:
                         capability_infos = {
                             "name": "Capability_" + str(capability["capabilityId"]),
                             "type": "string",
@@ -219,6 +227,10 @@ class Hub:
                         capabilities.append(capability_infos)
 
         return capabilities
+
+    def get_capability_infos(self, modelId: int, capabilityId: int):
+        """Get capability infos."""
+        return get_capability_infos(modelId, capabilityId)
 
     def get_capability_value(self, deviceId: int, capabilityId: int):
         """Get value for a device capability."""

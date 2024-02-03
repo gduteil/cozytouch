@@ -36,7 +36,7 @@ async def async_setup_entry(
     numbers = []
     capabilities = hub.get_capabilities_for_device(config_entry.data["deviceId"])
     for capability in capabilities:
-        if capability["type"] == "temperature_adjustment":
+        if capability["type"] == "away_temperature_adjustment":
             numbers.append(
                 TemperatureAdjustmentNumber(
                     deviceId=capability["deviceId"],

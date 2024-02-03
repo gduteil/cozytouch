@@ -296,7 +296,7 @@ class TimestampSensor(RegularStrSensor):
                     now_timestamp = time.time()
                     offset = datetime.datetime.fromtimestamp(
                         now_timestamp
-                    ) - datetime.datetime.utcfromtimestamp(now_timestamp)
+                    ) - datetime.datetime.fromtimestamp(now_timestamp, "utc")
 
                     ts = datetime.datetime.fromtimestamp(timestamp + offset.seconds)
                     return ts.strftime("%H:%M %d/%m/%Y")
