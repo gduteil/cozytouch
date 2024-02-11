@@ -74,6 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 )
                             ),
                             vol.Required("create_unknown", default=False): bool,
+                            vol.Required("dump_json", default=False): bool,
                         }
                     ),
                     errors=errors,
@@ -99,6 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if device_input is not None and "device" in device_input:
             device_data = ast.literal_eval(device_input["device"])
             device_data["create_unknown"] = device_input["create_unknown"]
+            device_data["dump_json"] = device_input["dump_json"]
             return self.async_create_entry(title=device_data["name"], data=device_data)
 
         return self.async_abort()

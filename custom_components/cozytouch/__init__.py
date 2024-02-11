@@ -16,10 +16,13 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
 ]
 
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Atlantic Cozytouch from a config entry."""
     theHub = hub.Hub(hass, entry.data["username"], entry.data["password"])
+
+    if "dump_json" in entry.data:
+        theHub.set_dump_json(entry.data["dump_json"])
+
     await theHub.connect()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = theHub

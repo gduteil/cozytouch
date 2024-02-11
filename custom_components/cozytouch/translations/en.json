@@ -17,7 +17,8 @@
             },
             "select_device": {
                 "data": {
-                  "create_unknown": "Create entities for unknown capabilities"
+                  "create_unknown": "Create entities for unknown capabilities",
+                  "dump_json": "Dump a JSON file with received data"
                 }
               }
         }

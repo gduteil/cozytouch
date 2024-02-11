@@ -12,6 +12,8 @@ from .capability import get_capability_infos
 from .const import COZYTOUCH_ATLANTIC_API, COZYTOUCH_CLIENT_ID
 from .model import get_model_name_from_id
 
+import json
+
 
 class Hub:
     """Atlantic Cozytouch Hub."""
@@ -28,6 +30,7 @@ class Hub:
         self._access_token = ""
         self._id = "cozytouch." + username.lower()
         self._create_unknown = False
+        self._dump_json = False
         self._devices = []
         self.online = False
 
@@ -98,6 +101,11 @@ class Hub:
     def update_devices_from_json_data(self, json_data: {}) -> None:
         """Update the devices list."""
 
+        if self._dump_json:
+            with open(self._hass.config.config_dir + "/Cozytouch.json", "w") as outfile:
+                json_object = json.dumps(json_data, indent=4)
+                outfile.write(json_object)
+
         # Start by removing old devices
         for local_device in self._devices[:]:
             bStillExists = False
@@ -146,6 +154,10 @@ class Hub:
     def get_create_entities_for_unknown_entities(self) -> bool:
         """Get option from config flow to create entities for unknown capabilities."""
         return self._create_unknown
+
+    def set_dump_json(self, dump_json: bool) -> None:
+        """Set option from config flow to create entities for unknown capabilities."""
+        self._dump_json = dump_json
 
     async def update(self, deviceId: int) -> None:
         """Update values from cloud."""
