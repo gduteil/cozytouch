@@ -53,7 +53,8 @@ async def async_setup_entry(
         if "icon" in capability:
             icon = capability["icon"]
 
-        if capability["type"] == "string":
+        if capability["type"] in ("string", "int"):
+            # Use a RegularStrSensor for integers
             sensors.append(
                 RegularStrSensor(
                     deviceId=capability["deviceId"],
@@ -134,7 +135,7 @@ async def async_setup_entry(
                     timestamp_index=1,
                 )
             )
-        elif capability["type"] == "switch":
+        elif capability["type"] in ("switch", "binary"):
             value_off = "0"
             if "value_off" in capability:
                 value_off = capability["value_off"]

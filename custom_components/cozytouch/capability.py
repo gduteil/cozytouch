@@ -3,16 +3,6 @@
 
 def get_capability_infos(modelId: int, capabilityId: int) -> {}:
     """Get capabilities for a device."""
-    if modelId == 235:
-        return get_capability_infos_navilink(capabilityId)
-
-    return None
-
-
-def get_capability_infos_navilink(capabilityId: int) -> {}:
-    """Get capabilities for a Navilink device."""
-    modelId = 235
-
     if capabilityId == 7:
         return {
             "modelId": modelId,
@@ -29,6 +19,38 @@ def get_capability_infos_navilink(capabilityId: int) -> {}:
             "name": "Temperature Setpoint",
             "type": "temperature",
             "category": "sensor",
+        }
+    elif capabilityId == 25:
+        return {
+            "modelId": modelId,
+            "name": "Number of starts CH pump",
+            "type": "int",
+            "category": "diag",
+            "icon": "mdi:water-pump",
+        }
+    elif capabilityId == 26:
+        return {
+            "modelId": modelId,
+            "name": "Number of starts DHW pump",
+            "type": "int",
+            "category": "diag",
+            "icon": "mdi:water-pump",
+        }
+    elif capabilityId == 28:
+        return {
+            "modelId": modelId,
+            "name": "Number of hours CH pump",
+            "type": "int",
+            "category": "diag",
+            "icon": "mdi:water-pump",
+        }
+    elif capabilityId == 29:
+        return {
+            "modelId": modelId,
+            "name": "Number of hours DHW pump",
+            "type": "int",
+            "category": "diag",
+            "icon": "mdi:water-pump",
         }
     elif capabilityId == 40:
         return {
@@ -95,6 +117,14 @@ def get_capability_infos_navilink(capabilityId: int) -> {}:
             "value_off": "0",
             "value_on": "2",
         }
+    elif capabilityId == 153:
+        return {
+            "modelId": modelId,
+            "name": "Flame",
+            "type": "binary",
+            "category": "sensor",
+            "icon": "mdi:fire",
+        }
     elif capabilityId == 154:
         return {
             "modelId": modelId,
@@ -106,14 +136,6 @@ def get_capability_infos_navilink(capabilityId: int) -> {}:
     elif capabilityId in (160, 161):
         # Target temperature adjustment limits
         return {}
-    elif capabilityId == 184:
-        return {
-            "modelId": modelId,
-            "name": "Time Control",
-            "type": "switch",
-            "category": "sensor",
-            "icon": "mdi:clock-outline",
-        }
     elif capabilityId == 172:
         return {
             "modelId": modelId,
@@ -122,6 +144,14 @@ def get_capability_infos_navilink(capabilityId: int) -> {}:
             "category": "sensor",
             "lowestValueCapabilityId": 160,
             "highestValueCapabilityId": 161,
+        }
+    elif capabilityId == 184:
+        return {
+            "modelId": modelId,
+            "name": "Time Control",
+            "type": "switch",
+            "category": "sensor",
+            "icon": "mdi:clock-outline",
         }
     elif capabilityId == 219:
         return {
@@ -149,6 +179,22 @@ def get_capability_infos_navilink(capabilityId: int) -> {}:
             "type": "string",
             "category": "diag",
             "icon": "mdi:tag",
+        }
+    elif capabilityId == 100402:
+        return {
+            "modelId": modelId,
+            "name": "Number of hours burner",
+            "type": "int",
+            "category": "diag",
+            "icon": "mdi:fire",
+        }
+    elif capabilityId == 100406:
+        return {
+            "modelId": modelId,
+            "name": "Number of starts burner",
+            "type": "int",
+            "category": "diag",
+            "icon": "mdi:fire",
         }
 
     return None

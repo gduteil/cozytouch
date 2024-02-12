@@ -1,12 +1,15 @@
 """The Atlantic Cozytouch integration."""
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 
 from . import hub
-from .const import DOMAIN
+from .const import CONF_DUMPJSON, DOMAIN
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -15,6 +18,12 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.CLIMATE,
 ]
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Optional(CONF_DUMPJSON): cv.boolean})},
+    extra=vol.ALLOW_EXTRA,
+)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Atlantic Cozytouch from a config entry."""
