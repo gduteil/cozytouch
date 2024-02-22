@@ -40,10 +40,6 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
                 "targetHeatValueCapabilityId": 40,
                 "lowestHeatValueCapabilityId": 160,
                 "highestHeatValueCapabilityId": 161,
-                "currentValueCapabilityId": 117,
-                "targetValueCapabilityId": 40,
-                "lowestValueCapabilityId": 160,
-                "highestValueCapabilityId": 161,
             }
     elif capabilityId == 19:
         return {
