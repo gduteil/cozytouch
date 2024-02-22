@@ -4,15 +4,47 @@
 def get_capability_infos(modelId: int, capabilityId: int) -> {}:
     """Get capabilities for a device."""
     if capabilityId == 7:
-        return {
-            "modelId": modelId,
-            "name": "Central Heating",
-            "type": "switch",
-            "category": "sensor",
-            "icon": "mdi:radiator",
-            "value_off": "0",
-            "value_on": "4",
-        }
+        if modelId in (557, 558) :
+            return {
+                "modelId": modelId,
+                "name": "Air Conditionner",
+                "type": "climate",
+                "category": "sensor",
+                "icon": "mdi:air-conditioner",
+                "value_off": "0",
+                "value_auto": "1",
+                "value_cool": "3",
+                "value_heat": "4",
+                "value_fan": "7",
+                "value_dry": "8",
+                "activeCapabilityId": 7,
+                "currentValueCapabilityId": 117,
+                "targetHeatValueCapabilityId": 40,
+                "lowestHeatValueCapabilityId": 160,
+                "highestHeatValueCapabilityId": 161,
+                "targetValueCapabilityId": 177,
+                "lowestValueCapabilityId": 162,
+                "highestValueCapabilityId": 163,
+            }
+        else :
+            return {
+                "modelId": modelId,
+                "name": "Central Heating",
+                "type": "climate",
+                "category": "sensor",
+                "icon": "mdi:radiator",
+                "value_off": "0",
+                "value_heat": "4",
+                "activeCapabilityId": 7,
+                "currentValueCapabilityId": 117,
+                "targetHeatValueCapabilityId": 40,
+                "lowestHeatValueCapabilityId": 160,
+                "highestHeatValueCapabilityId": 161,
+                "currentValueCapabilityId": 117,
+                "targetValueCapabilityId": 40,
+                "lowestValueCapabilityId": 160,
+                "highestValueCapabilityId": 161,
+            }
     elif capabilityId == 19:
         return {
             "modelId": modelId,
@@ -56,12 +88,8 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
         return {
             "modelId": modelId,
             "name": "Target Temperature",
-            "type": "temperature_adjustment",
+            "type": "temperature",
             "category": "sensor",
-            "activeCapabilityId": 7,
-            "currentValueCapabilityId": 117,
-            "lowestValueCapabilityId": 160,
-            "highestValueCapabilityId": 161,
         }
     elif capabilityId == 86:
         return {
