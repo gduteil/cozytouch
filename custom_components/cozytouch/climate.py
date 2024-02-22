@@ -137,7 +137,7 @@ class CozytouchClimate(ClimateEntity):
         )
 
         """Update the values from the hub."""
-        if active in [self._activeCapabilityInfos[v] for v in self._activeCapabilityInfos.keys() if v=="value_heat" or v=="value_auto"] :
+        if active in [self._activeCapabilityInfos[v] for v in self._activeCapabilityInfos.keys() if v in ("value_heat", "value_auto", "value_off")] :
             self._native_value = float(
                 self._hub.get_capability_value(
                     self._deviceId, self._activeCapabilityInfos["targetHeatValueCapabilityId"]
@@ -160,7 +160,7 @@ class CozytouchClimate(ClimateEntity):
             )
         )
 
-        if active in [self._activeCapabilityInfos[v] for v in self._activeCapabilityInfos.keys() if v=="value_heat"] :
+        if active in [self._activeCapabilityInfos[v] for v in self._activeCapabilityInfos.keys() if v in ("value_heat", "value_off")] :
             self._attr_min_temp = float(
                 self._hub.get_capability_value(
                     self._deviceId, self._activeCapabilityInfos["lowestHeatValueCapabilityId"]
@@ -208,41 +208,9 @@ class CozytouchClimate(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-
         if self._activeCapabilityInfos is not None:
-            if hvac_mode == HVACMode.OFF:
-                await self._hub.set_capability_value(
-                    self._deviceId,
-                    self._activeCapabilityId,
-                    self._activeCapabilityInfos["value_off"],
-                )
-            elif hvac_mode == HVACMode.AUTO:
-                await self._hub.set_capability_value(
-                    self._deviceId,
-                    self._activeCapabilityId,
-                    self._activeCapabilityInfos["value_auto"],
-                )
-            elif hvac_mode == HVACMode.COOL:
-                await self._hub.set_capability_value(
-                    self._deviceId,
-                    self._activeCapabilityId,
-                    self._activeCapabilityInfos["value_cool"],
-                )
-            elif hvac_mode == HVACMode.HEAT:
-                await self._hub.set_capability_value(
-                    self._deviceId,
-                    self._activeCapabilityId,
-                    self._activeCapabilityInfos["value_heat"],
-                )
-            elif hvac_mode == HVACMode.FAN_ONLY:
-                await self._hub.set_capability_value(
-                    self._deviceId,
-                    self._activeCapabilityId,
-                    self._activeCapabilityInfos["value_fan"],
-                )
-            elif hvac_mode == HVACMode.DRY:
-                await self._hub.set_capability_value(
-                    self._deviceId,
-                    self._activeCapabilityId,
-                    self._activeCapabilityInfos["value_dry"],
-                )
+            await self._hub.set_capability_value(
+                self._deviceId,
+                self._activeCapabilityId,
+                self._activeCapabilityInfos[list(self._dict_hvac_modes.keys())[list(self._dict_hvac_modes.values()).index(hvac_mode)]],
+            )
