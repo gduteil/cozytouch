@@ -101,7 +101,7 @@ class CozytouchClimate(ClimateEntity):
 
         self._attr_name = name
         self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_climate_{str(capabilityId)}"
-        self._attr_native_step = 0.5 # TODO : config 294
+        self._attr_native_step = 0.5
 
         self._attr_native_unit_of_measurement = "°C"
 
@@ -207,7 +207,7 @@ class CozytouchClimate(ClimateEntity):
                 await self._hub.set_capability_value(
                     self._deviceId, self._capabilityInfos.get("targetHeatValueCapabilityId") or self._capabilityInfos.get("targetValueCapabilityId") or self._capabilityId, str(temperature)
                 )
-            elif self._attr_hvac_mode in (HVACMode.DRY) :
+            elif self._attr_hvac_mode in (HVACMode.COOL) :
                 await self._hub.set_capability_value(
                     self._deviceId, self._capabilityInfos.get("targetValueCapabilityId") or self._capabilityId, str(temperature)
                 )
