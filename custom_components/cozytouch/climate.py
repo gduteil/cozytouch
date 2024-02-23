@@ -46,8 +46,6 @@ async def async_setup_entry(
                 CozytouchClimate(
                     deviceId=capability["deviceId"],
                     capabilityId=capability["capabilityId"],
-                    activeCapabilityId=capability["activeCapabilityId"],
-                    currentValueCapabilityId=capability["currentValueCapabilityId"],
                     name=capability["name"],
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
@@ -85,8 +83,6 @@ class CozytouchClimate(ClimateEntity):
         self,
         deviceId: int,
         capabilityId: int,
-        activeCapabilityId: int,
-        currentValueCapabilityId: int,
         name: str,
         config_title: str,
         config_uniq_id: str,
@@ -97,8 +93,6 @@ class CozytouchClimate(ClimateEntity):
 
         self._deviceId = deviceId
         self._capabilityId = capabilityId
-        self._activeCapabilityId = activeCapabilityId
-        self._currentValueCapabilityId = currentValueCapabilityId
         self._config_title = config_title
         self._config_uniq_id = config_uniq_id
         self._hub = hub
@@ -113,11 +107,17 @@ class CozytouchClimate(ClimateEntity):
 
         self._modelId = self._hub.get_model_id(deviceId)
 
-        self._activeCapabilityInfos = self._hub.get_capability_infos(
-                    self._modelId, self._activeCapabilityId
-                )
+        self._capabilityInfos = self._hub.get_capability_infos(
+            self._modelId, self._capabilityId
+        )
 
-        self._attr_hvac_modes=[self._dict_hvac_modes[v] for v in self._activeCapabilityInfos.keys() if v[:6]=='value_']
+        self._activeCapabilityId = self._capabilityInfos.get("activeCapabilityId", self._capabilityId)
+
+        self._activeCapabilityInfos = self._hub.get_capability_infos(
+            self._modelId, self._activeCapabilityId
+        )
+
+        self._attr_hvac_modes=[self._dict_hvac_modes[v] for v in self._activeCapabilityInfos.keys() if v in self._dict_hvac_modes]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -137,49 +137,55 @@ class CozytouchClimate(ClimateEntity):
         )
 
         """Update the values from the hub."""
-        if active in [self._activeCapabilityInfos[v] for v in self._activeCapabilityInfos.keys() if v in ("value_heat", "value_auto", "value_off")] :
-            self._native_value = float(
-                self._hub.get_capability_value(
-                    self._deviceId, self._activeCapabilityInfos["targetHeatValueCapabilityId"]
-                )
-            )
-        else :
-            self._native_value = float(
-                self._hub.get_capability_value(
-                    self._deviceId, self._activeCapabilityInfos["targetValueCapabilityId"]
-                )
-            )
-
         if self._activeCapabilityInfos is not None:
             if active :
-                self._attr_hvac_mode = [self._dict_hvac_modes[v] for v in self._activeCapabilityInfos.keys() if v[:6]=='value_'][[self._activeCapabilityInfos[v] for v in self._activeCapabilityInfos.keys() if v[:6]=='value_'].index(active)]
+                self._attr_hvac_mode = [self._dict_hvac_modes[v] for v in self._activeCapabilityInfos.keys() if v in self._dict_hvac_modes][[self._activeCapabilityInfos[v] for v in self._activeCapabilityInfos.keys() if v in self._dict_hvac_modes].index(active)]
 
-        self._current_value = float(
-            self._hub.get_capability_value(
-                self._deviceId, self._currentValueCapabilityId
+        if self._attr_hvac_mode in (HVACMode.HEAT, HVACMode.AUTO) :
+            self._native_value = float(
+                self._hub.get_capability_value(
+                    self._deviceId,
+                    self._capabilityInfos.get("targetHeatValueCapabilityId") or self._capabilityInfos.get("targetValueCapabilityId") or self._capabilityId
+                )
             )
-        )
+        elif self._attr_hvac_mode in (HVACMode.COOL) :
+            self._native_value = float(
+                self._hub.get_capability_value(
+                    self._deviceId, self._capabilityInfos.get("targetValueCapabilityId") or self._capabilityId
+                )
+            )
+        elif self._attr_hvac_mode in (HVACMode.DRY) :
+            self._native_value = 18
+        elif self._attr_hvac_mode in (HVACMode.FAN_ONLY) :
+            self._native_value = 20
 
-        if active in [self._activeCapabilityInfos[v] for v in self._activeCapabilityInfos.keys() if v in ("value_heat", "value_off")] :
+        if self._capabilityInfos.get("currentValueCapabilityId") :
+            self._current_value = float(
+                self._hub.get_capability_value(
+                    self._deviceId, self._capabilityInfos.get("currentValueCapabilityId")
+                )
+            )
+
+        if self._attr_hvac_mode in (HVACMode.HEAT, HVACMode.AUTO) :
             self._attr_min_temp = float(
                 self._hub.get_capability_value(
-                    self._deviceId, self._activeCapabilityInfos["lowestHeatValueCapabilityId"]
+                    self._deviceId, self._capabilityInfos.get("lowestHeatValueCapabilityId") or self._capabilityInfos.get("lowestValueCapabilityId")
                 )
             )
             self._attr_max_temp = float(
                 self._hub.get_capability_value(
-                    self._deviceId, self._activeCapabilityInfos["highestHeatValueCapabilityId"]
+                    self._deviceId, self._capabilityInfos.get("highestHeatValueCapabilityId") or self._capabilityInfos.get("highestValueCapabilityId")
                 )
             )
-        else:
+        elif self._attr_hvac_mode not in (HVACMode.OFF) :
             self._attr_min_temp = float(
                 self._hub.get_capability_value(
-                    self._deviceId, self._activeCapabilityInfos["lowestValueCapabilityId"]
+                    self._deviceId, self._capabilityInfos.get("lowestValueCapabilityId")
                 )
             )
             self._attr_max_temp = float(
                 self._hub.get_capability_value(
-                    self._deviceId, self._activeCapabilityInfos["highestValueCapabilityId"]
+                    self._deviceId, self._capabilityInfos.get("highestValueCapabilityId")
                 )
             )
 
@@ -199,11 +205,11 @@ class CozytouchClimate(ClimateEntity):
         if temperature is not None:
             if self._attr_hvac_mode in (HVACMode.HEAT, HVACMode.AUTO) :
                 await self._hub.set_capability_value(
-                    self._deviceId, self._activeCapabilityInfos["targetHeatValueCapabilityId"], str(temperature)
+                    self._deviceId, self._capabilityInfos.get("targetHeatValueCapabilityId") or self._capabilityInfos.get("targetValueCapabilityId") or self._capabilityId, str(temperature)
                 )
-            else :
+            elif self._attr_hvac_mode in (HVACMode.DRY) :
                 await self._hub.set_capability_value(
-                    self._deviceId, self._activeCapabilityInfos["targetValueCapabilityId"], str(temperature)
+                    self._deviceId, self._capabilityInfos.get("targetValueCapabilityId") or self._capabilityId, str(temperature)
                 )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

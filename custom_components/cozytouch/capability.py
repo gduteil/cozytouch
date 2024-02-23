@@ -17,8 +17,6 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
                 "value_heat": "4",
                 "value_fan": "7",
                 "value_dry": "8",
-                "activeCapabilityId": 7,
-                "currentValueCapabilityId": 117,
                 "targetHeatValueCapabilityId": 40,
                 "lowestHeatValueCapabilityId": 160,
                 "highestHeatValueCapabilityId": 161,
@@ -31,16 +29,12 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
             return {
                 "modelId": modelId,
                 "name": "Central Heating",
-                "type": "climate",
+                "type": "switch",
                 "category": "sensor",
                 "icon": "mdi:radiator",
                 "value_off": "0",
-                "value_heat": "4",
-                "activeCapabilityId": 7,
-                "currentValueCapabilityId": 117,
-                "targetHeatValueCapabilityId": 40,
-                "lowestHeatValueCapabilityId": 160,
-                "highestHeatValueCapabilityId": 161,
+                "value_on": "4",
+                "value_heat": "4"
             }
         elif capabilityId == 19:
             return {
@@ -85,8 +79,12 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
             return {
                 "modelId": modelId,
                 "name": "Target Temperature",
-                "type": "temperature",
+                "type": "climate",
                 "category": "sensor",
+                "activeCapabilityId": 7,
+                "currentValueCapabilityId": 117,
+                "lowestValueCapabilityId": 160,
+                "highestValueCapabilityId": 161,
             }
         elif capabilityId == 86:
             return {
