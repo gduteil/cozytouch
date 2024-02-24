@@ -202,13 +202,12 @@ class CozytouchClimate(ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get("temperature")
-        hvac_mode = kwargs.get("hvac_mode")
         if temperature is not None:
-            if hvac_mode in (HVACMode.HEAT, HVACMode.AUTO) :
+            if self._attr_hvac_mode in (HVACMode.HEAT, HVACMode.AUTO) :
                 await self._hub.set_capability_value(
                     self._deviceId, self._capabilityInfos.get("targetHeatValueCapabilityId") or self._capabilityInfos.get("targetValueCapabilityId") or self._capabilityId, str(temperature)
                 )
-            elif hvac_mode in (HVACMode.COOL) :
+            elif self._attr_hvac_mode in (HVACMode.COOL) :
                 await self._hub.set_capability_value(
                     self._deviceId, self._capabilityInfos.get("targetValueCapabilityId") or self._capabilityId, str(temperature)
                 )
