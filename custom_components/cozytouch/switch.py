@@ -6,11 +6,11 @@ import logging
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .hub import Hub
+from .sensor import CozytouchSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,24 +37,12 @@ async def async_setup_entry(
     capabilities = hub.get_capabilities_for_device(config_entry.data["deviceId"])
     for capability in capabilities:
         if capability["type"] == "switch":
-            value_off = "0"
-            if "value_off" in capability:
-                value_off = capability["value_off"]
-
-            value_on = "1"
-            if "value_on" in capability:
-                value_on = capability["value_on"]
-
             switches.append(
-                RegularSwitch(
-                    deviceId=capability["deviceId"],
-                    capabilityId=capability["capabilityId"],
-                    name=capability["name"],
+                CozytouchSwitch(
+                    capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     hub=hub,
-                    value_off=value_off,
-                    value_on=value_on,
                 )
             )
 
@@ -63,51 +51,38 @@ async def async_setup_entry(
         async_add_entities(switches, True)
 
 
-class RegularSwitch(SwitchEntity):
-    """Common class for switches."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = True
+class CozytouchSwitch(SwitchEntity, CozytouchSensor):
+    """Class for switches."""
 
     def __init__(
         self,
-        deviceId: int,
-        capabilityId: int,
-        name: str,
+        capability,
         config_title: str,
         config_uniq_id: str,
         hub: Hub,
-        value_off: str,
-        value_on: str,
+        name: str | None = None,
     ) -> None:
         """Initialize a Switch entity."""
-        _LOGGER.debug("%s: initializing %s switch", config_title, name)
-
-        self._deviceId = deviceId
-        self._capabilityId = capabilityId
-        self._config_title = config_title
-        self._config_uniq_id = config_uniq_id
-        self._hub = hub
-        self._value_off = value_off
-        self._value_on = value_on
+        capabilityId = capability["capabilityId"]
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            attr_uniq_id=f"{DOMAIN}_{config_uniq_id}_switch_{str(capabilityId)}",
+            hub=hub,
+            name=name,
+        )
         self._state = False
-
-        self._attr_name = name
-        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_switch_{str(capabilityId)}"
         self._attr_device_class = SwitchDeviceClass.SWITCH
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_uniq_id)},
-        )
+        self._value_off = capability.get("value_off", "0")
+        self._value_on = capability.get("value_on", "1")
 
     @property
     def is_on(self) -> bool:
         """Return the state."""
         self._state = (
-            self._hub.get_capability_value(self._deviceId, self._capabilityId)
+            self._get_capability_value(self._capability["capabilityId"])
             != self._value_off
         )
         return self._state
@@ -115,13 +90,17 @@ class RegularSwitch(SwitchEntity):
     async def async_turn_on(self):
         """Turn On method."""
         await self._hub.set_capability_value(
-            self._deviceId, self._capabilityId, self._value_on
+            self._capability["deviceId"],
+            self._capability["capabilityId"],
+            self._value_on,
         )
 
     async def async_turn_off(self):
         """Turn Off method."""
         await self._hub.set_capability_value(
-            self._deviceId, self._capabilityId, self._value_off
+            self._capability["deviceId"],
+            self._capability["capabilityId"],
+            self._value_off,
         )
 
     async def async_toggle(self) -> None:

@@ -1,7 +1,7 @@
 """Atlantic Cozytouch capabilility mapping."""
 
 
-def get_capability_infos(modelId: int, capabilityId: int) -> {}:
+def get_capability_infos(modelId: int, capabilityId: int):  # noqa: C901
     """Get capabilities for a device."""
     if capabilityId == 7:
         return {
@@ -63,11 +63,26 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
             "lowestValueCapabilityId": 160,
             "highestValueCapabilityId": 161,
         }
+    # elif capabilityId == 295:
+    #    return {
+    #        "modelId": modelId,
+    #        "name": "Power consumption",
+    #        "type": "power",
+    #        "category": "sensor",
+    #    }
     elif capabilityId == 86:
         return {
             "modelId": modelId,
             "name": "Domestic Hot Water",
             "type": "switch",
+            "category": "sensor",
+            "icon": "mdi:faucet",
+        }
+    elif capabilityId == 99:
+        return {
+            "modelId": modelId,
+            "name": "DHW Pump",
+            "type": "binary",
             "category": "sensor",
             "icon": "mdi:faucet",
         }
@@ -107,6 +122,14 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
             "type": "temperature",
             "category": "sensor",
         }
+    elif capabilityId == 121:
+        return {
+            "modelId": modelId,
+            "name": "Version",
+            "type": "string",
+            "category": "diag",
+            "icon": "mdi:tag",
+        }
     elif capabilityId == 152:
         return {
             "modelId": modelId,
@@ -144,6 +167,14 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
             "category": "sensor",
             "lowestValueCapabilityId": 160,
             "highestValueCapabilityId": 161,
+        }
+    elif capabilityId == 179:
+        return {
+            "modelId": modelId,
+            "name": "Wifi Signal",
+            "type": "signal",
+            "category": "diag",
+            "icon": "mdi:wifi",
         }
     elif capabilityId == 184:
         return {
@@ -196,5 +227,32 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
             "category": "diag",
             "icon": "mdi:fire",
         }
+    elif capabilityId == 100505:
+        return {
+            "modelId": modelId,
+            "name": "Powerful mode",
+            "type": "switch",
+            "category": "sensor",
+            "icon": "mdi:wind-power",
+        }
+    elif capabilityId == 100506:
+        return {
+            "modelId": modelId,
+            "name": "Presence",
+            "type": "binary",
+            "category": "sensor",
+            "icon": "mdi:account",
+        }
+    elif capabilityId == 100507:
+        return {
+            "modelId": modelId,
+            "name": "Eco mode",
+            "type": "switch",
+            "category": "sensor",
+            "icon": "mdi:flower-outline",
+        }
+    elif capabilityId == 100804:
+        # Swing mode
+        return None
 
     return None

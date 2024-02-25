@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 import datetime
+from enum import IntEnum
 import logging
-import time
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPressure, UnitOfTemperature
+from homeassistant.const import (
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,6 +22,15 @@ from .const import DOMAIN
 from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class CozytouchCapabilityVariableType(IntEnum):
+    """Capabilities types."""
+
+    STRING = 0
+    BOOL = 1
+    FLOAT = 2
+    INT = 3
 
 
 # config flow setup
@@ -45,117 +56,95 @@ async def async_setup_entry(
     sensors = []
     capabilities = hub.get_capabilities_for_device(config_entry.data["deviceId"])
     for capability in capabilities:
-        category = None
-        if "category" in capability and capability["category"] == "diag":
-            category = EntityCategory.DIAGNOSTIC
-
-        icon = None
-        if "icon" in capability:
-            icon = capability["icon"]
-
         if capability["type"] in ("string", "int"):
-            # Use a RegularStrSensor for integers
+            # Use a CozytouchSensor for integers
             sensors.append(
-                RegularStrSensor(
-                    deviceId=capability["deviceId"],
-                    capabilityId=capability["capabilityId"],
-                    name=capability["name"],
+                CozytouchSensor(
+                    capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     hub=hub,
-                    icon=icon,
-                    category=category,
                 )
             )
         elif capability["type"] == "temperature":
             sensors.append(
-                TemperatureOrPressureSensor(
-                    deviceId=capability["deviceId"],
-                    capabilityId=capability["capabilityId"],
-                    name=capability["name"],
+                CozytouchUnitSensor(
+                    capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     hub=hub,
-                    icon=icon,
-                    category=category,
                     device_class=SensorDeviceClass.TEMPERATURE,
                     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 )
             )
         elif capability["type"] == "pressure":
             sensors.append(
-                TemperatureOrPressureSensor(
-                    deviceId=capability["deviceId"],
-                    capabilityId=capability["capabilityId"],
-                    name=capability["name"],
+                CozytouchUnitSensor(
+                    capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     hub=hub,
-                    icon=icon,
-                    category=category,
                     device_class=SensorDeviceClass.PRESSURE,
                     native_unit_of_measurement=UnitOfPressure.BAR,
                 )
             )
         elif capability["type"] == "timestamp_2":
-            icon_0 = None
-            if "icon_0" in capability:
-                icon_0 = capability["icon_0"]
-
             sensors.append(
-                TimestampSensor(
-                    deviceId=capability["deviceId"],
-                    capabilityId=capability["capabilityId"],
-                    name=capability["name_0"],
+                CozytouchTimestampSensor(
+                    capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
+                    attr_uniq_id=config_entry.entry_id + "_0",
                     hub=hub,
-                    icon=icon_0,
-                    category=category,
+                    name=capability["name_0"],
+                    icon=capability.get("icon_0", None),
                     separator=",",
                     timestamp_index=0,
                 )
             )
 
-            icon_1 = None
-            if "icon_1" in capability:
-                icon_1 = capability["icon_1"]
-
             sensors.append(
-                TimestampSensor(
-                    deviceId=capability["deviceId"],
-                    capabilityId=capability["capabilityId"],
-                    name=capability["name_1"],
+                CozytouchTimestampSensor(
+                    capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
+                    attr_uniq_id=config_entry.entry_id + "_1",
                     hub=hub,
-                    icon=icon_1,
-                    category=category,
+                    name=capability["name_1"],
+                    icon=capability.get("icon_1", None),
                     separator=",",
                     timestamp_index=1,
                 )
             )
         elif capability["type"] in ("switch", "binary"):
-            value_off = "0"
-            if "value_off" in capability:
-                value_off = capability["value_off"]
-
-            value_on = "1"
-            if "value_on" in capability:
-                value_on = capability["value_on"]
-
             sensors.append(
-                RegularBinarySensor(
-                    deviceId=capability["deviceId"],
-                    capabilityId=capability["capabilityId"],
-                    name=capability["name"],
+                CozytouchBinarySensor(
+                    capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     hub=hub,
-                    icon=icon,
-                    category=category,
-                    value_off=value_off,
-                    value_on=value_on,
+                )
+            )
+        elif capability["type"] == "signal":
+            sensors.append(
+                CozytouchUnitSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    hub=hub,
+                    device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                    native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+                )
+            )
+        elif capability["type"] == "power":
+            sensors.append(
+                CozytouchUnitSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    hub=hub,
+                    device_class=SensorDeviceClass.POWER,
+                    native_unit_of_measurement=UnitOfPower.WATT,
                 )
             )
 
@@ -164,40 +153,70 @@ async def async_setup_entry(
         async_add_entities(sensors, True)
 
 
-class RegularStrSensor(SensorEntity):
-    """Common class for text sensor."""
+class CozytouchSensor(SensorEntity):
+    """Common class for sensors."""
 
-    # Generic entity properties
     _attr_has_entity_name = True
     _attr_should_poll = True
 
     def __init__(
         self,
-        deviceId: int,
-        capabilityId: int,
-        name: str,
+        capability,
         config_title: str,
         config_uniq_id: str,
         hub: Hub,
+        attr_uniq_id: str | None = None,
+        name: str | None = None,
         icon: str | None = None,
-        category: EntityCategory | None = None,
     ) -> None:
-        """Initialize a Regular Str Sensor."""
-        _LOGGER.debug("%s: initializing %s sensor", config_title, name)
-
-        self._deviceId = deviceId
-        self._capabilityId = capabilityId
+        """Initialize a sensor."""
+        self._capability = capability
         self._config_title = config_title
         self._config_uniq_id = config_uniq_id
         self._hub = hub
         self._last_value: str | None = None
+        self._value_type: CozytouchCapabilityVariableType | None = None
 
-        self._attr_name = name
-        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{str(capabilityId)}"
+        if attr_uniq_id:
+            self._attr_unique_id = attr_uniq_id
+        else:
+            capabilityId = self._capability["capabilityId"]
+            self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{str(capabilityId)}"
+
+        if name:
+            self._attr_name = name
+        else:
+            self._attr_name = self._capability["name"]
+
+        if "category" in self._capability:
+            if self._capability["category"] == "diag":
+                self._attr_entity_category = EntityCategory.DIAGNOSTIC
+            elif self._capability["category"] == "config":
+                self._attr_entity_category = EntityCategory.CONFIG
+            else:
+                self._attr_entity_category = None
+
         if icon:
             self._attr_icon = icon
-        if category:
-            self._attr_entity_category = category
+        elif "icon" in self._capability:
+            self._attr_icon = self._capability["icon"]
+
+    def _get_capability_value(self, capabilityId: int):
+        return self._hub.get_capability_value(
+            self._capability["deviceId"], capabilityId
+        )
+
+    def get_value(self):
+        """Retrieve value from hub."""
+        value = self._get_capability_value(self._capability["capabilityId"])
+        if self._value_type == CozytouchCapabilityVariableType.BOOL:
+            return bool(value)
+        if self._value_type == CozytouchCapabilityVariableType.FLOAT:
+            return float(value)
+        if self._value_type == CozytouchCapabilityVariableType.INT:
+            return int(value)
+
+        return value
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -207,7 +226,7 @@ class RegularStrSensor(SensorEntity):
         )
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self):
         """Value of the sensor."""
         return self._last_value
 
@@ -216,12 +235,6 @@ class RegularStrSensor(SensorEntity):
         """Update the value of the sensor from the hub."""
         # Get last seen value from controller
         value = self.get_value()
-        _LOGGER.debug(
-            "%s: retrieved %s value from hub controller: %s",
-            self._config_title,
-            self._attr_name,
-            repr(value),
-        )
 
         # Handle entity availability
         if value is None:
@@ -244,62 +257,46 @@ class RegularStrSensor(SensorEntity):
         # Save value
         self._last_value = value
 
-    def get_value(self) -> str:
-        """Retrieve value from hub."""
-        return self._hub.get_capability_value(self._deviceId, self._capabilityId)
 
-
-class TimestampSensor(RegularStrSensor):
+class CozytouchTimestampSensor(CozytouchSensor):
     """Class for timestamp sensor."""
 
     def __init__(
         self,
-        deviceId: int,
-        capabilityId: int,
-        name: str,
+        capability,
         config_title: str,
         config_uniq_id: str,
         hub: Hub,
+        name: str | None = None,
         icon: str | None = None,
-        category: EntityCategory | None = None,
         separator: str | None = None,
         timestamp_index: int | None = None,
+        attr_uniq_id: str | None = None,
     ) -> None:
-        """Initialize a Regular Str Sensor."""
-        _LOGGER.debug("%s: initializing %s timetamp", config_title, name)
-
+        """Initialize a timestamp Sensor."""
         super().__init__(
-            deviceId=deviceId,
-            capabilityId=capabilityId,
-            name=name,
+            capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
+            attr_uniq_id=attr_uniq_id,
             hub=hub,
+            name=name,
             icon=icon,
-            category=category,
         )
-        self._attr_unique_id = (
-            f"{DOMAIN}_{config_uniq_id}_{str(capabilityId)}_{str(timestamp_index)}"
-        )
-
+        self._value_type = CozytouchCapabilityVariableType.STRING
         self._separator = separator
         self._timestamp_index = timestamp_index
 
     def get_value(self) -> str:
         """Retrieve value from hub."""
-        value = self._hub.get_capability_value(self._deviceId, self._capabilityId)
+        value = self._get_capability_value(self._capability["capabilityId"])
         if value is not None:
             value = value.translate(str.maketrans("", "", "[]"))
             timestamps = value.split(self._separator, 2)
             if self._timestamp_index < len(timestamps):
                 timestamp = int(timestamps[self._timestamp_index])
                 if timestamp > 0:
-                    now_timestamp = time.time()
-                    offset = datetime.datetime.fromtimestamp(
-                        now_timestamp
-                    ) - datetime.datetime.fromtimestamp(now_timestamp, "utc")
-
-                    ts = datetime.datetime.fromtimestamp(timestamp + offset.seconds)
+                    ts = datetime.datetime.fromtimestamp(timestamp)
                     return ts.strftime("%H:%M %d/%m/%Y")
 
                 return "Undefined"
@@ -307,263 +304,70 @@ class TimestampSensor(RegularStrSensor):
         return None
 
 
-class RegularBinarySensor(BinarySensorEntity):
-    """Common class for binary sensor."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = True
+class CozytouchBinarySensor(BinarySensorEntity, CozytouchSensor):
+    """Class for binary sensor."""
 
     def __init__(
         self,
-        deviceId: int,
-        capabilityId: int,
-        name: str,
+        capability,
         config_title: str,
         config_uniq_id: str,
         hub: Hub,
-        value_off: str,
-        value_on: str,
+        name: str | None = None,
         icon: str | None = None,
-        category: EntityCategory | None = None,
-        device_class=BinarySensorDeviceClass.LIGHT,
     ) -> None:
-        """Initialize a binary sensor."""
-        _LOGGER.debug("%s: initializing %s binary sensor", config_title, name)
-
-        self._deviceId = deviceId
-        self._capabilityId = capabilityId
-        self._config_title = config_title
-        self._config_uniq_id = config_uniq_id
-        self._hub = hub
-        self._value_off = value_off
-        self._value_on = value_on
-        self._last_value: bool | None = None
-
-        self._attr_name = name
-        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{str(capabilityId)}"
-        if icon:
-            self._attr_icon = icon
-        if category:
-            self._attr_entity_category = category
-        if device_class:
-            self._attr_device_class = device_class
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_uniq_id)},
+        """Initialize a binary Sensor."""
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            hub=hub,
+            name=name,
+            icon=icon,
         )
+        self._last_value: False
 
     @property
     def is_on(self) -> bool:
-        """Update the value of the sensor from the hub."""
-        # Get last seen value from controller
-        value = (
-            self._hub.get_capability_value(self._deviceId, self._capabilityId)
-            != self._value_off
-        )
-        _LOGGER.debug(
-            "%s: retrieved %s value from hub controller: %s",
-            self._config_title,
-            self._attr_name,
-            repr(value),
-        )
-        # Handle entity availability
-        if value is None:
-            if self._attr_available:
-                if not self._hub.online:
-                    _LOGGER.debug(
-                        "%s: marking the %s sensor as unavailable: Cozytouch connection lost",
-                        self._config_title,
-                        self._attr_name,
-                    )
-                    self._attr_available = False
+        """Return last state value."""
+        value_on = "0"
+        if "value_on" in self._capability:
+            value_on = self._capability["value_on"]
 
-            return
-
-        if not self._attr_available:
-            _LOGGER.info(
-                "%s: marking the %s sensor as available now !",
-                self._config_title,
-                self._attr_name,
-            )
-            self._attr_available = True
-
-        return value
+        return self._last_value == value_on
 
 
-class TemperatureOrPressureSensor(SensorEntity):
-    """Common class for temperature sensor."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = True
+class CozytouchUnitSensor(CozytouchSensor):
+    """Class for unit sensor."""
 
     def __init__(
         self,
-        deviceId: int,
-        capabilityId: int,
-        name: str,
+        capability,
         config_title: str,
         config_uniq_id: str,
         hub: Hub,
+        device_class: SensorDeviceClass,
+        native_unit_of_measurement,
+        suggested_precision: int | None = None,
+        name: str | None = None,
         icon: str | None = None,
-        category: EntityCategory | None = None,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ) -> None:
-        """Initialize a temperature Sensor."""
-        _LOGGER.debug("%s: initializing %s sensor", config_title, name)
-
-        self._deviceId = deviceId
-        self._capabilityId = capabilityId
-        self._config_title = config_title
-        self._config_uniq_id = config_uniq_id
-        self._hub = hub
-        self._last_value: float | None = None
-
+        """Initialize an unit Sensor."""
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            hub=hub,
+            name=name,
+            icon=icon,
+        )
+        self._value_type = CozytouchCapabilityVariableType.FLOAT
         self._attr_native_unit_of_measurement = native_unit_of_measurement
-        self._attr_name = name
-        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{str(capabilityId)}"
-        if icon:
-            self._attr_icon = icon
-        if category:
-            self._attr_entity_category = category
+        self._attr_suggested_display_precision = suggested_precision
         if device_class:
             self._attr_device_class = device_class
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_uniq_id)},
-        )
-
-    @property
     def native_value(self) -> float | None:
         """Value of the sensor."""
-        return self._last_value
-
-    @callback
-    def update(self):
-        """Update the value of the sensor from the hub."""
-        # Get last seen value from controller
-        value = float(
-            self._hub.get_capability_value(self._deviceId, self._capabilityId)
-        )
-        _LOGGER.debug(
-            "%s: retrieved %s value from hub controller: %s",
-            self._config_title,
-            self._attr_name,
-            repr(value),
-        )
-        # Handle entity availability
-        if value is None:
-            if self._attr_available:
-                if not self._hub.online:
-                    _LOGGER.debug(
-                        "%s: marking the %s sensor as unavailable: Cozytouch connection lost",
-                        self._config_title,
-                        self._attr_name,
-                    )
-                    self._attr_available = False
-
-            return
-        elif not self._attr_available:
-            _LOGGER.info(
-                "%s: marking the %s sensor as available now !",
-                self._config_title,
-                self._attr_name,
-            )
-            self._attr_available = True
-
-        # Save value
-        self._last_value = value
-
-
-class PressureSensor(SensorEntity):
-    """Common class for pressure sensor."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = True
-
-    def __init__(
-        self,
-        deviceId: int,
-        capabilityId: int,
-        name: str,
-        config_title: str,
-        config_uniq_id: str,
-        hub: Hub,
-        icon: str | None = None,
-        category: EntityCategory | None = None,
-        device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.BAR,
-    ) -> None:
-        """Initialize a pressure Sensor."""
-        _LOGGER.debug("%s: initializing %s sensor", config_title, name)
-
-        self._deviceId = deviceId
-        self._capabilityId = capabilityId
-        self._config_title = config_title
-        self._config_uniq_id = config_uniq_id
-        self._hub = hub
-        self._last_value: float | None = None
-
-        self._attr_native_unit_of_measurement = native_unit_of_measurement
-        self._attr_name = name
-        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{str(capabilityId)}"
-        if icon:
-            self._attr_icon = icon
-        if category:
-            self._attr_entity_category = category
-        if device_class:
-            self._attr_device_class = device_class
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_uniq_id)},
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Value of the sensor."""
-        return self._last_value
-
-    @callback
-    def update(self):
-        """Update the value of the sensor from the hub."""
-        # Get last seen value from controller
-        value = float(
-            self._hub.get_capability_value(self._deviceId, self._capabilityId)
-        )
-        _LOGGER.debug(
-            "%s: retrieved %s value from hub controller: %s",
-            self._config_title,
-            self._attr_name,
-            repr(value),
-        )
-        # Handle entity availability
-        if value is None:
-            if self._attr_available:
-                if not self._hub.online:
-                    _LOGGER.debug(
-                        "%s: marking the %s sensor as unavailable: Cozytouch connection lost",
-                        self._config_title,
-                        self._attr_name,
-                    )
-                    self._attr_available = False
-
-            return
-        elif not self._attr_available:
-            _LOGGER.info(
-                "%s: marking the %s sensor as available now !",
-                self._config_title,
-                self._attr_name,
-            )
-            self._attr_available = True
-
-        # Save value
-        self._last_value = value
+        return float(self._last_value)

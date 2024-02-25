@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import json
 
 from aiohttp import ClientSession, ContentTypeError, FormData
 
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from .capability import get_capability_infos
 from .const import COZYTOUCH_ATLANTIC_API, COZYTOUCH_CLIENT_ID
 from .model import get_model_name_from_id
-
-import json
 
 
 class Hub:
@@ -33,6 +32,17 @@ class Hub:
         self._dump_json = False
         self._devices = []
         self.online = False
+
+        # Load json for test during dev
+        self._test_load = False
+        if self._test_load:
+            self._dump_json = False
+            self.online = True
+            with open(
+                self._hass.config.config_dir + "/cozytouch_takao.json", encoding="utf-8"
+            ) as json_file:
+                file_contents = json_file.read()
+                self.update_devices_from_json_data(json.loads(file_contents))
 
     @property
     def hub_id(self) -> str:
@@ -98,11 +108,13 @@ class Hub:
         """Close session."""
         await self._session.close()
 
-    def update_devices_from_json_data(self, json_data: {}) -> None:
+    def update_devices_from_json_data(self, json_data) -> None:
         """Update the devices list."""
 
         if self._dump_json:
-            with open(self._hass.config.config_dir + "/Cozytouch.json", "w") as outfile:
+            with open(
+                self._hass.config.config_dir + "/Cozytouch.json", "w", encoding="utf-8"
+            ) as outfile:
                 json_object = json.dumps(json_data, indent=4)
                 outfile.write(json_object)
 
@@ -114,7 +126,7 @@ class Hub:
                     bStillExists = True
                     break
 
-            if bStillExists == False:
+            if bStillExists is False:
                 self._devices.remove(local_device)
 
         # Create new devices
@@ -161,6 +173,9 @@ class Hub:
 
     async def update(self, deviceId: int) -> None:
         """Update values from cloud."""
+        if self._test_load:
+            return
+
         if self.online:
             headers = {
                 "Authorization": f"Bearer {self._access_token}",
@@ -183,7 +198,7 @@ class Hub:
         else:
             await self.connect()
 
-    def devices(self) -> []:
+    def devices(self):
         """Get devices list."""
         devs = []
         for dev in self._devices:
@@ -215,7 +230,7 @@ class Hub:
 
         return "Unknown"
 
-    def get_capabilities_for_device(self, deviceId: int) -> []:
+    def get_capabilities_for_device(self, deviceId: int):
         """Get capabilities for a device."""
         capabilities = []
         for dev in self._devices:

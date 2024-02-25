@@ -11,11 +11,11 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .hub import Hub
+from .sensor import CozytouchSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,13 +44,7 @@ async def async_setup_entry(
         if capability["type"] == "temperature_adjustment":
             climates.append(
                 CozytouchClimate(
-                    deviceId=capability["deviceId"],
-                    capabilityId=capability["capabilityId"],
-                    activeCapabilityId=capability["activeCapabilityId"],
-                    currentValueCapabilityId=capability["currentValueCapabilityId"],
-                    lowestValueCapabilityId=capability["lowestValueCapabilityId"],
-                    highestValueCapabilityId=capability["highestValueCapabilityId"],
-                    name=capability["name"],
+                    capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     hub=hub,
@@ -62,102 +56,67 @@ async def async_setup_entry(
         async_add_entities(climates, True)
 
 
-class CozytouchClimate(ClimateEntity):
-    """Temperature adjustment class."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = True
-    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-    _attr_hvac_mode = HVACMode.OFF
-    _attr_max_temp = 0
-    _attr_min_temp = 30
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+class CozytouchClimate(ClimateEntity, CozytouchSensor):
+    """Temperature adjustment climate class."""
 
     def __init__(
         self,
-        deviceId: int,
-        capabilityId: int,
-        activeCapabilityId: int,
-        currentValueCapabilityId: int,
-        lowestValueCapabilityId: int,
-        highestValueCapabilityId: int,
-        name: str,
+        capability,
         config_title: str,
         config_uniq_id: str,
         hub: Hub,
+        name: str | None = None,
     ) -> None:
-        """Initialize a Number entity."""
-        _LOGGER.debug("%s: initializing %s climate", config_title, name)
-
-        self._deviceId = deviceId
-        self._capabilityId = capabilityId
-        self._activeCapabilityId = activeCapabilityId
-        self._currentValueCapabilityId = currentValueCapabilityId
-        self._lowestValueCapabilityId = lowestValueCapabilityId
-        self._highestValueCapabilityId = highestValueCapabilityId
-        self._config_title = config_title
-        self._config_uniq_id = config_uniq_id
-        self._hub = hub
+        """Initialize a climate entity."""
+        capabilityId = capability["capabilityId"]
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            attr_uniq_id=f"{DOMAIN}_{config_uniq_id}_climate_{str(capabilityId)}",
+            hub=hub,
+            name=name,
+        )
         self._native_value = 0
         self._current_value = 0
-
-        self._attr_name = name
-        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_climate_{str(capabilityId)}"
         self._attr_native_step = 0.5
-
         self._attr_native_unit_of_measurement = "°C"
 
-        self._modelId = self._hub.get_model_id(deviceId)
+        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+        self._attr_hvac_mode = HVACMode.OFF
+        self._attr_max_temp = 0
+        self._attr_min_temp = 30
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_uniq_id)},
-        )
-
-    @property
-    def temperature_unit(self):
-        """Return temperature unit used."""
-        return UnitOfTemperature.CELSIUS
+        # Get sub capabilities
+        self._capabilityActive = None
+        if "activeCapabilityId" in capability:
+            self._capabilityActive = self._hub.get_capability_infos(
+                self._capability["deviceId"], self._capability["activeCapabilityId"]
+            )
 
     def update(self):
         """Update the values from the hub."""
         self._native_value = float(
-            self._hub.get_capability_value(self._deviceId, self._capabilityId)
+            self._get_capability_value(self._capability["capabilityId"])
         )
 
-        active = self._hub.get_capability_value(
-            self._deviceId, self._activeCapabilityId
-        )
-
-        activeCapabilityInfos = self._hub.get_capability_infos(
-            self._modelId, self._activeCapabilityId
-        )
-        if activeCapabilityInfos is not None:
-            if active == activeCapabilityInfos["value_off"]:
+        if self._capabilityActive:
+            active = self._get_capability_value(self._capability["activeCapabilityId"])
+            if active == self._capabilityActive.get("value_off", 0):
                 self._attr_hvac_mode = HVACMode.OFF
-            elif active == activeCapabilityInfos["value_on"]:
+            elif active == self._capabilityActive.get("value_on", 1):
                 self._attr_hvac_mode = HVACMode.HEAT
 
-        self._current_value = float(
-            self._hub.get_capability_value(
-                self._deviceId, self._currentValueCapabilityId
-            )
-        )
+        currentValueId = self._capability["currentValueCapabilityId"]
+        self._current_value = float(self._get_capability_value(currentValueId))
 
-        self._attr_min_temp = float(
-            self._hub.get_capability_value(
-                self._deviceId, self._lowestValueCapabilityId
-            )
-        )
+        lowestValueId = self._capability["lowestValueCapabilityId"]
+        self._attr_min_temp = float(self._get_capability_value(lowestValueId))
 
-        self._attr_max_temp = float(
-            self._hub.get_capability_value(
-                self._deviceId, self._highestValueCapabilityId
-            )
-        )
+        highestValueId = self._capability["highestValueCapabilityId"]
+        self._attr_max_temp = float(self._get_capability_value(highestValueId))
 
     @property
     def current_temperature(self):
@@ -174,25 +133,24 @@ class CozytouchClimate(ClimateEntity):
         temperature = kwargs.get("temperature")
         if temperature is not None:
             await self._hub.set_capability_value(
-                self._deviceId, self._capabilityId, str(temperature)
+                self._capability["deviceId"],
+                self._capability["capabilityId"],
+                str(temperature),
             )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
-        activeCapabilityInfos = self._hub.get_capability_infos(
-            self._modelId, self._activeCapabilityId
-        )
-        if activeCapabilityInfos is not None:
+        if self._capabilityActive:
             if hvac_mode == HVACMode.HEAT:
                 await self._hub.set_capability_value(
-                    self._deviceId,
-                    self._activeCapabilityId,
-                    activeCapabilityInfos["value_on"],
+                    self._capability["deviceId"],
+                    self._capability["activeCapabilityId"],
+                    self._capabilityActive.get("value_on", "1"),
                 )
             elif hvac_mode == HVACMode.OFF:
                 await self._hub.set_capability_value(
-                    self._deviceId,
-                    self._activeCapabilityId,
-                    activeCapabilityInfos["value_off"],
+                    self._capability["deviceId"],
+                    self._capability["activeCapabilityId"],
+                    self._capabilityActive.get("value_off", "0"),
                 )

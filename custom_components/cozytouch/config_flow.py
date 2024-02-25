@@ -8,7 +8,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
@@ -104,6 +105,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=device_data["name"], data=device_data)
 
         return self.async_abort()
+
+
+#    @staticmethod
+#    @callback
+#    def async_get_options_flow(
+#        config_entry: config_entries.ConfigEntry,
+#    ) -> config_entries.OptionsFlow:
+#        """Create the options flow."""
+#        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handles the options of a Cozytouch device."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "create_unknown",
+                        default=self.config_entry.data.get("create_unknown"),
+                    ): bool,
+                    vol.Required(
+                        "dump_json", default=self.config_entry.data.get("dump_json")
+                    ): bool,
+                }
+            ),
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
