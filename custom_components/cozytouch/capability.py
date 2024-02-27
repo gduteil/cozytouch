@@ -23,6 +23,10 @@ def get_capability_infos(modelId: int, capabilityId: int) -> {}:
                 "targetValueCapabilityId": 177,
                 "lowestValueCapabilityId": 162,
                 "highestValueCapabilityId": 163,
+                "fanValueCapabilityId": 100801,
+                "quietValueCapabilityId": 100802,
+                "fandirValueCapabilityId": 100803,
+                "swingValueCapabilityId": 100804
             }
     else :
         if capabilityId == 7:

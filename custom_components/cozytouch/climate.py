@@ -67,7 +67,7 @@ class CozytouchClimate(ClimateEntity):
     _attr_hvac_mode = HVACMode.OFF
     _attr_max_temp = 0
     _attr_min_temp = 30
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     _dict_hvac_modes = {
@@ -79,6 +79,20 @@ class CozytouchClimate(ClimateEntity):
         "value_dry" : HVACMode.DRY
     }
 
+    _dict_fan_modes = {
+        "FAN_LOW": 1,
+        "FAN_MEDIUM": 2,
+        "FAN_HIGH": 3,
+        "FAN_AUTO": 5
+    }
+
+    _dict_fan_dir = {
+        "UP": 1,
+        "MIDDLE_UP": 2,
+        "MIDDLE_DOWN": 3,
+        "DOWN": 4
+    }
+
     def __init__(
         self,
         deviceId: int,
@@ -88,7 +102,7 @@ class CozytouchClimate(ClimateEntity):
         config_uniq_id: str,
         hub: Hub,
     ) -> None:
-        """Initialize a Number entity."""
+        """Initialize a Climate entity."""
         _LOGGER.debug("%s: initializing %s climate", config_title, name)
 
         self._deviceId = deviceId
@@ -118,6 +132,20 @@ class CozytouchClimate(ClimateEntity):
         )
 
         self._attr_hvac_modes=[self._dict_hvac_modes[v] for v in self._activeCapabilityInfos.keys() if v in self._dict_hvac_modes]
+
+        if self._capabilityInfos.get("fanValueCapabilityId") :
+            self._attr_fan_modes=['FAN_LOW', 'FAN_MEDIUM', 'FAN_HIGH', 'FAN_AUTO']
+            self._attr_fan_mode='FAN_LOW'
+
+            if self._capabilityInfos.get("quietValueCapabilityId") :
+                self._attr_fan_modes.append('QUIET')
+
+        if self._capabilityInfos.get("fandirValueCapabilityId") :
+            self._attr_swing_modes=['UP', 'MIDDLE_UP', 'MIDDLE_DOWN', 'DOWN']
+            self._attr_swing_mode='MIDDLE_UP'
+
+            if self._capabilityInfos.get("swingValueCapabilityId") :
+                self._attr_swing_modes.append('SWING_ON')
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -189,6 +217,36 @@ class CozytouchClimate(ClimateEntity):
                 )
             )
 
+        if self._capabilityInfos.get("fanValueCapabilityId") :
+            quiet_value=0
+            if self._capabilityInfos.get("quietValueCapabilityId") :
+                quiet_value = int(
+                    self._hub.get_capability_value(
+                        self._deviceId, self._capabilityInfos.get("quietValueCapabilityId")
+                    )
+                )
+            fan_value = int(
+                self._hub.get_capability_value(
+                    self._deviceId, self._capabilityInfos.get("fanValueCapabilityId")
+                )
+            )
+            self._attr_fan_mode = (list(self._dict_fan_modes.keys())[list(self._dict_fan_modes.values()).index(fan_value)], 'QUIET')[quiet_value==1]
+
+        if self._capabilityInfos.get("fandirValueCapabilityId") :
+            swing_value=0
+            if self._capabilityInfos.get("swingValueCapabilityId") :
+                swing_value = int(
+                    self._hub.get_capability_value(
+                        self._deviceId, self._capabilityInfos.get("swingValueCapabilityId")
+                    )
+                )
+            dir_value = int(
+                self._hub.get_capability_value(
+                    self._deviceId, self._capabilityInfos.get("fandirValueCapabilityId")
+                )
+            )
+            self._attr_swing_mode = (list(self._dict_fan_dir.keys())[list(self._dict_fan_dir.values()).index(dir_value)], 'SWING_ON')[swing_value==1]
+
     @property
     def current_temperature(self):
         """Return current temperature."""
@@ -218,5 +276,51 @@ class CozytouchClimate(ClimateEntity):
             await self._hub.set_capability_value(
                 self._deviceId,
                 self._activeCapabilityId,
-                self._activeCapabilityInfos[list(self._dict_hvac_modes.keys())[list(self._dict_hvac_modes.values()).index(hvac_mode)]],
+                self._activeCapabilityInfos[list(self._dict_hvac_modes.keys())[list(self._dict_hvac_modes.values()).index(hvac_mode)]]
             )
+
+    async def async_set_fan_mode(self, fan_mode):
+        """Set new target fan mode."""
+        if fan_mode :
+            if self._capabilityInfos.get("fanValueCapabilityId") :
+                if fan_mode == 'QUIET' and self._capabilityInfos.get("quietValueCapabilityId") :
+                    await self._hub.set_capability_value(
+                        self._deviceId,
+                        self._capabilityInfos.get("quietValueCapabilityId"),
+                        1
+                    )
+                else:
+                    if self._capabilityInfos.get("quietValueCapabilityId") :
+                        await self._hub.set_capability_value(
+                            self._deviceId,
+                            self._capabilityInfos.get("quietValueCapabilityId"),
+                            0
+                        )
+                    await self._hub.set_capability_value(
+                        self._deviceId,
+                        self._capabilityInfos.get("fanValueCapabilityId"),
+                        self._dict_fan_modes.get(fan_mode)
+                    )
+
+    async def async_set_swing_mode(self, swing_mode):
+        """Set new target swing operation."""
+        if swing_mode :
+            if self._capabilityInfos.get("fandirValueCapabilityId") :
+                if swing_mode == 'SWING_ON' and self._capabilityInfos.get("swingValueCapabilityId") :
+                    await self._hub.set_capability_value(
+                        self._deviceId,
+                        self._capabilityInfos.get("swingValueCapabilityId"),
+                        1
+                    )
+                else:
+                    if self._capabilityInfos.get("swingValueCapabilityId") :
+                        await self._hub.set_capability_value(
+                            self._deviceId,
+                            self._capabilityInfos.get("swingValueCapabilityId"),
+                            0
+                        )
+                    await self._hub.set_capability_value(
+                        self._deviceId,
+                        self._capabilityInfos.get("fandirValueCapabilityId"),
+                        self._dict_fan_dir.get(swing_mode)
+                    )
