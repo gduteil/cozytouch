@@ -1,27 +1,147 @@
-"""Atlantic Cozytouch device model mapping."""
+"""Atlantic Cozytouch device model mapping.
+
+Mandatory :
+    * modelId : modelId of the device
+    * name : commercial name of the device.
+    * type : device type from CozytouchDeviceType enum.
+    * HVACModes : list of available HVAC modes/value pairs
+
+Optional :
+    * currentTemperatureAvailable : enable current temperature availability (default : True)
+    * fanModes : list of mode/value pairs
+
+"""  # noqa: D205
 
 
-def get_model_name_from_id(modelId: int) -> str:
-    """Return name from model ID."""
+from enum import StrEnum
+
+from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate.const import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_OFF,
+    FAN_ON,
+)
+
+
+class CozytouchDeviceType(StrEnum):
+    """Device types enum."""
+
+    UNKNOWN = "unknown"
+    THERMOSTAT = "thermostat"
+    GAZ_BOILER = "gaz_boiler"
+    HEAT_PUMP = "heat_pump"
+    WATER_HEATER = "water_heater"
+    AC = "ac"
+    AC_CONTROLLER = "ac_controller"
+    HUB = "hub"
+
+
+def get_model_infos(modelId: int):
+    """Return infos from model ID."""
+    modelInfos = {"modelId": modelId}
+
     if modelId == 56:
-        return "Naema 2 Micro 25"
-    elif modelId == 76:
-        return "Alfea Extensa Duo AI UE"
-    elif modelId == 235:
-        return "Thermostat Navilink Connect"
-    elif modelId == 556:
-        return "Takao hub"
-    elif modelId == 557:
-        return "Takao M3 (557)"
-    elif modelId == 558:
-        return "Takao M3 (558)"
-    elif modelId == 562:
-        return "Takao M3 (557) UI"
-    elif modelId == 563:
-        return "Takao M3 (558) UI"
-    elif modelId == 1353:
-        return "Calypso Split Interface"
-    elif modelId == 1376:
-        return "Calypso Split 270L"
+        modelInfos["name"] = "Naema 2 Micro 25"
+        modelInfos["type"] = CozytouchDeviceType.GAZ_BOILER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
 
-    return "Unknown product (" + str(modelId) + ")"
+    elif modelId == 76:
+        modelInfos["name"] = "Alfea Extensa Duo AI UE"
+        modelInfos["type"] = CozytouchDeviceType.HEAT_PUMP
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+    elif modelId == 235:
+        modelInfos["name"] = "Thermostat Navilink Connect"
+        modelInfos["type"] = CozytouchDeviceType.THERMOSTAT
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+    elif modelId == 556:
+        modelInfos["name"] = "Naviclim Hub"
+        modelInfos["type"] = CozytouchDeviceType.HUB
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+        }
+
+    elif modelId in (557, 558):
+        if modelId == 557:
+            modelInfos["name"] = "Takao M3 (5.4 kW)"
+        else:
+            modelInfos["name"] = "Takao M3 (2 kW)"
+
+        modelInfos["type"] = CozytouchDeviceType.AC
+
+        modelInfos["currentTemperatureAvailable"] = False
+        modelInfos["quiedModeAvailable"] = True
+
+        modelInfos["fanModes"] = {
+            0: FAN_OFF,
+            1: FAN_ON,
+            2: FAN_LOW,
+            3: FAN_MEDIUM,
+            4: FAN_HIGH,
+            5: FAN_AUTO,
+        }
+
+        modelInfos["swingModes"] = {
+            1: "Up",
+            2: "Middle Up",
+            3: "Middle Down",
+            4: "Down",
+        }
+
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            1: HVACMode.AUTO,
+            3: HVACMode.COOL,
+            4: HVACMode.HEAT,
+            7: HVACMode.FAN_ONLY,
+            8: HVACMode.DRY,
+        }
+
+    elif modelId in (562, 563):
+        if modelId == 562:
+            modelInfos["name"] = "Takao M3 (5.4 kW) User Interface"
+        else:
+            modelInfos["name"] = "Takao M3 (2 kW) User Interface"
+
+        modelInfos["type"] = CozytouchDeviceType.AC_CONTROLLER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+        }
+
+    elif modelId == 1353:
+        modelInfos["name"] = "Calypso Split Interface"
+        modelInfos["type"] = CozytouchDeviceType.HUB
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+        }
+
+    elif modelId == 1376:
+        modelInfos["name"] = "Calypso Split 270L"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+    else:
+        modelInfos["name"] = "Unknown product (" + str(modelId) + ")"
+        modelInfos["type"] = CozytouchDeviceType.UNKNOWN
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+    return modelInfos

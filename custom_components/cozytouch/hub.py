@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from .capability import get_capability_infos
 from .const import COZYTOUCH_ATLANTIC_API, COZYTOUCH_CLIENT_ID
-from .model import get_model_name_from_id
+from .model import get_model_infos
 
 
 class Hub:
@@ -39,7 +39,8 @@ class Hub:
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_takao.json", encoding="utf-8"
+                self._hass.config.config_dir + "/cozytouch_takao.json",
+                encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()
                 self.update_devices_from_json_data(json.loads(file_contents))
@@ -146,6 +147,7 @@ class Hub:
                         "gatewaySerialNumber": remote_device["gatewaySerialNumber"],
                         "modelId": remote_device["modelId"],
                         "productId": remote_device["productId"],
+                        "modelInfos": get_model_infos(remote_device["modelId"]),
                         "capabilities": [],
                     }
                 )
@@ -153,10 +155,6 @@ class Hub:
 
             self._devices[deviceIndex]["capabilities"] = copy.deepcopy(
                 remote_device["capabilities"]
-            )
-
-            self._devices[deviceIndex]["modelName"] = get_model_name_from_id(
-                remote_device["modelId"]
             )
 
     def set_create_entities_for_unknown_entities(self, create_unknown: bool) -> None:
@@ -214,13 +212,13 @@ class Hub:
 
         return -1
 
-    def get_model_name(self, deviceId: int) -> str:
+    def get_model_infos(self, deviceId: int) -> str:
         """Get model name."""
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
-                return dev["modelName"]
+                return get_model_infos(dev["modelId"])
 
-        return "Unknown"
+        return get_model_infos(-1)
 
     def get_serial_number(self, deviceId: int) -> str:
         """Get serial number."""
@@ -235,9 +233,10 @@ class Hub:
         capabilities = []
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
+                modelInfos = get_model_infos(dev["modelId"])
                 for capability in dev["capabilities"]:
                     capability_infos = get_capability_infos(
-                        dev["modelId"], capability["capabilityId"]
+                        modelInfos, capability["capabilityId"]
                     )
 
                     if capability_infos is None and self._create_unknown:
@@ -247,7 +246,7 @@ class Hub:
                             "category": "diag",
                         }
 
-                    if len(capability_infos) > 0:
+                    if capability_infos is not None and len(capability_infos) > 0:
                         capability_infos["deviceId"] = deviceId
                         capability_infos["capabilityId"] = capability["capabilityId"]
 
@@ -276,22 +275,25 @@ class Hub:
                 if dev["deviceId"] == deviceId:
                     for capability in dev["capabilities"]:
                         if capabilityId == capability["capabilityId"]:
-                            # Write capability value
-                            async with self._session.post(
-                                COZYTOUCH_ATLANTIC_API
-                                + "/magellan/executions/writecapability",
-                                json={
-                                    "capabilityId": capabilityId,
-                                    "deviceId": deviceId,
-                                    "value": value,
-                                },
-                                headers={
-                                    "Authorization": f"Bearer {self._access_token}",
-                                    "Content-Type": "application/json",
-                                },
-                            ) as response:
-                                if response.status == 201:
-                                    capability["value"] = value
+                            if self._test_load:
+                                capability["value"] = value
+                            else:
+                                # Write capability value
+                                async with self._session.post(
+                                    COZYTOUCH_ATLANTIC_API
+                                    + "/magellan/executions/writecapability",
+                                    json={
+                                        "capabilityId": capabilityId,
+                                        "deviceId": deviceId,
+                                        "value": value,
+                                    },
+                                    headers={
+                                        "Authorization": f"Bearer {self._access_token}",
+                                        "Content-Type": "application/json",
+                                    },
+                                ) as response:
+                                    if response.status == 201:
+                                        capability["value"] = value
 
                             break
 

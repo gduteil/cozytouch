@@ -70,11 +70,12 @@ class CloudConnectivity(BinarySensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        modelInfos = self._hub.get_model_infos(self._deviceId)
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_uniq_id)},
             manufacturer="Atlantic",
             name=self._title,
-            model=self._hub.get_model_name(self._deviceId),
+            model=modelInfos["name"],
             serial_number=self._hub.get_serial_number(self._deviceId),
         )
 

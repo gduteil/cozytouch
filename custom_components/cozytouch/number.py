@@ -78,6 +78,8 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         self._native_value = 0
         self._attr_native_step = 0.5
         self._attr_native_unit_of_measurement = "°C"
+        self._attr_native_min_value = 0.0
+        self._attr_native_max_value = 60.0
 
     @property
     def native_value(self) -> float | None:
@@ -90,14 +92,18 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         value = float(self._get_capability_value(self._capability["capabilityId"]))
 
         if "lowestValueCapabilityId" in self._capability:
-            self._attr_native_min_value = float(
-                self._get_capability_value(self._capability["lowestValueCapabilityId"])
+            lowestValue = self._get_capability_value(
+                self._capability["lowestValueCapabilityId"]
             )
+            if lowestValue:
+                self._attr_native_min_value = float(lowestValue)
 
         if "highestValueCapabilityId" in self._capability:
-            self._attr_native_max_value = float(
-                self._get_capability_value(self._capability["highestValueCapabilityId"])
+            highestValue = self._get_capability_value(
+                self._capability["highestValueCapabilityId"]
             )
+            if highestValue:
+                self._attr_native_max_value = float(highestValue)
 
         if value < self._attr_native_min_value:
             value = self._attr_native_min_value

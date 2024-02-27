@@ -9,10 +9,12 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     UnitOfPower,
     UnitOfPressure,
     UnitOfSoundPressure,
     UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -145,6 +147,28 @@ async def async_setup_entry(
                     hub=hub,
                     device_class=SensorDeviceClass.POWER,
                     native_unit_of_measurement=UnitOfPower.WATT,
+                )
+            )
+        elif capability["type"] == "volume":
+            sensors.append(
+                CozytouchUnitSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    hub=hub,
+                    device_class=SensorDeviceClass.VOLUME,
+                    native_unit_of_measurement=UnitOfVolume.LITERS,
+                )
+            )
+        elif capability["type"] == "percentage":
+            sensors.append(
+                CozytouchUnitSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    hub=hub,
+                    device_class=SensorDeviceClass.BATTERY,
+                    native_unit_of_measurement=PERCENTAGE,
                 )
             )
 
