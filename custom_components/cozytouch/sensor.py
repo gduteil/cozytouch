@@ -171,6 +171,15 @@ async def async_setup_entry(
                     native_unit_of_measurement=PERCENTAGE,
                 )
             )
+        elif capability["type"] == "time":
+            sensors.append(
+                CozytouchTimeSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    hub=hub,
+                )
+            )
 
     # Add the entities to HA
     if len(sensors) > 0:
@@ -354,7 +363,7 @@ class CozytouchBinarySensor(BinarySensorEntity, CozytouchSensor):
     @property
     def is_on(self) -> bool:
         """Return last state value."""
-        value_on = "0"
+        value_on = "1"
         if "value_on" in self._capability:
             value_on = self._capability["value_on"]
 
@@ -395,3 +404,53 @@ class CozytouchUnitSensor(CozytouchSensor):
     def native_value(self) -> float | None:
         """Value of the sensor."""
         return float(self._last_value)
+
+
+class CozytouchTimeSensor(CozytouchSensor):
+    """Class for time sensor (in minutes)."""
+
+    def __init__(
+        self,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+        hub: Hub,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize a time Sensor."""
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            hub=hub,
+            name=name,
+            icon=icon,
+        )
+        self._last_value: 0
+
+    def get_value(self) -> str:
+        """Retrieve value from hub."""
+        value = self._get_capability_value(self._capability["capabilityId"])
+        if value is not None:
+            strValue = ""
+            days = 0
+            remaining = int(value)
+            if remaining > (60 * 24):
+                days = int(remaining / (60 * 24))
+                remaining -= days * (60 * 24)
+
+            hours = 0
+            if remaining > 60:
+                hours = int(remaining / 60)
+                remaining -= hours * 60
+
+            minutes = int(remaining)
+
+            if days > 0:
+                strValue = str(days) + "d "
+
+            strValue += "%02d:%02d" % (hours, minutes)
+            return strValue
+
+        return None

@@ -148,6 +148,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         # Target temperature adjustment limits
         return {}
 
+    elif capabilityId == 165:
+        capability["name"] = "Boost Mode"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+
     elif capabilityId == 172:
         capability["name"] = "Away Mode Temperature"
         capability["type"] = "away_temperature_adjustment"
@@ -181,6 +187,16 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["category"] = "sensor"
         capability["icon_0"] = "mdi:airplane-takeoff"
         capability["icon_1"] = "mdi:airplane-landing"
+
+    elif capabilityId == 232:
+        capability["name"] = "Boost Total Time"
+        capability["type"] = "time"
+        capability["category"] = "diagnostic"
+
+    elif capabilityId == 233:
+        capability["name"] = "Boost Remaining Time"
+        capability["type"] = "time"
+        capability["category"] = "diagnostic"
 
     elif capabilityId == 258:
         capability["name"] = "Water Capacity"
