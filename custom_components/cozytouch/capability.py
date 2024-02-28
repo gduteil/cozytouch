@@ -208,7 +208,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["icon"] = "mdi:clock-outline"
 
     elif capabilityId == 258:
-        capability["name"] = "Water Capacity"
+        capability["name"] = "Tank Capacity"
         capability["type"] = "volume"
         capability["category"] = "sensor"
 
@@ -238,9 +238,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["category"] = "sensor"
 
     elif capabilityId == 283:
-        capability["name"] = "Peak Hours"
+        capability["name"] = "Off-Peak Hours"
         capability["type"] = "binary"
         capability["category"] = "sensor"
+        capability["icon"] = "mdi:clock-outline"
 
     elif capabilityId == 316:
         capability["name"] = "Interface FW"
