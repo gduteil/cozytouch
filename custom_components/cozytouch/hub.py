@@ -39,7 +39,7 @@ class Hub:
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_takao.json",
+                self._hass.config.config_dir + "/cozytouch_calypso.json",
                 encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()
@@ -200,7 +200,13 @@ class Hub:
         """Get devices list."""
         devs = []
         for dev in self._devices:
-            devs.append({"deviceId": dev["deviceId"], "name": dev["name"]})
+            devs.append(
+                {
+                    "deviceId": dev["deviceId"],
+                    "name": dev["name"],
+                    "model": dev["modelInfos"]["name"],
+                }
+            )
 
         return devs
 

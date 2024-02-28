@@ -51,13 +51,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 hub = await validate_input(self.hass, user_input)
                 devices = hub.devices()
                 hub.close()
+
+                new_devices = []
+                current_entries = self._async_current_entries()
+
+                for device in devices:
+                    existing_entry = next(
+                        (
+                            entry
+                            for entry in current_entries
+                            if entry.data.get("deviceId", "") == device["deviceId"]
+                        ),
+                        None,
+                    )
+                    if not existing_entry:
+                        new_devices.append(device)
+
+                if len(new_devices) == 0:
+                    raise NoNewDevice()
+
                 return self.async_show_form(
                     step_id="select_device",
                     data_schema=vol.Schema(
                         {
                             vol.Required("device"): selector.SelectSelector(
                                 selector.SelectSelectorConfig(
-                                    mode=selector.SelectSelectorMode.DROPDOWN,
+                                    mode=selector.SelectSelectorMode.LIST,
                                     options=[
                                         selector.SelectOptionDict(
                                             label=device["name"],
@@ -70,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                                 }
                                             ),
                                         )
-                                        for device in devices
+                                        for device in new_devices
                                     ],
                                 )
                             ),
@@ -83,6 +102,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             except CannotConnect:
                 errors["base"] = "invalid_auth"
+            except NoNewDevice:
+                errors["base"] = "No new device found"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -102,7 +123,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_data = ast.literal_eval(device_input["device"])
             device_data["create_unknown"] = device_input["create_unknown"]
             device_data["dump_json"] = device_input["dump_json"]
-            return self.async_create_entry(title=device_data["name"], data=device_data)
+            return self.async_create_entry(
+                title=device_data["name"],
+                data=device_data,
+            )
 
         return self.async_abort()
 
@@ -148,6 +172,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class NoNewDevice(exceptions.HomeAssistantError):
+    """Error to indicate we didn't find new device."""
 
 
 class InvalidAuth(exceptions.HomeAssistantError):

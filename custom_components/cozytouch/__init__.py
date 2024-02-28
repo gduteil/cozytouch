@@ -17,6 +17,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SWITCH,
     Platform.CLIMATE,
+    Platform.SELECT,
 ]
 
 CONFIG_SCHEMA = vol.Schema(

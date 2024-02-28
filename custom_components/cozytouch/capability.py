@@ -86,6 +86,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["category"] = "sensor"
         capability["icon"] = "mdi:faucet"
 
+    elif capabilityId == 87:
+        capability["name"] = "Heating Mode"
+        capability["type"] = "select"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+        capability["modelList"] = "HeatingModes"
+
     elif capabilityId == 99:
         capability["name"] = "DHW Pump"
         capability["type"] = "binary"
@@ -192,11 +199,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["name"] = "Boost Total Time"
         capability["type"] = "time"
         capability["category"] = "diagnostic"
+        capability["icon"] = "mdi:clock-outline"
 
     elif capabilityId == 233:
         capability["name"] = "Boost Remaining Time"
         capability["type"] = "time"
         capability["category"] = "diagnostic"
+        capability["icon"] = "mdi:clock-outline"
 
     elif capabilityId == 258:
         capability["name"] = "Water Capacity"
@@ -204,19 +213,19 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["category"] = "sensor"
 
     elif capabilityId == 264:
-        capability["name"] = "Temperature_264"
+        capability["name"] = "Condenser Temperature"
         capability["type"] = "temperature"
-        capability["category"] = "diag"
+        capability["category"] = "sensor"
 
     elif capabilityId == 265:
-        capability["name"] = "Temperature_265"
+        capability["name"] = "Tank Middle Temperature"
         capability["type"] = "temperature"
-        capability["category"] = "diag"
+        capability["category"] = "sensor"
 
     elif capabilityId == 266:
-        capability["name"] = "Temperature_266"
+        capability["name"] = "Tank Top Temperature"
         capability["type"] = "temperature"
-        capability["category"] = "diag"
+        capability["category"] = "sensor"
 
     elif capabilityId == 267:
         capability["name"] = "Temperature_267"
@@ -226,6 +235,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
     elif capabilityId == 271:
         capability["name"] = "Hot Water Available"
         capability["type"] = "percentage"
+        capability["category"] = "sensor"
+
+    elif capabilityId == 283:
+        capability["name"] = "Peak Hours"
+        capability["type"] = "binary"
         capability["category"] = "sensor"
 
     elif capabilityId == 316:

@@ -27,7 +27,7 @@ async def async_setup_entry(
         hub = hass.data[DOMAIN][config_entry.entry_id]
     except KeyError:
         _LOGGER.error(
-            "%s: can not init binaries sensors: failed to get the hub object",
+            "%s: can not init switches: failed to get the hub object",
             config_entry.title,
         )
         return

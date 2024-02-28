@@ -4,11 +4,13 @@ Mandatory :
     * modelId : modelId of the device
     * name : commercial name of the device.
     * type : device type from CozytouchDeviceType enum.
-    * HVACModes : list of available HVAC modes/value pairs
+    * HVACModes : list of available HVAC value/mode pairs
 
 Optional :
     * currentTemperatureAvailable : enable current temperature availability (default : True)
-    * fanModes : list of mode/value pairs
+    * fanModes : list of value/mode pairs
+    * swingModes : list of value/mode pairs
+    * quietModeAvailable : enable quiet mode availability (default : False)
 
 """  # noqa: D205
 
@@ -76,14 +78,14 @@ def get_model_infos(modelId: int):
 
     elif modelId in (557, 558):
         if modelId == 557:
-            modelInfos["name"] = "Takao M3 (5.4 kW)"
+            modelInfos["name"] = "Takao M3 5.4kW"
         else:
-            modelInfos["name"] = "Takao M3 (2 kW)"
+            modelInfos["name"] = "Takao M3 2kW"
 
         modelInfos["type"] = CozytouchDeviceType.AC
 
         modelInfos["currentTemperatureAvailable"] = False
-        modelInfos["quiedModeAvailable"] = True
+        modelInfos["quietModeAvailable"] = True
 
         modelInfos["fanModes"] = {
             0: FAN_OFF,
@@ -112,9 +114,9 @@ def get_model_infos(modelId: int):
 
     elif modelId in (562, 563):
         if modelId == 562:
-            modelInfos["name"] = "Takao M3 (5.4 kW) User Interface"
+            modelInfos["name"] = "Takao M3 5.4kW User Interface"
         else:
-            modelInfos["name"] = "Takao M3 (2 kW) User Interface"
+            modelInfos["name"] = "Takao M3 2kW User Interface"
 
         modelInfos["type"] = CozytouchDeviceType.AC_CONTROLLER
         modelInfos["HVACModes"] = {
@@ -134,6 +136,11 @@ def get_model_infos(modelId: int):
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
+        }
+
+        modelInfos["HeatingModes"] = {
+            0: "Manual",
+            3: "Eco+",
         }
 
     else:
