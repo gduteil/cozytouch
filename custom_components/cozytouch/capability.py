@@ -163,7 +163,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
 
     elif capabilityId == 172:
         capability["name"] = "Away Mode Temperature"
-        capability["type"] = "away_temperature_adjustment"
+        capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
         capability["lowestValueCapabilityId"] = 160
         capability["highestValueCapabilityId"] = 161
@@ -286,6 +286,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
     elif capabilityId == 100804:
         # Swing mode
         return None
+
+    # For test
+    elif capabilityId in (22, 231, 234, 252, 312, 105300):
+        capability["name"] = "Temp_" + str(capabilityId)
+        capability["type"] = "temperature_adjustment_number"
+        capability["category"] = "sensor"
 
     else:
         return None
