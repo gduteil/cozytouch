@@ -85,8 +85,7 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
         """Change the selected option."""
         for value in self._list:
             if self._list[value] == option:
-                await self._hub.set_capability_value(
-                    self._capability["deviceId"],
+                await self._set_capability_value(
                     self._capability["capabilityId"],
                     str(value),
                 )

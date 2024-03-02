@@ -121,8 +121,7 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         elif new_value > self._attr_native_max_value:
             new_value = self._attr_native_max_value
 
-        await self._hub.set_capability_value(
-            self._capability["deviceId"],
+        await self._set_capability_value(
             self._capability["capabilityId"],
             str(new_value),
         )

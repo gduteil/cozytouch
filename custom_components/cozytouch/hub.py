@@ -242,7 +242,9 @@ class Hub:
                 modelInfos = get_model_infos(dev["modelId"])
                 for capability in dev["capabilities"]:
                     capability_infos = get_capability_infos(
-                        modelInfos, capability["capabilityId"]
+                        modelInfos,
+                        capability["capabilityId"],
+                        capability["value"],
                     )
 
                     if capability_infos is None and self._create_unknown:
@@ -260,17 +262,22 @@ class Hub:
 
         return capabilities
 
-    def get_capability_infos(self, modelId: int, capabilityId: int):
+    def get_capability_infos(
+        self, modelId: int, capabilityId: int, capabilityValue: str
+    ):
         """Get capability infos."""
-        return get_capability_infos(modelId, capabilityId)
+        return get_capability_infos(modelId, capabilityId, capabilityValue)
 
     def get_capability_value(self, deviceId: int, capabilityId: int):
         """Get value for a device capability."""
-        for dev in self._devices:
-            if dev["deviceId"] == deviceId:
-                for capability in dev["capabilities"]:
-                    if capabilityId == capability["capabilityId"]:
-                        return capability["value"]
+        try:
+            for dev in self._devices:
+                if dev["deviceId"] == deviceId:
+                    for capability in dev["capabilities"]:
+                        if capabilityId == capability["capabilityId"]:
+                            return capability["value"]
+        except:
+            return None
 
         return None
 

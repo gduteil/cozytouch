@@ -22,6 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 
 FAN_QUIET = "Quiet"
 
+PRESET_BASIC = "Basic"
+PRESET_PROG = "Prog"
+PRESET_OVERRIDE = "Override"
+
 
 # config flow setup
 async def async_setup_entry(
@@ -94,11 +98,16 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         self._attr_hvac_modes = list(self._modelInfos["HVACModes"].values())
         self._attr_hvac_mode = HVACMode.OFF
 
+        # Fan modes
         if "fanModes" in self._modelInfos:
             self._configure_fan_modes()
 
+        # Swing modes
         if "swingModes" in self._modelInfos:
             self._configure_swing_modes()
+
+        # Presets
+        self._configure_presets()
 
     def _configure_fan_modes(self):
         self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
@@ -119,6 +128,19 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
 
         if len(self._attr_swing_modes) > 0:
             self._attr_swing_mode = self._attr_swing_modes[0]
+
+    def _configure_presets(self):
+        self._attr_preset_modes = []
+        if "progCapabilityId" in self._capability:
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+
+            self._attr_preset_modes.append(PRESET_BASIC)
+            self._attr_preset_modes.append(PRESET_PROG)
+
+            if "progOverrideCapabilityId" in self._capability:
+                self._attr_preset_modes.append(PRESET_OVERRIDE)
+
+            self._attr_preset_mode = PRESET_BASIC
 
     def update(self):
         """Update the values from the hub."""
@@ -201,6 +223,27 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             if swingModeValue in swingModes:
                 self._attr_swing_mode = swingModes[swingModeValue]
 
+        # Presets
+        if "progCapabilityId" in self._capability:
+            progModeValue = int(
+                self._get_capability_value(self._capability["progCapabilityId"])
+            )
+            if progModeValue == 0:
+                self._attr_preset_mode = PRESET_BASIC
+            elif "progOverrideCapabilityId" in self._capability:
+                # In prog mode we can also be in override mode
+                progOverrideValue = int(
+                    self._get_capability_value(
+                        self._capability["progOverrideCapabilityId"]
+                    )
+                )
+                if progOverrideValue == 1:
+                    self._attr_preset_mode = PRESET_OVERRIDE
+                else:
+                    self._attr_preset_mode = PRESET_PROG
+            else:
+                self._attr_preset_mode = PRESET_PROG
+
     @property
     def current_temperature(self):
         """Return current temperature."""
@@ -219,14 +262,12 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                 self._attr_hvac_mode == HVACMode.COOL
                 and "targetCoolCapabilityId" in self._capability
             ):
-                await self._hub.set_capability_value(
-                    self._capability["deviceId"],
+                await self._set_capability_value(
                     self._capability["targetCoolCapabilityId"],
                     str(temperature),
                 )
             else:
-                await self._hub.set_capability_value(
-                    self._capability["deviceId"],
+                await self._set_capability_value(
                     self._capability["targetCapabilityId"],
                     str(temperature),
                 )
@@ -236,8 +277,7 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         HVACModes = self._modelInfos["HVACModes"]
         for mode in HVACModes:
             if HVACModes[mode] == hvac_mode:
-                await self._hub.set_capability_value(
-                    self._capability["deviceId"],
+                await self._set_capability_value(
                     self._capability["capabilityId"],
                     str(mode),
                 )
@@ -246,15 +286,13 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
     async def async_set_fan_mode(self, fan_mode) -> None:
         """Set new target fan mode."""
         if fan_mode == FAN_QUIET and "quietModeCapabilityId" in self._capability:
-            await self._hub.set_capability_value(
-                self._capability["deviceId"],
+            await self._set_capability_value(
                 self._capability["quietModeCapabilityId"],
                 "1",
             )
         elif "fanModeCapabilityId" in self._capability:
             if "quietModeCapabilityId" in self._capability:
-                await self._hub.set_capability_value(
-                    self._capability["deviceId"],
+                await self._set_capability_value(
                     self._capability["quietModeCapabilityId"],
                     "0",
                 )
@@ -262,8 +300,7 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             FANModes = self._modelInfos["fanModes"]
             for mode in FANModes:
                 if FANModes[mode] == fan_mode:
-                    await self._hub.set_capability_value(
-                        self._capability["deviceId"],
+                    await self._set_capability_value(
                         self._capability["fanModeCapabilityId"],
                         str(mode),
                     )
@@ -272,15 +309,13 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
     async def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
         if swing_mode == SWING_ON and "swingOnCapabilityId" in self._capability:
-            await self._hub.set_capability_value(
-                self._capability["deviceId"],
+            await self._set_capability_value(
                 self._capability["swingOnCapabilityId"],
                 "1",
             )
         elif "swingModeCapabilityId" in self._capability:
             if "swingOnCapabilityId" in self._capability:
-                await self._hub.set_capability_value(
-                    self._capability["deviceId"],
+                await self._set_capability_value(
                     self._capability["swingOnCapabilityId"],
                     "0",
                 )
@@ -288,9 +323,51 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             SwingModes = self._modelInfos["swingModes"]
             for mode in SwingModes:
                 if SwingModes[mode] == swing_mode:
-                    await self._hub.set_capability_value(
-                        self._capability["deviceId"],
+                    await self._set_capability_value(
                         self._capability["swingModeCapabilityId"],
                         str(mode),
                     )
                     break
+
+    async def async_set_preset_mode(self, preset_mode):
+        """Set new target preset mode."""
+        progCapabilityId = self._capability.get("progCapabilityId", None)
+        progOverrideCapabilityId = self._capability.get(
+            "progOverrideCapabilityId", None
+        )
+        if progCapabilityId:
+            if preset_mode == PRESET_BASIC:
+                await self._set_capability_value(progCapabilityId, "0")
+
+            elif preset_mode == PRESET_PROG:
+                await self._set_capability_value(progCapabilityId, "1")
+
+            if progOverrideCapabilityId:
+                progOverrideTimeCapabilityId = self._capability.get(
+                    "progOverrideTimeCapabilityId", None
+                )
+                progOverrideTotalTimeCapabilityId = self._capability.get(
+                    "progOverrideTotalTimeCapabilityId", None
+                )
+
+                if preset_mode == PRESET_OVERRIDE:
+                    await self._set_capability_value(progOverrideCapabilityId, "1")
+
+                    if (
+                        progOverrideTimeCapabilityId
+                        and progOverrideTotalTimeCapabilityId
+                    ):
+                        totalTime = self._get_capability_value(
+                            progOverrideTotalTimeCapabilityId
+                        )
+                        await self._set_capability_value(
+                            progOverrideTimeCapabilityId, totalTime
+                        )
+                else:
+                    await self._set_capability_value(progOverrideCapabilityId, "0")
+                    if progOverrideTimeCapabilityId:
+                        await self._set_capability_value(
+                            progOverrideTimeCapabilityId, "0"
+                        )
+
+        self._attr_preset_mode = preset_mode

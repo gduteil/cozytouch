@@ -53,7 +53,7 @@ def get_model_infos(modelId: int):
             4: HVACMode.HEAT,
         }
 
-    if modelId == 65:
+    elif modelId == 65:
         modelInfos["name"] = "Naema 2 Duo 25"
         modelInfos["type"] = CozytouchDeviceType.GAZ_BOILER
         modelInfos["HVACModes"] = {

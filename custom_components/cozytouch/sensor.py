@@ -239,6 +239,13 @@ class CozytouchSensor(SensorEntity):
             self._capability["deviceId"], capabilityId
         )
 
+    async def _set_capability_value(self, capabilityId: int, value: str):
+        await self._hub.set_capability_value(
+            self._capability["deviceId"],
+            capabilityId,
+            value,
+        )
+
     def get_value(self):
         """Retrieve value from hub."""
         value = self._get_capability_value(self._capability["capabilityId"])
@@ -436,12 +443,12 @@ class CozytouchTimeSensor(CozytouchSensor):
             strValue = ""
             days = 0
             remaining = int(value)
-            if remaining > (60 * 24):
+            if remaining >= (60 * 24):
                 days = int(remaining / (60 * 24))
                 remaining -= days * (60 * 24)
 
             hours = 0
-            if remaining > 60:
+            if remaining >= 60:
                 hours = int(remaining / 60)
                 remaining -= hours * 60
 

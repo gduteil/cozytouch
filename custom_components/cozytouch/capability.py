@@ -3,7 +3,7 @@
 from .model import CozytouchDeviceType
 
 
-def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
+def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: str):  # noqa: C901
     """Get capabilities for a device."""
     modelId = modelInfos["modelId"]
 
@@ -13,12 +13,16 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER:
             capability["name"] = "Central Heating"
             capability["icon"] = "mdi:radiator"
+            capability["progCapabilityId"] = 184
+            capability["progOverrideCapabilityId"] = 157
+            capability["progOverrideTotalTimeCapabilityId"] = 158
+            capability["progOverrideTimeCapabilityId"] = 159
         elif modelInfos["type"] == CozytouchDeviceType.AC:
             capability["name"] = "Air Conditioner"
             capability["icon"] = "mdi:air-conditioner"
             capability["targetCoolCapabilityId"] = 177
-            capability["lowestValueCapabilityId"] = 162
-            capability["highestValueCapabilityId"] = 163
+            capability["lowestCoolValueCapabilityId"] = 162
+            capability["highestCoolValueCapabilityId"] = 163
         else:
             capability["name"] = "Heat"
 
@@ -125,6 +129,15 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["type"] = "temperature"
         capability["category"] = "sensor"
 
+    elif capabilityId == 119:
+        # Outside temperature is invalid when value is -327.68
+        if float(capabilityValue) > -327.68:
+            capability["name"] = "Outside Temperature"
+            capability["type"] = "temperature"
+            capability["category"] = "sensor"
+        else:
+            return None
+
     elif capabilityId == 121:
         capability["name"] = "Version"
         capability["type"] = "string"
@@ -151,6 +164,18 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["category"] = "diag"
         capability["icon"] = "mdi:zigbee"
 
+    elif capabilityId == 158:
+        capability["name"] = "Override Total Time"
+        capability["type"] = "time_adjustment"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:clock-outline"
+
+    elif capabilityId == 159:
+        capability["name"] = "Override Remaining Time"
+        capability["type"] = "time"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:clock-outline"
+
     elif capabilityId in (160, 161):
         # Target temperature adjustment limits
         return {}
@@ -160,6 +185,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-boiler"
+
+    elif capability == 184:
+        capability["name"] = "Prog mode"
+        capability["type"] = "binary"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:clock-outline"
 
     elif capabilityId == 172:
         capability["name"] = "Away Mode Temperature"
@@ -173,12 +204,6 @@ def get_capability_infos(modelInfos: dict, capabilityId: int):  # noqa: C901
         capability["type"] = "signal"
         capability["category"] = "diag"
         capability["icon"] = "mdi:wifi"
-
-    elif capabilityId == 184:
-        capability["name"] = "Time Control"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:clock-outline"
 
     elif capabilityId == 219:
         capability["name"] = "Wifi SSID"

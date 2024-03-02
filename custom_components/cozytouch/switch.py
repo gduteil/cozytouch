@@ -89,16 +89,14 @@ class CozytouchSwitch(SwitchEntity, CozytouchSensor):
 
     async def async_turn_on(self):
         """Turn On method."""
-        await self._hub.set_capability_value(
-            self._capability["deviceId"],
+        await self._set_capability_value(
             self._capability["capabilityId"],
             self._value_on,
         )
 
     async def async_turn_off(self):
         """Turn Off method."""
-        await self._hub.set_capability_value(
-            self._capability["deviceId"],
+        await self._set_capability_value(
             self._capability["capabilityId"],
             self._value_off,
         )
