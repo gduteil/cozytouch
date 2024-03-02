@@ -136,7 +136,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability["type"] = "temperature"
             capability["category"] = "sensor"
         else:
-            return None
+            return {}
 
     elif capabilityId == 121:
         capability["name"] = "Version"
@@ -164,11 +164,17 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:zigbee"
 
+    elif capabilityId == 157:
+        # Prog override flag
+        return {}
+
     elif capabilityId == 158:
         capability["name"] = "Override Total Time"
-        capability["type"] = "time_adjustment"
+        capability["type"] = "hours_adjustment_number"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
+        capability["lowest_value"] = 1
+        capability["highest_value"] = 10
 
     elif capabilityId == 159:
         capability["name"] = "Override Remaining Time"
@@ -186,12 +192,6 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-boiler"
 
-    elif capability == 184:
-        capability["name"] = "Prog mode"
-        capability["type"] = "binary"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:clock-outline"
-
     elif capabilityId == 172:
         capability["name"] = "Away Mode Temperature"
         capability["type"] = "temperature_adjustment_number"
@@ -204,6 +204,82 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "signal"
         capability["category"] = "diag"
         capability["icon"] = "mdi:wifi"
+
+    elif capabilityId == 184:
+        capability["name"] = "Prog mode"
+        capability["type"] = "binary"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:clock-outline"
+
+    elif capabilityId == 196:
+        capability["name"] = "Prog 01 (Mon Z1)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 197:
+        capability["name"] = "Prog 02 (Tue Z1)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 198:
+        capability["name"] = "Prog 03 (Wed Z1)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 199:
+        capability["name"] = "Prog 04 (Thu Z1)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 200:
+        capability["name"] = "Prog 05 (Fri Z1)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 201:
+        capability["name"] = "Prog 06 (Sat Z1)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 202:
+        capability["name"] = "Prog 07 (Sun Z1)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 203:
+        capability["name"] = "Prog 08 (Mon Z2)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 204:
+        capability["name"] = "Prog 09 (Tue Z2)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 205:
+        capability["name"] = "Prog 10 (Wed Z2)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 206:
+        capability["name"] = "Prog 11 (Thu Z2)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 207:
+        capability["name"] = "Prog 12 (Fri Z2)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 208:
+        capability["name"] = "Prog 13 (Sat Z2)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 209:
+        capability["name"] = "Prog 14 (Sun Z2)"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
 
     elif capabilityId == 219:
         capability["name"] = "Wifi SSID"

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime
 from enum import IntEnum
+import json
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -174,6 +175,16 @@ async def async_setup_entry(
         elif capability["type"] == "time":
             sensors.append(
                 CozytouchTimeSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    hub=hub,
+                )
+            )
+
+        elif capability["type"] == "prog":
+            sensors.append(
+                CozytouchProgSensor(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
@@ -458,6 +469,50 @@ class CozytouchTimeSensor(CozytouchSensor):
                 strValue = str(days) + "d "
 
             strValue += "%02d:%02d" % (hours, minutes)
+            return strValue
+
+        return None
+
+
+class CozytouchProgSensor(CozytouchSensor):
+    """Class for Prog sensor."""
+
+    def __init__(
+        self,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+        hub: Hub,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize a time Sensor."""
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            hub=hub,
+            name=name,
+            icon=icon,
+        )
+
+    def get_value(self) -> str:
+        """Retrieve value from hub."""
+        value = self._get_capability_value(self._capability["capabilityId"])
+        if value is not None:
+            progList = json.loads(value)
+
+            strValue = ""
+            for prog in progList:
+                if len(prog) == 2 and (prog[0] != 0 or prog[1] != 0):
+                    hours = int(prog[0] / 60)
+                    minutes = int(prog[0] % 60)
+
+                    if strValue != "":
+                        strValue += " / "
+                    strValue += "%02d:%02d " % (hours, minutes)
+                    strValue += " %d°C" % (prog[1])
+
             return strValue
 
         return None

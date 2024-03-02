@@ -13,11 +13,11 @@ from .const import CONF_DUMPJSON, DOMAIN
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
-    Platform.NUMBER,
-    Platform.SWITCH,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
     Platform.TIME,
 ]
 

@@ -45,6 +45,15 @@ async def async_setup_entry(
                     hub=hub,
                 )
             )
+        elif capability["type"] == "hours_adjustment_number":
+            numbers.append(
+                HoursAdjustmentNumber(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    hub=hub,
+                )
+            )
 
     # Add the entities to HA
     if len(numbers) > 0:
@@ -124,4 +133,65 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         await self._set_capability_value(
             self._capability["capabilityId"],
             str(new_value),
+        )
+
+
+class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
+    """Hours adjustment number class."""
+
+    def __init__(
+        self,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+        hub: Hub,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize a Number entity."""
+        capabilityId = capability["capabilityId"]
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            attr_uniq_id=f"{DOMAIN}_{config_uniq_id}_number_{str(capabilityId)}",
+            hub=hub,
+            name=name,
+            icon=icon,
+        )
+        self._attr_device_class = None
+        self._native_value = 0
+        self._attr_native_step = 1
+        self._attr_native_min_value = capability.get("lowest_value", 0)
+        self._attr_native_max_value = capability.get("highest_value", 100)
+
+    @property
+    def native_value(self) -> float | None:
+        """Value of the sensor."""
+        return self._native_value
+
+    def update(self):
+        """Update the value of the sensor from the hub."""
+        # Get last seen value from controller
+        value = (
+            float(self._get_capability_value(self._capability["capabilityId"])) / 60.0
+        )
+
+        if value < self._attr_native_min_value:
+            value = self._attr_native_min_value
+        elif value > self._attr_native_max_value:
+            value = self._attr_native_max_value
+
+        self._native_value = value
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        new_value = value
+        if new_value < self._attr_native_min_value:
+            new_value = self._attr_native_min_value
+        elif new_value > self._attr_native_max_value:
+            new_value = self._attr_native_max_value
+
+        await self._set_capability_value(
+            self._capability["capabilityId"], str(new_value * 60)
         )

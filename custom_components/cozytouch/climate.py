@@ -267,6 +267,10 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                     str(temperature),
                 )
             else:
+                # If we are in "Prog mode", we need to switch to override before changing the temperature
+                if self._attr_preset_mode == PRESET_PROG:
+                    await self.async_set_preset_mode(PRESET_OVERRIDE)
+
                 await self._set_capability_value(
                     self._capability["targetCapabilityId"],
                     str(temperature),
@@ -351,8 +355,6 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                 )
 
                 if preset_mode == PRESET_OVERRIDE:
-                    await self._set_capability_value(progOverrideCapabilityId, "1")
-
                     if (
                         progOverrideTimeCapabilityId
                         and progOverrideTotalTimeCapabilityId
@@ -361,13 +363,16 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                             progOverrideTotalTimeCapabilityId
                         )
                         await self._set_capability_value(
-                            progOverrideTimeCapabilityId, totalTime
+                            progOverrideTotalTimeCapabilityId, totalTime
                         )
+
+                    await self._set_capability_value(progOverrideCapabilityId, "1")
+
                 else:
-                    await self._set_capability_value(progOverrideCapabilityId, "0")
                     if progOverrideTimeCapabilityId:
                         await self._set_capability_value(
                             progOverrideTimeCapabilityId, "0"
                         )
+                    await self._set_capability_value(progOverrideCapabilityId, "0")
 
         self._attr_preset_mode = preset_mode

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
+import time
 
 from aiohttp import ClientSession, ContentTypeError, FormData
 
@@ -12,6 +14,8 @@ from homeassistant.core import HomeAssistant
 from .capability import get_capability_infos
 from .const import COZYTOUCH_ATLANTIC_API, COZYTOUCH_CLIENT_ID
 from .model import get_model_infos
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Hub:
@@ -283,6 +287,7 @@ class Hub:
 
     async def set_capability_value(self, deviceId: int, capabilityId: int, value: str):
         """Set value for a device capability."""
+        _LOGGER.info("Set_capability_value : %d = %s" % (capabilityId, value))
         if self.online:
             for dev in self._devices:
                 if dev["deviceId"] == deviceId:
@@ -306,8 +311,61 @@ class Hub:
                                     },
                                 ) as response:
                                     if response.status == 201:
-                                        capability["value"] = value
+                                        # Check completion
+                                        executionId = await response.json()
+                                        completed = False
+                                        nbRetry = 0
+                                        while not completed:
+                                            async with self._session.get(
+                                                COZYTOUCH_ATLANTIC_API
+                                                + "/magellan/executions/"
+                                                + str(executionId),
+                                                headers={
+                                                    "Authorization": f"Bearer {self._access_token}",
+                                                    "Content-Type": "application/json",
+                                                },
+                                            ) as executionResponse:
+                                                try:
+                                                    execution_data = (
+                                                        await executionResponse.json()
+                                                    )
+                                                    execution_state = (
+                                                        execution_data.get(
+                                                            "state", False
+                                                        )
+                                                    )
+                                                    if execution_state == 1:
+                                                        _LOGGER.info(
+                                                            "Execution_state waiting execution"
+                                                        )
+                                                    if execution_state == 2:
+                                                        _LOGGER.info(
+                                                            "Execution_state in progress"
+                                                        )
+                                                    elif execution_state == 3:
+                                                        _LOGGER.info(
+                                                            "Execution_state completed"
+                                                        )
+                                                        completed = True
+                                                        break
+                                                    else:
+                                                        _LOGGER.info(
+                                                            "Execution_state error"
+                                                        )
+                                                        break
 
+                                                except ContentTypeError:
+                                                    self.online = False
+                                                    break
+
+                                            nbRetry += 1
+                                            if nbRetry > 3:
+                                                break
+
+                                            time.sleep(1)
+
+                                        if completed:
+                                            capability["value"] = value
                             break
 
 
