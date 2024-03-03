@@ -33,12 +33,5 @@
                 }
             }
         }
-    },
-    "entity": {
-        "sensor": {
-            "Thermostat Temperature": {
-                "name": "Test"
-            }
-        }
     }
 }
