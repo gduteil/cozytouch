@@ -1,7 +1,7 @@
 """Time for Atlantic Cozytouch integration."""
 from __future__ import annotations
 
-import datetime
+from datetime import datetime, time
 import logging
 import time
 
@@ -36,15 +36,15 @@ async def async_setup_entry(
 
     # Init selects
     times = []
-    capabilities = hub.get_capabilities_for_device(config_entry.data["deviceId"])
+    capabilities = hub.get_capabilities_for_device()
     for capability in capabilities:
         if capability["type"] == "time_adjustment":
             times.append(
                 CozytouchTime(
+                    coordinator=hub,
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
                 )
             )
 
@@ -58,19 +58,19 @@ class CozytouchTime(TimeEntity, CozytouchSensor):
 
     def __init__(
         self,
+        coordinator: Hub,
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
         """Initialize a Select entity."""
         super().__init__(
+            coordinator=coordinator,
             capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
-            hub=hub,
             name=name,
             icon=icon,
         )
@@ -78,7 +78,7 @@ class CozytouchTime(TimeEntity, CozytouchSensor):
     async def async_set_value(self, value: time) -> None:
         """Update the current value."""
         minutes = (value.hour * 60) + value.minute
-        await self._set_capability_value(
+        await self.coordinator.set_capability_value(
             self._capability["capabilityId"],
             str(minutes),
         )
@@ -86,7 +86,9 @@ class CozytouchTime(TimeEntity, CozytouchSensor):
     @property
     def native_value(self) -> time | None:
         """Retrieve value from hub."""
-        value = int(self._get_capability_value(self._capability["capabilityId"]))
+        value = int(
+            self.coordinator.get_capability_value(self._capability["capabilityId"])
+        )
         hours = 0
         minutes = value
         if value >= 60:

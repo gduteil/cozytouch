@@ -34,15 +34,15 @@ async def async_setup_entry(
 
     # Init selects
     selects = []
-    capabilities = hub.get_capabilities_for_device(config_entry.data["deviceId"])
+    capabilities = hub.get_capabilities_for_device()
     for capability in capabilities:
         if capability["type"] == "select":
             selects.append(
                 CozytouchSelect(
+                    coordinator=hub,
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
                 )
             )
 
@@ -56,23 +56,23 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
 
     def __init__(
         self,
+        coordinator: Hub,
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
         """Initialize a Select entity."""
         super().__init__(
+            coordinator=coordinator,
             capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
-            hub=hub,
             name=name,
             icon=icon,
         )
-        modelInfos = self._hub.get_model_infos(capability["deviceId"])
+        modelInfos = self.coordinator.get_model_infos()
         if "modelList" in capability and capability["modelList"] in modelInfos:
             self._list = modelInfos.get(capability["modelList"], None)
         else:
@@ -85,14 +85,17 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
         """Change the selected option."""
         for value in self._list:
             if self._list[value] == option:
-                await self._set_capability_value(
+                await self.coordinator.set_capability_value(
                     self._capability["capabilityId"],
                     str(value),
                 )
+                await self.coordinator.async_request_refresh()
                 break
 
     def get_value(self) -> str:
         """Retrieve value from hub."""
-        value = int(self._get_capability_value(self._capability["capabilityId"]))
+        value = int(
+            self.coordinator.get_capability_value(self._capability["capabilityId"])
+        )
         if value in self._list:
             self.current_option = self._list[value]

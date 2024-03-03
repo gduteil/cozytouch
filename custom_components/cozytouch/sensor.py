@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .hub import Hub
@@ -66,7 +67,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                 )
             )
         elif capability["type"] == "temperature":
@@ -75,7 +76,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                     device_class=SensorDeviceClass.TEMPERATURE,
                     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 )
@@ -86,7 +87,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                     device_class=SensorDeviceClass.PRESSURE,
                     native_unit_of_measurement=UnitOfPressure.BAR,
                 )
@@ -98,7 +99,7 @@ async def async_setup_entry(
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     attr_uniq_id=config_entry.entry_id + "_0",
-                    hub=hub,
+                    coordinator=hub,
                     name=capability["name_0"],
                     icon=capability.get("icon_0", None),
                     separator=",",
@@ -112,7 +113,7 @@ async def async_setup_entry(
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     attr_uniq_id=config_entry.entry_id + "_1",
-                    hub=hub,
+                    coordinator=hub,
                     name=capability["name_1"],
                     icon=capability.get("icon_1", None),
                     separator=",",
@@ -125,7 +126,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                 )
             )
         elif capability["type"] == "signal":
@@ -134,7 +135,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                     device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                     native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
                 )
@@ -145,7 +146,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                     device_class=SensorDeviceClass.POWER,
                     native_unit_of_measurement=UnitOfPower.WATT,
                 )
@@ -156,7 +157,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                     device_class=SensorDeviceClass.VOLUME,
                     native_unit_of_measurement=UnitOfVolume.LITERS,
                 )
@@ -167,7 +168,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                     device_class=SensorDeviceClass.BATTERY,
                     native_unit_of_measurement=PERCENTAGE,
                 )
@@ -178,7 +179,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                 )
             )
 
@@ -188,7 +189,7 @@ async def async_setup_entry(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
+                    coordinator=hub,
                 )
             )
 
@@ -197,30 +198,31 @@ async def async_setup_entry(
         async_add_entities(sensors, True)
 
 
-class CozytouchSensor(SensorEntity):
+class CozytouchSensor(SensorEntity, CoordinatorEntity):
     """Common class for sensors."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = True
+    _attr_should_poll = False
 
     def __init__(
         self,
+        coordinator: Hub,
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
         attr_uniq_id: str | None = None,
         name: str | None = None,
+        translation_key: str | None = None,
         icon: str | None = None,
     ) -> None:
         """Initialize a sensor."""
+        super().__init__(coordinator)
+
         self._capability = capability
         self._config_title = config_title
         self._config_uniq_id = config_uniq_id
-        self._hub = hub
         self._last_value: str | None = None
         self._value_type: CozytouchCapabilityVariableType | None = None
-
         if attr_uniq_id:
             self._attr_unique_id = attr_uniq_id
         else:
@@ -231,6 +233,11 @@ class CozytouchSensor(SensorEntity):
             self._attr_name = name
         else:
             self._attr_name = self._capability["name"]
+
+        if translation_key:
+            self._attr_translation_key = translation_key
+        else:
+            self._attr_translation_key = self._attr_name
 
         if "category" in self._capability:
             if self._capability["category"] == "diag":
@@ -245,21 +252,9 @@ class CozytouchSensor(SensorEntity):
         elif "icon" in self._capability:
             self._attr_icon = self._capability["icon"]
 
-    def _get_capability_value(self, capabilityId: int):
-        return self._hub.get_capability_value(
-            self._capability["deviceId"], capabilityId
-        )
-
-    async def _set_capability_value(self, capabilityId: int, value: str):
-        await self._hub.set_capability_value(
-            self._capability["deviceId"],
-            capabilityId,
-            value,
-        )
-
     def get_value(self):
         """Retrieve value from hub."""
-        value = self._get_capability_value(self._capability["capabilityId"])
+        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
         if self._value_type == CozytouchCapabilityVariableType.BOOL:
             return bool(value)
         if self._value_type == CozytouchCapabilityVariableType.FLOAT:
@@ -282,15 +277,16 @@ class CozytouchSensor(SensorEntity):
         return self._last_value
 
     @callback
-    def update(self):
+    def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor from the hub."""
         # Get last seen value from controller
         value = self.get_value()
+        # _LOGGER.info("%s: update %s (%s)", self._config_title, self._attr_name, value)
 
         # Handle entity availability
         if value is None:
             if self._attr_available:
-                if not self._hub.online:
+                if not self.coordinator.online:
                     _LOGGER.debug(
                         "%s: marking the %s sensor as unavailable: Cozytouch connection lost",
                         self._config_title,
@@ -307,6 +303,7 @@ class CozytouchSensor(SensorEntity):
 
         # Save value
         self._last_value = value
+        self.async_write_ha_state()
 
 
 class CozytouchTimestampSensor(CozytouchSensor):
@@ -317,7 +314,7 @@ class CozytouchTimestampSensor(CozytouchSensor):
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
+        coordinator: Hub,
         name: str | None = None,
         icon: str | None = None,
         separator: str | None = None,
@@ -330,7 +327,7 @@ class CozytouchTimestampSensor(CozytouchSensor):
             config_title=config_title,
             config_uniq_id=config_uniq_id,
             attr_uniq_id=attr_uniq_id,
-            hub=hub,
+            coordinator=coordinator,
             name=name,
             icon=icon,
         )
@@ -340,7 +337,7 @@ class CozytouchTimestampSensor(CozytouchSensor):
 
     def get_value(self) -> str:
         """Retrieve value from hub."""
-        value = self._get_capability_value(self._capability["capabilityId"])
+        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
         if value is not None:
             value = value.translate(str.maketrans("", "", "[]"))
             timestamps = value.split(self._separator, 2)
@@ -363,7 +360,7 @@ class CozytouchBinarySensor(BinarySensorEntity, CozytouchSensor):
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
+        coordinator: Hub,
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
@@ -372,7 +369,7 @@ class CozytouchBinarySensor(BinarySensorEntity, CozytouchSensor):
             capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
-            hub=hub,
+            coordinator=coordinator,
             name=name,
             icon=icon,
         )
@@ -396,7 +393,7 @@ class CozytouchUnitSensor(CozytouchSensor):
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
+        coordinator: Hub,
         device_class: SensorDeviceClass,
         native_unit_of_measurement,
         suggested_precision: int | None = None,
@@ -408,7 +405,7 @@ class CozytouchUnitSensor(CozytouchSensor):
             capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
-            hub=hub,
+            coordinator=coordinator,
             name=name,
             icon=icon,
         )
@@ -421,7 +418,8 @@ class CozytouchUnitSensor(CozytouchSensor):
     @property
     def native_value(self) -> float | None:
         """Value of the sensor."""
-        return float(self._last_value)
+        if self._last_value:
+            return float(self._last_value)
 
 
 class CozytouchTimeSensor(CozytouchSensor):
@@ -432,7 +430,7 @@ class CozytouchTimeSensor(CozytouchSensor):
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
+        coordinator: Hub,
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
@@ -441,7 +439,7 @@ class CozytouchTimeSensor(CozytouchSensor):
             capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
-            hub=hub,
+            coordinator=coordinator,
             name=name,
             icon=icon,
         )
@@ -449,7 +447,7 @@ class CozytouchTimeSensor(CozytouchSensor):
 
     def get_value(self) -> str:
         """Retrieve value from hub."""
-        value = self._get_capability_value(self._capability["capabilityId"])
+        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
         if value is not None:
             strValue = ""
             days = 0
@@ -482,7 +480,7 @@ class CozytouchProgSensor(CozytouchSensor):
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
+        coordinator: Hub,
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
@@ -491,14 +489,14 @@ class CozytouchProgSensor(CozytouchSensor):
             capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
-            hub=hub,
+            coordinator=coordinator,
             name=name,
             icon=icon,
         )
 
     def get_value(self) -> str:
         """Retrieve value from hub."""
-        value = self._get_capability_value(self._capability["capabilityId"])
+        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
         if value is not None:
             progList = json.loads(value)
 

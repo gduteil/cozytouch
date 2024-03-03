@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from datetime import timedelta
 import json
 import logging
 import time
@@ -10,6 +11,7 @@ from aiohttp import ClientSession, ContentTypeError, FormData
 
 from homeassistant import exceptions
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .capability import get_capability_infos
 from .const import COZYTOUCH_ATLANTIC_API, COZYTOUCH_CLIENT_ID
@@ -18,18 +20,31 @@ from .model import get_model_infos
 _LOGGER = logging.getLogger(__name__)
 
 
-class Hub:
+class Hub(DataUpdateCoordinator):
     """Atlantic Cozytouch Hub."""
 
     manufacturer = "Atlantic Group"
 
-    def __init__(self, hass: HomeAssistant, username: str, password: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        username: str,
+        password: str,
+        deviceId: int | None = None,
+    ) -> None:
         """Init hub."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Cozytouch_" + str(deviceId),
+            update_interval=timedelta(seconds=10),
+        )
         self._session = ClientSession()
         self._host = "none"
         self._hass = hass
-        self.username = username
+        self._username = username
         self._password = password
+        self._deviceId = deviceId
         self._access_token = ""
         self._id = "cozytouch." + username.lower()
         self._create_unknown = False
@@ -43,7 +58,7 @@ class Hub:
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_calypso.json",
+                self._hass.config.config_dir + "/cozytouch_takao.json",
                 encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()
@@ -69,7 +84,7 @@ class Hub:
                         {
                             "grant_type": "password",
                             "scope": "openid",
-                            "username": "GA-PRIVATEPERSON/" + self.username,
+                            "username": "GA-PRIVATEPERSON/" + self._username,
                             "password": self._password,
                         }
                     ),
@@ -173,8 +188,8 @@ class Hub:
         """Set option from config flow to create entities for unknown capabilities."""
         self._dump_json = dump_json
 
-    async def update(self, deviceId: int) -> None:
-        """Update values from cloud."""
+    async def _async_update_data(self):
+        _LOGGER.debug("_async_update_data %d", self._deviceId)
         if self._test_load:
             return
 
@@ -186,13 +201,13 @@ class Hub:
             async with self._session.get(
                 COZYTOUCH_ATLANTIC_API
                 + "/magellan/capabilities/?deviceId="
-                + str(deviceId),
+                + str(self._deviceId),
                 headers=headers,
             ) as response:
                 try:
                     json_data = await response.json()
                     for dev in self._devices:
-                        if dev["deviceId"] == deviceId:
+                        if dev["deviceId"] == self._deviceId:
                             dev["capabilities"] = copy.deepcopy(json_data)
                             break
                 except ContentTypeError:
@@ -214,32 +229,34 @@ class Hub:
 
         return devs
 
-    def get_model_id(self, deviceId: int) -> int:
-        """Get model ID."""
-        for dev in self._devices:
-            if dev["deviceId"] == deviceId:
-                return dev["modelId"]
+    def get_model_infos(self, deviceId: int | None = None) -> str:
+        """Get model infos."""
+        if not deviceId:
+            deviceId = self._deviceId
 
-        return -1
-
-    def get_model_infos(self, deviceId: int) -> str:
-        """Get model name."""
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
                 return get_model_infos(dev["modelId"])
 
         return get_model_infos(-1)
 
-    def get_serial_number(self, deviceId: int) -> str:
+    def get_serial_number(self, deviceId: int | None = None) -> str:
         """Get serial number."""
+        if not deviceId:
+            deviceId = self._deviceId
+
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
                 return dev["gatewaySerialNumber"]
 
         return "Unknown"
 
-    def get_capabilities_for_device(self, deviceId: int):
+    def get_capabilities_for_device(self, deviceId: int | None = None):
         """Get capabilities for a device."""
+
+        if not deviceId:
+            deviceId = self._deviceId
+
         capabilities = []
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
@@ -272,11 +289,11 @@ class Hub:
         """Get capability infos."""
         return get_capability_infos(modelId, capabilityId, capabilityValue)
 
-    def get_capability_value(self, deviceId: int, capabilityId: int):
+    def get_capability_value(self, capabilityId: int):
         """Get value for a device capability."""
         try:
             for dev in self._devices:
-                if dev["deviceId"] == deviceId:
+                if dev["deviceId"] == self._deviceId:
                     for capability in dev["capabilities"]:
                         if capabilityId == capability["capabilityId"]:
                             return capability["value"]
@@ -285,12 +302,14 @@ class Hub:
 
         return None
 
-    async def set_capability_value(self, deviceId: int, capabilityId: int, value: str):
+    async def set_capability_value(self, capabilityId: int, value: str):
         """Set value for a device capability."""
-        _LOGGER.info("Set_capability_value : %d = %s" % (capabilityId, value))
+        _LOGGER.debug(
+            "Set_capability_value for %d : %d = %s", self._deviceId, capabilityId, value
+        )
         if self.online:
             for dev in self._devices:
-                if dev["deviceId"] == deviceId:
+                if dev["deviceId"] == self._deviceId:
                     for capability in dev["capabilities"]:
                         if capabilityId == capability["capabilityId"]:
                             if self._test_load:
@@ -302,7 +321,7 @@ class Hub:
                                     + "/magellan/executions/writecapability",
                                     json={
                                         "capabilityId": capabilityId,
-                                        "deviceId": deviceId,
+                                        "deviceId": self._deviceId,
                                         "value": value,
                                     },
                                     headers={

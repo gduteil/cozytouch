@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -34,24 +34,24 @@ async def async_setup_entry(
 
     # Init number entities
     numbers = []
-    capabilities = hub.get_capabilities_for_device(config_entry.data["deviceId"])
+    capabilities = hub.get_capabilities_for_device()
     for capability in capabilities:
         if capability["type"] == "temperature_adjustment_number":
             numbers.append(
                 TemperatureAdjustmentNumber(
+                    coordinator=hub,
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
                 )
             )
         elif capability["type"] == "hours_adjustment_number":
             numbers.append(
                 HoursAdjustmentNumber(
+                    coordinator=hub,
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
                 )
             )
 
@@ -65,21 +65,21 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
 
     def __init__(
         self,
+        coordinator: Hub,
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
         """Initialize a Number entity."""
         capabilityId = capability["capabilityId"]
         super().__init__(
+            coordinator=coordinator,
             capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
             attr_uniq_id=f"{DOMAIN}_{config_uniq_id}_number_{str(capabilityId)}",
-            hub=hub,
             name=name,
             icon=icon,
         )
@@ -95,20 +95,23 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         """Value of the sensor."""
         return self._native_value
 
-    def update(self):
+    @callback
+    def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor from the hub."""
         # Get last seen value from controller
-        value = float(self._get_capability_value(self._capability["capabilityId"]))
+        value = float(
+            self.coordinator.get_capability_value(self._capability["capabilityId"])
+        )
 
         if "lowestValueCapabilityId" in self._capability:
-            lowestValue = self._get_capability_value(
+            lowestValue = self.coordinator.get_capability_value(
                 self._capability["lowestValueCapabilityId"]
             )
             if lowestValue:
                 self._attr_native_min_value = float(lowestValue)
 
         if "highestValueCapabilityId" in self._capability:
-            highestValue = self._get_capability_value(
+            highestValue = self.coordinator.get_capability_value(
                 self._capability["highestValueCapabilityId"]
             )
             if highestValue:
@@ -121,6 +124,7 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
 
         # Save value
         self._native_value = value
+        self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -130,7 +134,7 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         elif new_value > self._attr_native_max_value:
             new_value = self._attr_native_max_value
 
-        await self._set_capability_value(
+        await self._self.coordinator.set_capability_value(
             self._capability["capabilityId"],
             str(new_value),
         )
@@ -141,10 +145,10 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
 
     def __init__(
         self,
+        coordinator: Hub,
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
@@ -155,7 +159,7 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
             config_title=config_title,
             config_uniq_id=config_uniq_id,
             attr_uniq_id=f"{DOMAIN}_{config_uniq_id}_number_{str(capabilityId)}",
-            hub=hub,
+            coordinator=coordinator,
             name=name,
             icon=icon,
         )
@@ -170,11 +174,15 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
         """Value of the sensor."""
         return self._native_value
 
-    def update(self):
+    @callback
+    def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor from the hub."""
         # Get last seen value from controller
         value = (
-            float(self._get_capability_value(self._capability["capabilityId"])) / 60.0
+            float(
+                self.coordinator.get_capability_value(self._capability["capabilityId"])
+            )
+            / 60.0
         )
 
         if value < self._attr_native_min_value:
@@ -183,6 +191,7 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
             value = self._attr_native_max_value
 
         self._native_value = value
+        self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -192,6 +201,8 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
         elif new_value > self._attr_native_max_value:
             new_value = self._attr_native_max_value
 
-        await self._set_capability_value(
+        await self._self.coordinator.set_capability_value(
             self._capability["capabilityId"], str(new_value * 60)
         )
+
+        await self.coordinator.async_request_refresh()

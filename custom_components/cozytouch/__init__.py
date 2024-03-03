@@ -1,6 +1,8 @@
 """The Atlantic Cozytouch integration."""
 from __future__ import annotations
 
+from datetime import timedelta
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,10 +28,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SCAN_INTERVAL = timedelta(seconds=10)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Atlantic Cozytouch from a config entry."""
-    theHub = hub.Hub(hass, entry.data["username"], entry.data["password"])
+    theHub = hub.Hub(
+        hass, entry.data["username"], entry.data["password"], entry.data["deviceId"]
+    )
 
     if "dump_json" in entry.data:
         theHub.set_dump_json(entry.data["dump_json"])
@@ -39,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = theHub
 
     theHub.set_create_entities_for_unknown_entities(entry.data["create_unknown"])
-
+    await theHub.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

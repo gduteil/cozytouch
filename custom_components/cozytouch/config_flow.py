@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
@@ -50,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 hub = await validate_input(self.hass, user_input)
                 devices = hub.devices()
-                hub.close()
+                await hub.close()
 
                 new_devices = []
                 current_entries = self._async_current_entries()
@@ -129,15 +129,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_abort()
-
-
-#    @staticmethod
-#    @callback
-#    def async_get_options_flow(
-#        config_entry: config_entries.ConfigEntry,
-#    ) -> config_entries.OptionsFlow:
-#        """Create the options flow."""
-#        return OptionsFlowHandler(config_entry)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

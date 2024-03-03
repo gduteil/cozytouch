@@ -1,36 +1,44 @@
 {
+    "title": "Cozytouch",
     "config": {
-      "step": {
-        "user": {
-          "data": {
-            "username": "Username",
-            "password": "Password"
-          }
+        "step": {
+            "user": {
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                }
+            },
+            "select_device": {
+                "data": {
+                    "create_unknown": "Create entities for unknown capabilities",
+                    "dump_json": "Dump a JSON file with received data"
+                }
+            }
         },
-        "select_device": {
-          "data": {
-            "create_unknown": "Create entities for unknown capabilities",
-            "dump_json": "Dump a JSON file with received data"
-          }
+        "error": {
+            "cannot_connect": "Cannot connect to Atlantic Cozytouch servers",
+            "invalid_auth": "Invalid Atlantic Cozytouch authentication",
+            "unknown": "Unknown error"
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
         }
-      },
-      "error": {
-        "cannot_connect": "Cannot connect to Atlantic Cozytouch servers",
-        "invalid_auth": "Invalid Atlantic Cozytouch authentication",
-        "unknown": "Unknown error"
-      },
-      "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-      }
     },
     "options": {
-      "step": {
-        "init": {
-          "data": {
-            "create_unknown": "Create entities for unknown capabilities",
-            "dump_json": "Dump a JSON file with received data"
-          }
+        "step": {
+            "init": {
+                "data": {
+                    "create_unknown": "Create entities for unknown capabilities",
+                    "dump_json": "Dump a JSON file with received data"
+                }
+            }
         }
-      }
+    },
+    "entity": {
+        "sensor": {
+            "Thermostat Temperature": {
+                "name": "Test"
+            }
+        }
     }
 }

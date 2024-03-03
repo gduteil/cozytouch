@@ -34,15 +34,15 @@ async def async_setup_entry(
 
     # Init switches
     switches = []
-    capabilities = hub.get_capabilities_for_device(config_entry.data["deviceId"])
+    capabilities = hub.get_capabilities_for_device()
     for capability in capabilities:
         if capability["type"] == "switch":
             switches.append(
                 CozytouchSwitch(
+                    coordinator=hub,
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
-                    hub=hub,
                 )
             )
 
@@ -56,20 +56,20 @@ class CozytouchSwitch(SwitchEntity, CozytouchSensor):
 
     def __init__(
         self,
+        coordinator: Hub,
         capability,
         config_title: str,
         config_uniq_id: str,
-        hub: Hub,
         name: str | None = None,
     ) -> None:
         """Initialize a Switch entity."""
         capabilityId = capability["capabilityId"]
         super().__init__(
+            coordinator=coordinator,
             capability=capability,
             config_title=config_title,
             config_uniq_id=config_uniq_id,
             attr_uniq_id=f"{DOMAIN}_{config_uniq_id}_switch_{str(capabilityId)}",
-            hub=hub,
             name=name,
         )
         self._state = False
@@ -82,24 +82,26 @@ class CozytouchSwitch(SwitchEntity, CozytouchSensor):
     def is_on(self) -> bool:
         """Return the state."""
         self._state = (
-            self._get_capability_value(self._capability["capabilityId"])
+            self.coordinator.get_capability_value(self._capability["capabilityId"])
             != self._value_off
         )
         return self._state
 
     async def async_turn_on(self):
         """Turn On method."""
-        await self._set_capability_value(
+        await self.coordinator.set_capability_value(
             self._capability["capabilityId"],
             self._value_on,
         )
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self):
         """Turn Off method."""
-        await self._set_capability_value(
+        await self.coordinator.set_capability_value(
             self._capability["capabilityId"],
             self._value_off,
         )
+        await self.coordinator.async_request_refresh()
 
     async def async_toggle(self) -> None:
         """Toggle the power on the zone."""
