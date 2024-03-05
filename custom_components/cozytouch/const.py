@@ -1,5 +1,7 @@
 """Constants for the Atlantic Cozytouch integration."""
 
+from enum import IntEnum
+
 DOMAIN = "cozytouch"
 
 COZYTOUCH_ATLANTIC_API = "https://apis.groupe-atlantic.com"
@@ -8,3 +10,13 @@ COZYTOUCH_CLIENT_ID = (
 )
 
 CONF_DUMPJSON = "dumpJSON"
+
+
+class CozytouchCapabilityVariableType(IntEnum):
+    """Capabilities types."""
+
+    STRING = 0
+    BOOL = 1
+    FLOAT = 2
+    INT = 3
+    ARRAY = 4

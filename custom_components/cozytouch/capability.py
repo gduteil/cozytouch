@@ -1,5 +1,6 @@
 """Atlantic Cozytouch capabilility mapping."""
 
+from .const import CozytouchCapabilityVariableType
 from .model import CozytouchDeviceType
 
 
@@ -109,6 +110,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:gauge"
 
+    elif capabilityId in (101, 102, 103, 104):
+        capability["name"] = "Capability_" + str(capabilityId)
+        capability["type"] = "string"
+        capability["value_type"] = CozytouchCapabilityVariableType.ARRAY
+        capability["category"] = "sensor"
+
     elif capabilityId == 109:
         capability["name"] = "Boiler Water Temperature"
         capability["type"] = "temperature"
@@ -120,9 +127,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
 
     elif capabilityId == 116:
-        capability["name"] = "Exhaust Temperature"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
+        if modelInfos.get("exhaustTemperatureAvailable", True):
+            capability["name"] = "Exhaust Temperature"
+            capability["type"] = "temperature"
+            capability["category"] = "sensor"
+        else:
+            return {}
 
     elif capabilityId == 117:
         capability["name"] = "Thermostat Temperature"
@@ -159,10 +169,16 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:fire"
 
     elif capabilityId == 154:
-        capability["name"] = "Zone Zigbee"
+        capability["name"] = "Zone 1"
         capability["type"] = "string"
         capability["category"] = "diag"
-        capability["icon"] = "mdi:zigbee"
+        capability["icon"] = "mdi:home-floor-1"
+
+    elif capabilityId == 155:
+        capability["name"] = "Zone 2"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:home-floor-2"
 
     elif capabilityId == 157:
         # Prog override flag

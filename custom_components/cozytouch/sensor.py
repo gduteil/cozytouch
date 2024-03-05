@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime
-from enum import IntEnum
 import json
 import logging
 
@@ -22,19 +21,10 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, CozytouchCapabilityVariableType
 from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class CozytouchCapabilityVariableType(IntEnum):
-    """Capabilities types."""
-
-    STRING = 0
-    BOOL = 1
-    FLOAT = 2
-    INT = 3
 
 
 # config flow setup
@@ -214,6 +204,7 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
         name: str | None = None,
         translation_key: str | None = None,
         icon: str | None = None,
+        value_type: CozytouchCapabilityVariableType | None = None,
     ) -> None:
         """Initialize a sensor."""
         super().__init__(coordinator)
@@ -222,7 +213,14 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
         self._config_title = config_title
         self._config_uniq_id = config_uniq_id
         self._last_value: str | None = None
-        self._value_type: CozytouchCapabilityVariableType | None = None
+
+        if value_type:
+            self._value_type = value_type
+        elif "value_type" in self._capability:
+            self._value_type = self._capability["value_type"]
+        else:
+            self._value_type = None
+
         if attr_uniq_id:
             self._attr_unique_id = attr_uniq_id
         else:
@@ -254,13 +252,21 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
 
     def get_value(self):
         """Retrieve value from hub."""
-        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
-        if self._value_type == CozytouchCapabilityVariableType.BOOL:
-            return bool(value)
-        if self._value_type == CozytouchCapabilityVariableType.FLOAT:
-            return float(value)
-        if self._value_type == CozytouchCapabilityVariableType.INT:
-            return int(value)
+        if self._value_type == CozytouchCapabilityVariableType.ARRAY:
+            return "array"
+
+        try:
+            value = self.coordinator.get_capability_value(
+                self._capability["capabilityId"]
+            )
+            if self._value_type == CozytouchCapabilityVariableType.BOOL:
+                return bool(value)
+            if self._value_type == CozytouchCapabilityVariableType.FLOAT:
+                return float(value)
+            if self._value_type == CozytouchCapabilityVariableType.INT:
+                return int(value)
+        except ValueError:
+            return value
 
         return value
 
@@ -330,8 +336,8 @@ class CozytouchTimestampSensor(CozytouchSensor):
             coordinator=coordinator,
             name=name,
             icon=icon,
+            value_type=CozytouchCapabilityVariableType.STRING,
         )
-        self._value_type = CozytouchCapabilityVariableType.STRING
         self._separator = separator
         self._timestamp_index = timestamp_index
 
@@ -408,8 +414,8 @@ class CozytouchUnitSensor(CozytouchSensor):
             coordinator=coordinator,
             name=name,
             icon=icon,
+            value_type=CozytouchCapabilityVariableType.FLOAT,
         )
-        self._value_type = CozytouchCapabilityVariableType.FLOAT
         self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._attr_suggested_display_precision = suggested_precision
         if device_class:
@@ -419,7 +425,10 @@ class CozytouchUnitSensor(CozytouchSensor):
     def native_value(self) -> float | None:
         """Value of the sensor."""
         if self._last_value:
-            return float(self._last_value)
+            try:
+                return float(self._last_value)
+            except ValueError:
+                return 0.0
 
 
 class CozytouchTimeSensor(CozytouchSensor):

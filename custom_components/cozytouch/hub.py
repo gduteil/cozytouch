@@ -58,7 +58,7 @@ class Hub(DataUpdateCoordinator):
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_takao.json",
+                self._hass.config.config_dir + "/cozytouch_alfea.json",
                 encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()
@@ -291,14 +291,13 @@ class Hub(DataUpdateCoordinator):
 
     def get_capability_value(self, capabilityId: int):
         """Get value for a device capability."""
-        try:
-            for dev in self._devices:
-                if dev["deviceId"] == self._deviceId:
-                    for capability in dev["capabilities"]:
-                        if capabilityId == capability["capabilityId"]:
-                            return capability["value"]
-        except:
-            return None
+        for dev in self._devices:
+            if dev["deviceId"] == self._deviceId:
+                for capability in dev["capabilities"]:
+                    if capabilityId == capability["capabilityId"]:
+                        return capability["value"]
+
+                return "0"
 
         return None
 

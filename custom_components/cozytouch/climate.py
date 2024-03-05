@@ -302,7 +302,10 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                 )
             else:
                 # If we are in "Prog mode", we need to switch to override before changing the temperature
-                if self._attr_preset_mode == PRESET_PROG:
+                if (
+                    hasattr(self, "_attr_preset_mode")
+                    and self._attr_preset_mode == PRESET_PROG
+                ):
                     await self.async_set_preset_mode(PRESET_OVERRIDE)
 
                 await self.coordinator.set_capability_value(

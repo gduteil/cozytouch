@@ -8,6 +8,7 @@ Mandatory :
 
 Optional :
     * currentTemperatureAvailable : enable current temperature availability (default : True)
+    * exhaustTemperatureAvailable : enable exhaust temperature availability (default : True)
     * fanModes : list of value/mode pairs
     * swingModes : list of value/mode pairs
     * quietModeAvailable : enable quiet mode availability (default : False)
@@ -68,6 +69,8 @@ def get_model_infos(modelId: int):
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
         }
+
+        modelInfos["exhaustTemperatureAvailable"] = False
 
     elif modelId == 235:
         modelInfos["name"] = "Thermostat Navilink Connect"

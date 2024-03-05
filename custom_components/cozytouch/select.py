@@ -94,8 +94,11 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
 
     def get_value(self) -> str:
         """Retrieve value from hub."""
-        value = int(
-            self.coordinator.get_capability_value(self._capability["capabilityId"])
-        )
-        if value in self._list:
-            self.current_option = self._list[value]
+        try:
+            value = int(
+                self.coordinator.get_capability_value(self._capability["capabilityId"])
+            )
+            if value in self._list:
+                self.current_option = self._list[value]
+        except ValueError:
+            return
