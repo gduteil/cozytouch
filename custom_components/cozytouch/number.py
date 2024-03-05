@@ -201,8 +201,8 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
         elif new_value > self._attr_native_max_value:
             new_value = self._attr_native_max_value
 
-        await self._self.coordinator.set_capability_value(
-            self._capability["capabilityId"], str(new_value * 60)
+        await self.coordinator.set_capability_value(
+            self._capability["capabilityId"], str(int(new_value * 60))
         )
 
         await self.coordinator.async_request_refresh()
