@@ -8,10 +8,13 @@ Mandatory :
 
 Optional :
     * currentTemperatureAvailable : enable current temperature availability (default : True)
+    * currentTemperatureAvailableZ1 : enable current temperature availability for Z1 (used for HEAT_PUMP, default : True)
+    * currentTemperatureAvailableZ2 : enable current temperature availability for Z2 (used for HEAT_PUMP, default : True)
     * exhaustTemperatureAvailable : enable exhaust temperature availability (default : True)
     * fanModes : list of value/mode pairs
     * swingModes : list of value/mode pairs
     * quietModeAvailable : enable quiet mode availability (default : False)
+    * supportTariff : enable sensors for DHW and heating tariff if option is active (default : False)
 
 """  # noqa: D205
 
@@ -49,6 +52,7 @@ def get_model_infos(modelId: int):
     if modelId == 56:
         modelInfos["name"] = "Naema 2 Micro 25"
         modelInfos["type"] = CozytouchDeviceType.GAZ_BOILER
+        modelInfos["supportTariff"] = True
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
@@ -57,6 +61,7 @@ def get_model_infos(modelId: int):
     elif modelId == 65:
         modelInfos["name"] = "Naema 2 Duo 25"
         modelInfos["type"] = CozytouchDeviceType.GAZ_BOILER
+        modelInfos["supportTariff"] = True
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
@@ -65,6 +70,9 @@ def get_model_infos(modelId: int):
     elif modelId == 76:
         modelInfos["name"] = "Alfea Extensa Duo AI UE"
         modelInfos["type"] = CozytouchDeviceType.HEAT_PUMP
+        modelInfos["supportTariff"] = True
+        modelInfos["currentTemperatureAvailableZ1"] = False
+        modelInfos["currentTemperatureAvailableZ2"] = True
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
@@ -94,7 +102,7 @@ def get_model_infos(modelId: int):
             modelInfos["name"] = "Takao M3 2kW"
 
         modelInfos["type"] = CozytouchDeviceType.AC
-
+        modelInfos["supportTariff"] = True
         modelInfos["currentTemperatureAvailable"] = False
         modelInfos["quietModeAvailable"] = True
 
@@ -144,6 +152,7 @@ def get_model_infos(modelId: int):
     elif modelId == 1376:
         modelInfos["name"] = "Calypso Split 270L"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["supportTariff"] = True
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,

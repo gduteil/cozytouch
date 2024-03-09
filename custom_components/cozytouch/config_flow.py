@@ -93,6 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                     ],
                                 )
                             ),
+                            vol.Required("tariff", default=False): bool,
                             vol.Required("create_unknown", default=False): bool,
                             vol.Required("dump_json", default=False): bool,
                         }
@@ -121,6 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the device selection step."""
         if device_input is not None and "device" in device_input:
             device_data = ast.literal_eval(device_input["device"])
+            device_data["tariff"] = device_input["tariff"]
             device_data["create_unknown"] = device_input["create_unknown"]
             device_data["dump_json"] = device_input["dump_json"]
             return self.async_create_entry(

@@ -10,7 +10,15 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     capability = {"modelId": modelId}
 
-    if capabilityId == 7:
+    if capabilityId in (7, 8):
+        # Default Ids
+        capability["targetCapabilityId"] = 40
+        capability["lowestValueCapabilityId"] = 160
+        capability["highestValueCapabilityId"] = 161
+
+        if modelInfos.get("currentTemperatureAvailable", True):
+            capability["currentValueCapabilityId"] = 117
+
         if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER:
             capability["name"] = "Central Heating"
             capability["icon"] = "mdi:radiator"
@@ -24,17 +32,30 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability["targetCoolCapabilityId"] = 177
             capability["lowestCoolValueCapabilityId"] = 162
             capability["highestCoolValueCapabilityId"] = 163
+        elif modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
+            if capabilityId == 7:
+                capability["name"] = "Heat Pump Z1"
+                capability["targetCapabilityId"] = 17
+                if modelInfos.get("currentTemperatureAvailableZ1", True):
+                    capability["currentValueCapabilityId"] = 119
+                else:
+                    capability["currentValueCapabilityId"] = None
+            else:
+                capability["name"] = "Heat Pump Z2"
+                capability["targetCapabilityId"] = 18
+                if modelInfos.get("currentTemperatureAvailableZ2", True):
+                    capability["currentValueCapabilityId"] = 118
+                else:
+                    capability["currentValueCapabilityId"] = None
+
+            capability["lowestValueCapabilityId"] = 172
+            capability["highestValueCapabilityId"] = 171
+            capability["icon"] = "mdi:heat-pump"
         else:
             capability["name"] = "Heat"
 
         capability["type"] = "climate"
         capability["category"] = "sensor"
-        capability["targetCapabilityId"] = 40
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
-
-        if modelInfos.get("currentTemperatureAvailable", True):
-            capability["currentValueCapabilityId"] = 117
 
         if "fanModes" in modelInfos:
             capability["fanModeCapabilityId"] = 100801
@@ -180,9 +201,9 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:home-floor-2"
 
-    elif capabilityId == 157:
-        # Prog override flag
-        return {}
+    # elif capabilityId == 157:
+    #    # Prog override flag
+    #    return {}
 
     elif capabilityId == 158:
         capability["name"] = "Override Total Time"
@@ -198,15 +219,19 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
 
-    elif capabilityId in (160, 161):
-        # Target temperature adjustment limits
-        return {}
+    # elif capabilityId in (160, 161):
+    #    # Target temperature adjustment limits
+    #    return {}
 
     elif capabilityId == 165:
         capability["name"] = "Boost Mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-boiler"
+
+        if modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
+            capability["value_off"] = "false"
+            capability["value_on"] = "true"
 
     elif capabilityId == 172:
         capability["name"] = "Away Mode Temperature"
@@ -396,13 +421,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:flower-outline"
 
-    elif capabilityId == 100801:
-        # FAN mode
-        return None
+    # elif capabilityId == 100801:
+    #    # FAN mode
+    #    return None
 
-    elif capabilityId == 100804:
-        # Swing mode
-        return None
+    # elif capabilityId == 100804:
+    #    # Swing mode
+    #    return None
 
     # For test
     elif capabilityId in (22, 231, 234, 252, 312, 105300):

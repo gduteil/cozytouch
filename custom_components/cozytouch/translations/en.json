@@ -27,6 +27,7 @@
         "step": {
             "init": {
                 "data": {
+                    "tariff": "Create entities tariff/consumption",
                     "create_unknown": "Create entities for unknown capabilities",
                     "dump_json": "Dump a JSON file with received data"
                 }

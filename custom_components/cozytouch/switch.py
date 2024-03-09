@@ -81,10 +81,8 @@ class CozytouchSwitch(SwitchEntity, CozytouchSensor):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        self._state = (
-            self.coordinator.get_capability_value(self._capability["capabilityId"])
-            != self._value_off
-        )
+        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
+        self._state = value is not None and value == self._value_on
         return self._state
 
     async def async_turn_on(self):

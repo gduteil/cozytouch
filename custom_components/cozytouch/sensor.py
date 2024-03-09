@@ -6,10 +6,15 @@ import json
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
     UnitOfSoundPressure,
@@ -180,6 +185,52 @@ async def async_setup_entry(
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     coordinator=hub,
+                )
+            )
+
+    # Create tariffs entities
+    if hub.get_create_entities_for_tariffs():
+        dhwEnergyId = hub.get_dhw_energy_id()
+        if dhwEnergyId:
+            sensors.append(
+                CozytouchTariffSensor(
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                    name="DHW Tariff",
+                    energyId=dhwEnergyId,
+                )
+            )
+
+            sensors.append(
+                CozytouchConsumptionSensor(
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                    name="DHW Daily Consumption",
+                    index=1,
+                )
+            )
+
+        heatingEnergyId = hub.get_heating_energy_id()
+        if heatingEnergyId:
+            sensors.append(
+                CozytouchTariffSensor(
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                    name="Heating Tariff",
+                    energyId=heatingEnergyId,
+                )
+            )
+
+            sensors.append(
+                CozytouchConsumptionSensor(
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                    name="Heating Daily Consumption",
+                    index=0,
                 )
             )
 
@@ -523,3 +574,106 @@ class CozytouchProgSensor(CozytouchSensor):
             return strValue
 
         return None
+
+
+class CozytouchTariffSensor(SensorEntity, CoordinatorEntity):
+    """Class for tariffs."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        coordinator: Hub,
+        config_title: str,
+        config_uniq_id: str,
+        name: str,
+        energyId: int,
+    ) -> None:
+        """Initialize a sensor."""
+        super().__init__(coordinator)
+
+        self._config_title = config_title
+        self._config_uniq_id = config_uniq_id
+        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{name.lower()}"
+        self._attr_name = name
+        self._attr_translation_key = self._attr_name
+
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_device_class = SensorDeviceClass.MONETARY
+        self._attr_unit_of_measurement = "EUR"
+        self._attr_icon = "mdi:currency-eur"
+
+        self._energyId = energyId
+        self._last_value = 0.0
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config_uniq_id)},
+        )
+
+    @property
+    def native_value(self):
+        """Value of the sensor."""
+        return self._last_value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update the value of the sensor from the hub."""
+        # Get last seen value from controller
+        self._last_value = self.coordinator.get_energy_tariff(self._energyId)
+        self.async_write_ha_state()
+
+
+class CozytouchConsumptionSensor(SensorEntity, CoordinatorEntity):
+    """Class for tariffs."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        coordinator: Hub,
+        config_title: str,
+        config_uniq_id: str,
+        name: str,
+        index: int,
+    ) -> None:
+        """Initialize a sensor."""
+        super().__init__(coordinator)
+
+        self._config_title = config_title
+        self._config_uniq_id = config_uniq_id
+        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{name.lower()}"
+        self._attr_name = name
+        self._attr_translation_key = self._attr_name
+
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_device_class = SensorDeviceClass.ENERGY
+        self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+        self._attr_suggested_display_precision = 2
+        self._last_value = 0.0
+        self._index = index
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config_uniq_id)},
+        )
+
+    @property
+    def native_value(self):
+        """Value of the sensor."""
+        return self._last_value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update the value of the sensor from the hub."""
+        # Get last seen value from controller
+        self._last_value = self.coordinator.get_daily_consumption(self._index)
+        self.async_write_ha_state()
