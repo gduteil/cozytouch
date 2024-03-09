@@ -10,6 +10,7 @@ from aiohttp import ClientSession, ContentTypeError, FormData
 
 from homeassistant import exceptions
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .capability import get_capability_infos
@@ -59,7 +60,17 @@ class Hub(DataUpdateCoordinator):
         self._create_unknown = False
         self._dump_json = False
         self._devices = []
+
         self.online = False
+
+        modelInfos = self.get_model_infos()
+        if "name" in modelInfos:
+            self.device_info = DeviceInfo(
+                entry_type=DeviceEntryType.SERVICE,
+                identifiers={("cozytouch", "cozytouch" + str(deviceId))},
+                manufacturer="Atlantic",
+                name=modelInfos["name"],
+            )
 
         # Load json for test during dev
         self._test_load = False
@@ -549,17 +560,20 @@ class Hub(DataUpdateCoordinator):
                 "Content-Type": "application/json",
             }
 
-            timestamp = int(
+            timestamp_from = int(
                 datetime.combine(datetime.now(timezone.utc), time.min).timestamp()
+            )
+            timestamp_to = int(
+                datetime.combine(datetime.now(timezone.utc), time.max).timestamp()
             )
             async with self._session.get(
                 COZYTOUCH_ATLANTIC_API
                 + "/magellan/setups/"
                 + str(self._setupId)
                 + "/consumptions?fromDate="
-                + str(timestamp)
+                + str(timestamp_from)
                 + "&toDate="
-                + str(timestamp),
+                + str(timestamp_to),
                 headers=headers,
             ) as response:
                 try:

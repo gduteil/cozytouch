@@ -264,6 +264,7 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
         self._config_title = config_title
         self._config_uniq_id = config_uniq_id
         self._last_value: str | None = None
+        self._device_uniq_id = config_uniq_id
 
         if value_type:
             self._value_type = value_type
@@ -324,8 +325,13 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        modelInfos = self.coordinator.get_model_infos()
         return DeviceInfo(
-            identifiers={(DOMAIN, self._config_uniq_id)},
+            identifiers={(DOMAIN, self._device_uniq_id)},
+            manufacturer="Atlantic",
+            name=modelInfos["name"],
+            model=modelInfos["name"],
+            serial_number=self.coordinator.get_serial_number(),
         )
 
     @property
@@ -600,7 +606,7 @@ class CozytouchTariffSensor(SensorEntity, CoordinatorEntity):
         self._attr_translation_key = self._attr_name
 
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_state_class = SensorStateClass.TOTAL
         self._attr_device_class = SensorDeviceClass.MONETARY
         self._attr_unit_of_measurement = "EUR"
         self._attr_icon = "mdi:currency-eur"
@@ -652,7 +658,7 @@ class CozytouchConsumptionSensor(SensorEntity, CoordinatorEntity):
         self._attr_translation_key = self._attr_name
 
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         self._attr_device_class = SensorDeviceClass.ENERGY
         self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._attr_suggested_display_precision = 2

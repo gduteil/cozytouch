@@ -125,6 +125,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_data["tariff"] = device_input["tariff"]
             device_data["create_unknown"] = device_input["create_unknown"]
             device_data["dump_json"] = device_input["dump_json"]
+
+            await self.async_set_unique_id(
+                "cozytouch_" + str(device_data["deviceId"]), raise_on_progress=False
+            )
             return self.async_create_entry(
                 title=device_data["name"],
                 data=device_data,
