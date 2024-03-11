@@ -16,23 +16,25 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["lowestValueCapabilityId"] = 160
         capability["highestValueCapabilityId"] = 161
 
-        capability["progCapabilityId"] = 184
-        capability["progOverrideCapabilityId"] = 157
-        capability["progOverrideTotalTimeCapabilityId"] = 158
-        capability["progOverrideTimeCapabilityId"] = 159
-
         if modelInfos.get("currentTemperatureAvailable", True):
             capability["currentValueCapabilityId"] = 117
 
         if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER:
             capability["name"] = "Central Heating"
             capability["icon"] = "mdi:radiator"
+            capability["progCapabilityId"] = 184
+            capability["progOverrideCapabilityId"] = 157
+            capability["progOverrideTotalTimeCapabilityId"] = 158
+            capability["progOverrideTimeCapabilityId"] = 159
         elif modelInfos["type"] == CozytouchDeviceType.AC:
             capability["name"] = "Air Conditioner"
             capability["icon"] = "mdi:air-conditioner"
             capability["targetCoolCapabilityId"] = 177
             capability["lowestCoolValueCapabilityId"] = 162
             capability["highestCoolValueCapabilityId"] = 163
+            capability["activityCapabilityId"] = 100506
+            capability["ecoCapabilityId"] = 100507
+            capability["boostCapabilityId"] = 100505
         elif modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
             if capabilityId == 7:
                 capability["name"] = "Heat Pump Z1"
