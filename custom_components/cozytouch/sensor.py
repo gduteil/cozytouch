@@ -568,7 +568,7 @@ class CozytouchProgSensor(CozytouchSensor):
 
             strValue = ""
             for prog in progList:
-                if len(prog) == 2 and (prog[0] != 0 or prog[1] != 0):
+                if len(prog) >= 2 and (prog[0] != 0 or prog[1] != 0):
                     hours = int(prog[0] / 60)
                     minutes = int(prog[0] % 60)
 

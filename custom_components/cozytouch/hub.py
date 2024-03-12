@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime, time, timedelta, timezone
-import time
 import json
 import logging
 
@@ -79,7 +78,7 @@ class Hub(DataUpdateCoordinator):
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_alfea.json",
+                self._hass.config.config_dir + "/cozytouch_kelud.json",
                 encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()

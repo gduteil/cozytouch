@@ -40,6 +40,7 @@ class CozytouchDeviceType(StrEnum):
     GAZ_BOILER = "gaz_boiler"
     HEAT_PUMP = "heat_pump"
     WATER_HEATER = "water_heater"
+    TOWEL_RACK = "towel_rack"
     AC = "ac"
     AC_CONTROLLER = "ac_controller"
     HUB = "hub"
@@ -159,6 +160,15 @@ def get_model_infos(modelId: int):
         modelInfos["HeatingModes"] = {
             0: "Manual",
             3: "Eco+",
+        }
+
+    elif modelId == 1381:
+        modelInfos["name"] = "KELUD 1750W BLC"
+        modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
+        modelInfos["supportTariff"] = True
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
         }
 
     else:
