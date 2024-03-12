@@ -21,6 +21,13 @@
                             "Middle Down": "mdi:arrow-bottom-right",
                             "Down": "mdi:arrow-down"
                         }
+                    },
+                    "preset_mode": {
+                        "state": {
+                            "Basic": "mdi:thermometer",
+                            "Prog": "mdi:clock-outline",
+                            "Override": "mdi:timer-sand-complete"
+                        }
                     }
                 }
             },

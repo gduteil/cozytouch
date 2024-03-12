@@ -107,11 +107,9 @@ def get_model_infos(modelId: int):
         modelInfos["quietModeAvailable"] = True
 
         modelInfos["fanModes"] = {
-            0: FAN_OFF,
-            1: FAN_ON,
-            2: FAN_LOW,
-            3: FAN_MEDIUM,
-            4: FAN_HIGH,
+            1: FAN_LOW,
+            2: FAN_MEDIUM,
+            3: FAN_HIGH,
             5: FAN_AUTO,
         }
 

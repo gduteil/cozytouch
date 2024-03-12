@@ -32,6 +32,9 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability["targetCoolCapabilityId"] = 177
             capability["lowestCoolValueCapabilityId"] = 162
             capability["highestCoolValueCapabilityId"] = 163
+            capability["activityCapabilityId"] = 100506
+            capability["ecoCapabilityId"] = 100507
+            capability["boostCapabilityId"] = 100505
         elif modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
             if capabilityId == 7:
                 capability["name"] = "Heat Pump Z1"
@@ -248,8 +251,8 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     elif capabilityId == 184:
         capability["name"] = "Prog mode"
-        capability["type"] = "binary"
-        capability["category"] = "diag"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
 
     elif capabilityId == 196:
@@ -410,8 +413,8 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:wind-power"
 
     elif capabilityId == 100506:
-        capability["name"] = "Presence"
-        capability["type"] = "binary"
+        capability["name"] = "Presence mode"
+        capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:account"
 
@@ -421,13 +424,87 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:flower-outline"
 
-    # elif capabilityId == 100801:
-    #    # FAN mode
-    #    return None
+    elif capabilityId == 100802:
+        capability["name"] = "Quiet mode"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:fan-minus"
 
-    # elif capabilityId == 100804:
-    #    # Swing mode
-    #    return None
+    elif capabilityId == 100804:
+        capability["name"] = "Swing mode"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:arrow-oscillating"
+
+    elif capabilityId == 100320:
+        capability["name"] = "Monday Heat prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100321:
+        capability["name"] = "Tuesday Heat prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100322:
+        capability["name"] = "Wednesday Heat prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100323:
+        capability["name"] = "Thursday Heat prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100324:
+        capability["name"] = "Friday Heat prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100325:
+        capability["name"] = "Saturday Heat prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100326:
+        capability["name"] = "Sunday Heat prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100327:
+        capability["name"] = "Monday Cool prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100328:
+        capability["name"] = "Tuesday Cool prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100329:
+        capability["name"] = "Wednesday Cool prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100330:
+        capability["name"] = "Thursday Cool prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100331:
+        capability["name"] = "Friday Cool prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100332:
+        capability["name"] = "Saturday Cool prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100333:
+        capability["name"] = "Sunday Cool prog"
+        capability["type"] = "prog"
+        capability["category"] = "diag"
 
     # For test
     elif capabilityId in (22, 231, 234, 252, 312, 105300):

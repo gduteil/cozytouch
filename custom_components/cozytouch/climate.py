@@ -8,7 +8,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.climate.const import SWING_ON
+from homeassistant.components.climate.const import SWING_ON, PRESET_ACTIVITY, PRESET_ECO, PRESET_BOOST, PRESET_NONE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
@@ -104,11 +104,11 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         self._attr_hvac_mode = HVACMode.OFF
 
         # Fan modes
-        if "fanModes" in self._modelInfos:
+        if "fanModes" in self._modelInfos and "fanModeCapabilityId" in self._capability:
             self._configure_fan_modes()
 
         # Swing modes
-        if "swingModes" in self._modelInfos:
+        if "swingModes" in self._modelInfos and "swingModeCapabilityId" in self._capability:
             self._configure_swing_modes()
 
         # Presets
@@ -136,9 +136,28 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
 
     def _configure_presets(self):
         self._attr_preset_modes = []
-        if "progCapabilityId" in self._capability:
+        if "progCapabilityId" in self._capability \
+        or "activityCapabilityId" in self._capability \
+        or "ecoCapabilityId" in self._capability \
+        or "boostCapabilityId" in self._capability :
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
+        if "activityCapabilityId" in self._capability \
+        or "ecoCapabilityId" in self._capability \
+        or "boostCapabilityId" in self._capability :
+            self._attr_preset_modes.append(PRESET_NONE)
+            self._attr_preset_mode = PRESET_NONE
+
+        if "activityCapabilityId" in self._capability:
+            self._attr_preset_modes.append(PRESET_ACTIVITY)
+
+        if "ecoCapabilityId" in self._capability:
+            self._attr_preset_modes.append(PRESET_ECO)
+
+        if "boostCapabilityId" in self._capability:
+            self._attr_preset_modes.append(PRESET_BOOST)
+
+        if "progCapabilityId" in self._capability :
             self._attr_preset_modes.append(PRESET_BASIC)
             self._attr_preset_modes.append(PRESET_PROG)
 
@@ -254,6 +273,40 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                 self._attr_swing_mode = swingModes[swingModeValue]
 
         # Presets
+        activityModeValue, ecoModeValue, boostModeValue = 0, 0, 0
+        if "activityCapabilityId" in self._capability:
+            activityModeValue = int(
+                self.coordinator.get_capability_value(
+                    self._capability["activityCapabilityId"]
+                )
+            )
+            if activityModeValue == 1 :
+                self._attr_preset_mode = PRESET_ACTIVITY
+            else :
+                self._attr_preset_mode = PRESET_NONE
+
+        if "ecoCapabilityId" in self._capability:
+            ecoModeValue = int(
+                self.coordinator.get_capability_value(
+                    self._capability["ecoCapabilityId"]
+                )
+            )
+            if ecoModeValue == 1 :
+                self._attr_preset_mode = PRESET_ECO
+            elif activityModeValue == 0 :
+                self._attr_preset_mode = PRESET_NONE
+
+        if "boostCapabilityId" in self._capability:
+            boostModeValue = int(
+                self.coordinator.get_capability_value(
+                    self._capability["boostCapabilityId"]
+                )
+            )
+            if boostModeValue == 1 :
+                self._attr_preset_mode = PRESET_BOOST
+            elif activityModeValue == 0 and ecoModeValue == 0 :
+                self._attr_preset_mode = PRESET_NONE
+
         if "progCapabilityId" in self._capability:
             progModeValue = int(
                 self.coordinator.get_capability_value(
@@ -292,6 +345,13 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         """Set new target temperature."""
         temperature = kwargs.get("temperature")
         if temperature is not None:
+            # If we are in "Prog mode", we need to switch to override before changing the temperature
+            if (
+                hasattr(self, "_attr_preset_mode")
+                and self._attr_preset_mode == PRESET_PROG
+            ):
+                await self.async_set_preset_mode(PRESET_OVERRIDE)
+
             if (
                 self._attr_hvac_mode == HVACMode.COOL
                 and "targetCoolCapabilityId" in self._capability
@@ -300,14 +360,7 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                     self._capability["targetCoolCapabilityId"],
                     str(temperature),
                 )
-            else:
-                # If we are in "Prog mode", we need to switch to override before changing the temperature
-                if (
-                    hasattr(self, "_attr_preset_mode")
-                    and self._attr_preset_mode == PRESET_PROG
-                ):
-                    await self.async_set_preset_mode(PRESET_OVERRIDE)
-
+            else :
                 await self.coordinator.set_capability_value(
                     self._capability["targetCapabilityId"],
                     str(temperature),
@@ -379,10 +432,34 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
+        activityCapabilityId = self._capability.get("activityCapabilityId", None)
+        ecoCapabilityId = self._capability.get("ecoCapabilityId", None)
+        boostCapabilityId = self._capability.get("boostCapabilityId", None)
         progCapabilityId = self._capability.get("progCapabilityId", None)
         progOverrideCapabilityId = self._capability.get(
             "progOverrideCapabilityId", None
         )
+
+        if activityCapabilityId :
+            if preset_mode == PRESET_ACTIVITY:
+                await self.coordinator.set_capability_value(activityCapabilityId, "1")
+            elif preset_mode == PRESET_NONE:
+                await self.coordinator.set_capability_value(activityCapabilityId, "0")
+
+        if ecoCapabilityId :
+            if preset_mode == PRESET_ECO:
+                await self.coordinator.set_capability_value(ecoCapabilityId, "1")
+            elif preset_mode in (PRESET_ACTIVITY, PRESET_NONE):
+                await self.coordinator.set_capability_value(ecoCapabilityId, "0")
+                #NOTE: PRESET_BOOST mode automatically disable PRESET_ECO mode
+
+        if boostCapabilityId :
+            if preset_mode == PRESET_BOOST:
+                await self.coordinator.set_capability_value(boostCapabilityId, "1")
+            elif preset_mode in (PRESET_ACTIVITY, PRESET_NONE):
+                await self.coordinator.set_capability_value(boostCapabilityId, "0")
+                #NOTE: PRESET_ECO mode automatically disable PRESET_BOOST mode
+
         if progCapabilityId:
             if preset_mode == PRESET_BASIC:
                 await self.coordinator.set_capability_value(progCapabilityId, "0")
