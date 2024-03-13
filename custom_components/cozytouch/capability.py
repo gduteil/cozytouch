@@ -209,15 +209,15 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     #    return {}
 
     elif capabilityId == 158:
-        capability["name"] = "Override Total Time"
+        capability["name"] = "Override Total Time Z1"
         capability["type"] = "hours_adjustment_number"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
         capability["lowest_value"] = 1
-        capability["highest_value"] = 10
+        capability["highest_value"] = 24
 
     elif capabilityId == 159:
-        capability["name"] = "Override Remaining Time"
+        capability["name"] = "Override Remaining Time Z2"
         capability["type"] = "time"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
@@ -507,7 +507,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
 
     # For test
-    elif capabilityId in (22, 231, 234, 252, 312, 105300):
+    elif capabilityId in (22, 231, 234, 252, 312, 105300, 17, 18, 178, 22, 41, 42, 43):
         capability["name"] = "Temp_" + str(capabilityId)
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"

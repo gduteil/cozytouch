@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import copy
-from datetime import datetime, time, timedelta, timezone
+from datetime import UTC, datetime, time as t, timedelta, timezone
 import json
 import logging
+import time
 
 from aiohttp import ClientSession, ContentTypeError, FormData
 
@@ -78,7 +79,7 @@ class Hub(DataUpdateCoordinator):
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_kelud.json",
+                self._hass.config.config_dir + "/cozytouch_alfea.json",
                 encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()
@@ -560,12 +561,8 @@ class Hub(DataUpdateCoordinator):
                 "Content-Type": "application/json",
             }
 
-            timestamp_from = int(
-                datetime.combine(datetime.now(timezone.utc), time.min).timestamp()
-            )
-            timestamp_to = int(
-                datetime.combine(datetime.now(timezone.utc), time.max).timestamp()
-            )
+            timestamp_from = int(datetime.combine(datetime.now(UTC), t.min).timestamp())
+            timestamp_to = int(datetime.combine(datetime.now(UTC), t.max).timestamp())
             async with self._session.get(
                 COZYTOUCH_ATLANTIC_API
                 + "/magellan/setups/"

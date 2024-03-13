@@ -187,6 +187,15 @@ async def async_setup_entry(
                     coordinator=hub,
                 )
             )
+        elif capability["type"] == "climate":
+            sensors.append(
+                CozytouchSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                )
+            )
 
     # Create tariffs entities
     if hub.get_create_entities_for_tariffs():
