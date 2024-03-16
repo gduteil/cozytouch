@@ -41,6 +41,17 @@
                         }
                     }
                 }
+            },
+            "Heat": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "Basic": "mdi:thermostat",
+                            "Prog": "mdi:thermostat-auto",
+                            "Override": "mdi:thermostat-cog"
+                        }
+                    }
+                }
             }
         }
     }

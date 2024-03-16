@@ -26,6 +26,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability["progOverrideCapabilityId"] = 157
             capability["progOverrideTotalTimeCapabilityId"] = 158
             capability["progOverrideTimeCapabilityId"] = 159
+        elif modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
+            capability["name"] = "Heat"
+            capability["icon"] = "mdi:heating-coil"
+            capability["progCapabilityId"] = 184
+            capability["progOverrideCapabilityId"] = 157
+            capability["progOverrideTotalTimeCapabilityId"] = 158
+            capability["progOverrideTimeCapabilityId"] = 159
         elif modelInfos["type"] == CozytouchDeviceType.AC:
             capability["name"] = "Air Conditioner"
             capability["icon"] = "mdi:air-conditioner"
@@ -102,6 +109,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     elif capabilityId == 40:
         capability["name"] = "Target Temperature"
         capability["type"] = "temperature"
+        capability["category"] = "sensor"
+
+    elif capabilityId == 57:
+        capability["name"] = "Power consumption"
+        capability["type"] = "energy"
         capability["category"] = "sensor"
 
     # elif capabilityId == 295:
@@ -187,10 +199,15 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["value_on"] = "2"
 
     elif capabilityId == 153:
-        capability["name"] = "Flame"
+        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
+            capability["name"] = "Resistance"
+            capability["icon"] = "mdi:radiator"
+        else:
+            capability["name"] = "Flame"
+            capability["icon"] = "mdi:fire"
+
         capability["type"] = "binary"
         capability["category"] = "sensor"
-        capability["icon"] = "mdi:fire"
 
     elif capabilityId == 154:
         capability["name"] = "Zone 1"
@@ -209,7 +226,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     #    return {}
 
     elif capabilityId == 158:
-        capability["name"] = "Override Total Time Z1"
+        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
+            capability["name"] = "Override Total Time"
+        else:
+            capability["name"] = "Override Total Time Z1"
+
         capability["type"] = "hours_adjustment_number"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
@@ -217,7 +238,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["highest_value"] = 24
 
     elif capabilityId == 159:
-        capability["name"] = "Override Remaining Time Z2"
+        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
+            capability["name"] = "Override Remaining Time"
+        else:
+            capability["name"] = "Override Remaining Time Z2"
+
         capability["type"] = "time"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
@@ -413,28 +438,19 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:wind-power"
 
     elif capabilityId == 100506:
-        capability["name"] = "Presence mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:account"
+        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
+            capability = {}
+        else:
+            capability["name"] = "Presence mode"
+            capability["type"] = "switch"
+            capability["category"] = "sensor"
+            capability["icon"] = "mdi:account"
 
     elif capabilityId == 100507:
         capability["name"] = "Eco mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:flower-outline"
-
-    elif capabilityId == 100802:
-        capability["name"] = "Quiet mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:fan-minus"
-
-    elif capabilityId == 100804:
-        capability["name"] = "Swing mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:arrow-oscillating"
 
     elif capabilityId == 100320:
         capability["name"] = "Monday Heat prog"
@@ -505,6 +521,24 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["name"] = "Sunday Cool prog"
         capability["type"] = "prog"
         capability["category"] = "diag"
+
+    elif capabilityId == 100802:
+        capability["name"] = "Quiet mode"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:fan-minus"
+
+    elif capabilityId == 100804:
+        capability["name"] = "Swing mode"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:arrow-oscillating"
+
+    elif capabilityId == 104044:
+        capability["name"] = "Boost Mode"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:heat-wave"
 
     # For test
     elif capabilityId in (22, 231, 234, 252, 312, 105300, 17, 18, 178, 22, 41, 42, 43):

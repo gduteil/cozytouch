@@ -146,6 +146,17 @@ async def async_setup_entry(
                     native_unit_of_measurement=UnitOfPower.WATT,
                 )
             )
+        elif capability["type"] == "energy":
+            sensors.append(
+                CozytouchUnitSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                    device_class=SensorDeviceClass.ENERGY,
+                    native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+                )
+            )
         elif capability["type"] == "volume":
             sensors.append(
                 CozytouchUnitSensor(
