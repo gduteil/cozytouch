@@ -136,6 +136,14 @@ async def async_setup_entry(
                 )
             )
         elif capability["type"] == "power":
+            native_unit_of_measurement = capability.get(
+                "displayed_unit_of_measurement", UnitOfPower.WATT
+            )
+
+            display_factor = 1.0
+            if native_unit_of_measurement == UnitOfPower.KILO_WATT:
+                display_factor = 0.001
+
             sensors.append(
                 CozytouchUnitSensor(
                     capability=capability,
@@ -143,10 +151,23 @@ async def async_setup_entry(
                     config_uniq_id=config_entry.entry_id,
                     coordinator=hub,
                     device_class=SensorDeviceClass.POWER,
-                    native_unit_of_measurement=UnitOfPower.WATT,
+                    native_unit_of_measurement=capability.get(
+                        "displayed_unit_of_measurement", UnitOfPower.WATT
+                    ),
+                    displayed_unit_of_measurement=capability.get(
+                        "displayed_unit_of_measurement", None
+                    ),
                 )
             )
         elif capability["type"] == "energy":
+            native_unit_of_measurement = capability.get(
+                "displayed_unit_of_measurement", UnitOfEnergy.WATT_HOUR
+            )
+
+            display_factor = 1.0
+            if native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR:
+                display_factor = 0.001
+
             sensors.append(
                 CozytouchUnitSensor(
                     capability=capability,
@@ -154,7 +175,8 @@ async def async_setup_entry(
                     config_uniq_id=config_entry.entry_id,
                     coordinator=hub,
                     device_class=SensorDeviceClass.ENERGY,
-                    native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+                    native_unit_of_measurement=native_unit_of_measurement,
+                    display_factor=display_factor,
                 )
             )
         elif capability["type"] == "volume":
@@ -205,52 +227,6 @@ async def async_setup_entry(
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
                     coordinator=hub,
-                )
-            )
-
-    # Create tariffs entities
-    if hub.get_create_entities_for_tariffs():
-        dhwEnergyId = hub.get_dhw_energy_id()
-        if dhwEnergyId:
-            sensors.append(
-                CozytouchTariffSensor(
-                    config_title=config_entry.title,
-                    config_uniq_id=config_entry.entry_id,
-                    coordinator=hub,
-                    name="DHW Tariff",
-                    energyId=dhwEnergyId,
-                )
-            )
-
-            sensors.append(
-                CozytouchConsumptionSensor(
-                    config_title=config_entry.title,
-                    config_uniq_id=config_entry.entry_id,
-                    coordinator=hub,
-                    name="DHW Daily Consumption",
-                    index=1,
-                )
-            )
-
-        heatingEnergyId = hub.get_heating_energy_id()
-        if heatingEnergyId:
-            sensors.append(
-                CozytouchTariffSensor(
-                    config_title=config_entry.title,
-                    config_uniq_id=config_entry.entry_id,
-                    coordinator=hub,
-                    name="Heating Tariff",
-                    energyId=heatingEnergyId,
-                )
-            )
-
-            sensors.append(
-                CozytouchConsumptionSensor(
-                    config_title=config_entry.title,
-                    config_uniq_id=config_entry.entry_id,
-                    coordinator=hub,
-                    name="Heating Daily Consumption",
-                    index=0,
                 )
             )
 
@@ -479,6 +455,7 @@ class CozytouchUnitSensor(CozytouchSensor):
         coordinator: Hub,
         device_class: SensorDeviceClass,
         native_unit_of_measurement,
+        display_factor: float | None = 1.0,
         suggested_precision: int | None = None,
         name: str | None = None,
         icon: str | None = None,
@@ -497,6 +474,16 @@ class CozytouchUnitSensor(CozytouchSensor):
         self._attr_suggested_display_precision = suggested_precision
         if device_class:
             self._attr_device_class = device_class
+
+        self._display_factor = display_factor
+
+    def get_value(self):
+        """Retrieve value from hub and convert it if needed."""
+        value = super().get_value()
+        if self._display_factor != 1.0:
+            return float(value) * self._display_factor
+
+        return value
 
     @property
     def native_value(self) -> float | None:
@@ -600,106 +587,3 @@ class CozytouchProgSensor(CozytouchSensor):
             return strValue
 
         return None
-
-
-class CozytouchTariffSensor(SensorEntity, CoordinatorEntity):
-    """Class for tariffs."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        coordinator: Hub,
-        config_title: str,
-        config_uniq_id: str,
-        name: str,
-        energyId: int,
-    ) -> None:
-        """Initialize a sensor."""
-        super().__init__(coordinator)
-
-        self._config_title = config_title
-        self._config_uniq_id = config_uniq_id
-        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{name.lower()}"
-        self._attr_name = name
-        self._attr_translation_key = self._attr_name
-
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_state_class = SensorStateClass.TOTAL
-        self._attr_device_class = SensorDeviceClass.MONETARY
-        self._attr_unit_of_measurement = "EUR"
-        self._attr_icon = "mdi:currency-eur"
-
-        self._energyId = energyId
-        self._last_value = 0.0
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_uniq_id)},
-        )
-
-    @property
-    def native_value(self):
-        """Value of the sensor."""
-        return self._last_value
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update the value of the sensor from the hub."""
-        # Get last seen value from controller
-        self._last_value = self.coordinator.get_energy_tariff(self._energyId)
-        self.async_write_ha_state()
-
-
-class CozytouchConsumptionSensor(SensorEntity, CoordinatorEntity):
-    """Class for tariffs."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        coordinator: Hub,
-        config_title: str,
-        config_uniq_id: str,
-        name: str,
-        index: int,
-    ) -> None:
-        """Initialize a sensor."""
-        super().__init__(coordinator)
-
-        self._config_title = config_title
-        self._config_uniq_id = config_uniq_id
-        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{name.lower()}"
-        self._attr_name = name
-        self._attr_translation_key = self._attr_name
-
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._attr_device_class = SensorDeviceClass.ENERGY
-        self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-        self._attr_suggested_display_precision = 2
-        self._last_value = 0.0
-        self._index = index
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_uniq_id)},
-        )
-
-    @property
-    def native_value(self):
-        """Value of the sensor."""
-        return self._last_value
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update the value of the sensor from the hub."""
-        # Get last seen value from controller
-        self._last_value = self.coordinator.get_daily_consumption(self._index)
-        self.async_write_ha_state()

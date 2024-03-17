@@ -37,9 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, entry.data["username"], entry.data["password"], entry.data["deviceId"]
     )
 
-    if "tariff" in entry.data:
-        theHub.set_create_entities_for_tariffs(entry.data["tariff"])
-
     if "dump_json" in entry.data:
         theHub.set_dump_json(entry.data["dump_json"])
 

@@ -1,5 +1,7 @@
 """Atlantic Cozytouch capabilility mapping."""
 
+from homeassistant.const import UnitOfEnergy
+
 from .const import CozytouchCapabilityVariableType
 from .model import CozytouchDeviceType
 
@@ -111,15 +113,32 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "temperature"
         capability["category"] = "sensor"
 
+    elif capabilityId == 44:
+        capability["name"] = "CH Power consumption"
+        capability["type"] = "energy"
+        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:radiator"
+
+    elif capabilityId == 45:
+        capability["name"] = "DHW Power consumption"
+        capability["type"] = "energy"
+        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:faucet"
+
+    elif capabilityId == 46:
+        capability["name"] = "Total Power consumption"
+        capability["type"] = "energy"
+        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+
     elif capabilityId == 57:
         capability["name"] = "Power consumption"
         capability["type"] = "energy"
+        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
         capability["category"] = "sensor"
-
-    # elif capabilityId == 295:
-    #   capability["name"]="Power consumption"
-    #   capability["type"]="power"
-    #   capability["category"]="sensor"
 
     elif capabilityId == 86:
         capability["name"] = "Domestic Hot Water"

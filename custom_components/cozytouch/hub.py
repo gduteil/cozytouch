@@ -27,11 +27,6 @@ class Hub(DataUpdateCoordinator):
     manufacturer = "Atlantic Group"
     _localization = {}
 
-    _default_tarrifs = []
-    _setup_tarrifs = []
-    _consumptions = []
-    _consumption_last_update = 0
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -57,7 +52,6 @@ class Hub(DataUpdateCoordinator):
         self._mainHeatingEnergyId = None
         self._access_token = ""
         self._id = "cozytouch." + username.lower()
-        self._tariffs = False
         self._create_unknown = False
         self._dump_json = False
         self._devices = []
@@ -153,10 +147,6 @@ class Hub(DataUpdateCoordinator):
                             json_data[0]["address"].get("country", None)
                         )
 
-                    if self._tariffs:
-                        await self._update_default_tariffs()
-                        await self._update_setup_tariffs()
-
                 self.online = True
 
             except CannotConnect:
@@ -218,15 +208,6 @@ class Hub(DataUpdateCoordinator):
                     remote_device["capabilities"]
                 )
 
-    def set_create_entities_for_tariffs(self, tariffs: bool) -> None:
-        """Set option from config flow to create entities for tariffs."""
-        self._tariffs = tariffs
-
-    def get_create_entities_for_tariffs(self) -> bool:
-        """Get option from config flow to create entities for tariffs."""
-        modelInfos = self.get_model_infos()
-        return self._tariffs and modelInfos.get("supportTariff", False)
-
     def get_dhw_energy_id(self) -> int:
         """Get DHW energy ID."""
         return self._mainDHWEnergyId
@@ -271,18 +252,6 @@ class Hub(DataUpdateCoordinator):
                             break
                 except ContentTypeError:
                     self.online = False
-
-            # Update tariffs and consumptions
-            if self._tariffs:
-                if len(self._default_tarrifs) == 0:
-                    await self._update_default_tariffs()
-
-                if len(self._setup_tarrifs) == 0:
-                    await self._update_setup_tariffs()
-
-                # Only update consumption every 10 minute
-                if (datetime.now().timestamp() - self._consumption_last_update) > 600:
-                    await self._update_consumptions()
 
         else:
             await self.connect()
@@ -458,32 +427,6 @@ class Hub(DataUpdateCoordinator):
                                             capability["value"] = value
                             break
 
-    def get_energy_tariff(self, energyId: int) -> float | None:
-        """Get tariff of energy ID, return first tariff for now."""
-        price = None
-        for tariff in self._setup_tarrifs:
-            if (
-                tariff.get("active", False)
-                and tariff.get("consumptionType", -1) == energyId
-            ):
-                energyTariffLines = tariff.get("energyTariffLines", [])
-                if len(energyTariffLines) > 0:
-                    price = energyTariffLines[0].get("energyPrice", None)
-                    break
-
-        if not price and energyId < len(self._default_tarrifs):
-            for tariff in self._default_tarrifs:
-                if (
-                    tariff.get("active", False)
-                    and tariff.get("consumptionType", -1) == energyId
-                ):
-                    energyTariffLines = tariff.get("energyTariffLines", [])
-                    if len(energyTariffLines) > 0:
-                        price = energyTariffLines[0].get("energyPrice", None)
-                        break
-
-        return price
-
     async def _update_localization(self, country: str):
         if len(self._localization) == 0:
             headers = {
@@ -503,94 +446,6 @@ class Hub(DataUpdateCoordinator):
 
                 except ContentTypeError:
                     self._localization = {}
-
-        headers = {
-            "Authorization": f"Bearer {self._access_token}",
-            "Content-Type": "application/json",
-        }
-        async with self._session.get(
-            COZYTOUCH_ATLANTIC_API + "/magellan/tariffs/default",
-            headers=headers,
-        ) as response:
-            try:
-                json_data = await response.json()
-                self._default_tarrifs = copy.deepcopy(json_data)
-
-            except ContentTypeError:
-                self._default_tarrifs = []
-
-    async def _update_default_tariffs(self):
-        headers = {
-            "Authorization": f"Bearer {self._access_token}",
-            "Content-Type": "application/json",
-        }
-        async with self._session.get(
-            COZYTOUCH_ATLANTIC_API + "/magellan/tariffs/default",
-            headers=headers,
-        ) as response:
-            try:
-                json_data = await response.json()
-                self._default_tarrifs = copy.deepcopy(json_data)
-
-            except ContentTypeError:
-                self._default_tarrifs = []
-
-    async def _update_setup_tariffs(self):
-        if self._setupId:
-            headers = {
-                "Authorization": f"Bearer {self._access_token}",
-                "Content-Type": "application/json",
-            }
-            async with self._session.get(
-                COZYTOUCH_ATLANTIC_API
-                + "/magellan/tariffs/?setupId="
-                + str(self._setupId),
-                headers=headers,
-            ) as response:
-                try:
-                    json_data = await response.json()
-                    self._setup_tarrifs = copy.deepcopy(json_data)
-
-                except ContentTypeError:
-                    self._setup_tarrifs = []
-
-    async def _update_consumptions(self):
-        if self._setupId:
-            headers = {
-                "Authorization": f"Bearer {self._access_token}",
-                "Content-Type": "application/json",
-            }
-
-            timestamp_from = int(datetime.combine(datetime.now(UTC), t.min).timestamp())
-            timestamp_to = int(datetime.combine(datetime.now(UTC), t.max).timestamp())
-            async with self._session.get(
-                COZYTOUCH_ATLANTIC_API
-                + "/magellan/setups/"
-                + str(self._setupId)
-                + "/consumptions?fromDate="
-                + str(timestamp_from)
-                + "&toDate="
-                + str(timestamp_to),
-                headers=headers,
-            ) as response:
-                try:
-                    json_data = await response.json()
-                    if response.status == 200:
-                        self._consumptions = copy.deepcopy(json_data)
-                        self._consumption_last_update = datetime.now().timestamp()
-
-                except ContentTypeError:
-                    self._consumptions = []
-
-    def get_daily_consumption(self, index: int):
-        """Get daily consumption."""
-        if (
-            index < len(self._consumptions)
-            and "consumptionPeriods" in self._consumptions[index]
-        ):
-            consumptions = self._consumptions[index]["consumptionPeriods"][-1]
-            if "consumedQuantity" in consumptions:
-                return float(consumptions["consumedQuantity"])
 
 
 class CannotConnect(exceptions.HomeAssistantError):
