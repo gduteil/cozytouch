@@ -1,10 +1,13 @@
 # Cozytouch
 This is an Atlantic Cozytouch cloud integration. Atlantic use multiple protocols, in my case the protocol is different than the one implemented by official integration (overkiz).
 
-This has been tested using a `Navilink 128 radio connect` connected on a `Atlantic Naema 2 micro duo 25`, but it should work for other devices.
+This has been tested using on : 
+  - `Atlantic Naema 2 Micro 25` gas boiler using a `Ǹavilink Radio-Connect 128` thermostat
+  - `Atlantic Naema 2 Duo 25` gas boiler using a `Ǹavilink Radio-Connect 128` thermostat
+  - `Takao M3` air conditionning
+  - `Kelud 1750W` towel rack
 
-Only some capabilities have been mapped for now, an option is available during configuration to add all found capabilities as generic sensors.
-
+A special mapping needs to be done for each model type, feel free to create an issue to help supporting your device.
 
 
 ## Installation
@@ -25,7 +28,7 @@ Restart Home Assistant.
 
 ## Configuration
 
-Once your Home Assistant has restarted, go to `Settings -> Devices & Services -> Add an  intégration`.
+Once your Home Assistant has restarted, go to `Settings -> Devices & Services -> Add an  integration`.
 
 Search for `cozytouch` and select the `Atlantic Cozytouch` integration.
 
