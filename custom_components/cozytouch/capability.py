@@ -110,8 +110,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     elif capabilityId == 40:
         capability["name"] = "Target Temperature"
-        capability["type"] = "temperature"
+        capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
+        capability["lowestValueCapabilityId"] = 160
+        capability["highestValueCapabilityId"] = 161
 
     elif capabilityId == 44:
         capability["name"] = "CH Power consumption"
@@ -286,6 +288,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["lowestValueCapabilityId"] = 160
         capability["highestValueCapabilityId"] = 161
+
+    elif capabilityId == 177:
+        capability["name"] = "Target Cool Temperature"
+        capability["type"] = "temperature_adjustment_number"
+        capability["category"] = "sensor"
+        capability["lowestValueCapabilityId"] = 162
+        capability["highestValueCapabilityId"] = 163
 
     elif capabilityId == 179:
         capability["name"] = "Wifi Signal"
