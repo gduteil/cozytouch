@@ -84,7 +84,18 @@ def get_model_infos(modelId: int):
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
         }
+    elif modelId == 390:
+        modelInfos["name"] = "AQUEO ACI HYB VM 150L 2200M"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
 
+        modelInfos["HeatingModes"] = {
+            0: "Manual",
+            3: "Eco+",
+        }
     elif modelId == 556:
         modelInfos["name"] = "Naviclim Hub"
         modelInfos["type"] = CozytouchDeviceType.HUB
@@ -143,7 +154,7 @@ def get_model_infos(modelId: int):
             0: HVACMode.OFF,
         }
 
-    elif modelId == 1376:
+    elif modelId in (1369, 1376):
         modelInfos["name"] = "Calypso Split 270L"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
         modelInfos["HVACModes"] = {

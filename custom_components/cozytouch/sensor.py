@@ -175,6 +175,7 @@ async def async_setup_entry(
                     config_uniq_id=config_entry.entry_id,
                     coordinator=hub,
                     device_class=SensorDeviceClass.ENERGY,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
                     native_unit_of_measurement=native_unit_of_measurement,
                     display_factor=display_factor,
                 )
@@ -211,6 +212,15 @@ async def async_setup_entry(
                 )
             )
 
+        elif capability["type"] == "timezone":
+            sensors.append(
+                CozytouchTimezoneSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                )
+            )
         elif capability["type"] == "prog":
             sensors.append(
                 CozytouchProgSensor(
@@ -456,6 +466,7 @@ class CozytouchUnitSensor(CozytouchSensor):
         device_class: SensorDeviceClass,
         native_unit_of_measurement,
         display_factor: float | None = 1.0,
+        state_class: SensorStateClass | None = None,
         suggested_precision: int | None = None,
         name: str | None = None,
         icon: str | None = None,
@@ -474,6 +485,9 @@ class CozytouchUnitSensor(CozytouchSensor):
         self._attr_suggested_display_precision = suggested_precision
         if device_class:
             self._attr_device_class = device_class
+
+        if state_class:
+            self._attr_state_class = state_class
 
         self._display_factor = display_factor
 
@@ -540,6 +554,45 @@ class CozytouchTimeSensor(CozytouchSensor):
                 strValue = str(days) + "d "
 
             strValue += "%02d:%02d" % (hours, minutes)
+            return strValue
+
+        return None
+
+
+class CozytouchTimezoneSensor(CozytouchSensor):
+    """Class for timezone sensor."""
+
+    def __init__(
+        self,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+        coordinator: Hub,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize a time Sensor."""
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            coordinator=coordinator,
+            name=name,
+            icon=icon,
+        )
+        self._last_value: 0
+
+    def get_value(self) -> str:
+        """Retrieve value from hub."""
+        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
+        if value is not None:
+            if float(value) > 0:
+                strValue = "GMT+%d" % (int(value) / 3600)
+            elif float(value) < 0:
+                strValue = "GMT-%d" % (abs(int(value)) / 3600)
+            else:
+                strValue = "GMT"
+
             return strValue
 
         return None

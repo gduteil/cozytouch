@@ -136,7 +136,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-boiler"
 
-    elif capabilityId == 57:
+    elif capabilityId in (57, 59):
         capability["name"] = "Power consumption"
         capability["type"] = "energy"
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
@@ -211,7 +211,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:tag"
 
-    elif capabilityId == 152:
+    elif capabilityId in (152, 227):
         capability["name"] = "Away Mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
@@ -262,7 +262,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
             capability["name"] = "Override Remaining Time"
         else:
-            capability["name"] = "Override Remaining Time Z2"
+            capability["name"] = "Override Remaining Time Z1"
 
         capability["type"] = "time"
         capability["category"] = "sensor"
@@ -426,9 +426,15 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
 
     elif capabilityId == 267:
-        capability["name"] = "Temperature_267"
+        capability["name"] = "Tank Bottom Temperature"
         capability["type"] = "temperature"
-        capability["category"] = "diag"
+        capability["category"] = "sensor"
+
+    elif capabilityId == 269:
+        capability["name"] = "Water Consumption"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-pump"
 
     elif capabilityId == 271:
         capability["name"] = "Hot Water Available"
@@ -440,6 +446,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "binary"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
+
+    elif capabilityId == 315:
+        capability["name"] = "Timezone"
+        capability["type"] = "timezone"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:map-clock-outline"
 
     elif capabilityId == 316:
         capability["name"] = "Interface FW"
@@ -569,10 +581,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:heat-wave"
 
     # For test
-    elif capabilityId in (22, 231, 234, 252, 312, 105300, 17, 18, 178, 22, 41, 42, 43):
-        capability["name"] = "Temp_" + str(capabilityId)
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
+    # elif capabilityId in (22, 231, 234, 252, 312, 105300, 17, 18, 178, 22, 41, 42, 43):
+    #    capability["name"] = "Temp_" + str(capabilityId)
+    #    capability["type"] = "temperature_adjustment_number"
+    #    capability["category"] = "sensor"
 
     else:
         return None
