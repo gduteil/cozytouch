@@ -156,10 +156,15 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["modelList"] = "HeatingModes"
 
     elif capabilityId == 99:
-        capability["name"] = "DHW Pump"
+        if modelInfos["type"] == CozytouchDeviceType.WATER_HEATER:
+            capability["name"] = "Resistance"
+            capability["icon"] = "mdi:radiator"
+        else:
+            capability["name"] = "DHW Pump"
+            capability["icon"] = "mdi:faucet"
+
         capability["type"] = "binary"
         capability["category"] = "sensor"
-        capability["icon"] = "mdi:faucet"
 
     elif capabilityId == 100:
         capability["name"] = "Water Pressure"
@@ -213,11 +218,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     elif capabilityId in (152, 227):
         capability["name"] = "Away Mode"
-        capability["type"] = "switch"
+        capability["type"] = "away_mode_switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:airplane"
         capability["value_off"] = "0"
-        capability["value_on"] = "2"
+        capability["value_on"] = "1"
+        capability["value_pending"] = "2"
+        capability["timestampsCapabilityId"] = 222
 
     elif capabilityId == 153:
         if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
@@ -388,10 +395,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["name"] = "Away Mode"
         capability["name_0"] = "Away Mode Start"
         capability["name_1"] = "Away Mode Stop"
-        capability["type"] = "timestamp_2"
+        capability["type"] = "away_mode_timestamps"
         capability["category"] = "sensor"
         capability["icon_0"] = "mdi:airplane-takeoff"
         capability["icon_1"] = "mdi:airplane-landing"
+        capability["timezoneCapabilityId"] = 315
 
     elif capabilityId == 232:
         capability["name"] = "Boost Total Time"

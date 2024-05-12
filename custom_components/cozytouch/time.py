@@ -34,7 +34,7 @@ async def async_setup_entry(
         )
         return
 
-    # Init selects
+    # Init times
     times = []
     capabilities = hub.get_capabilities_for_device()
     for capability in capabilities:
@@ -65,7 +65,7 @@ class CozytouchTime(TimeEntity, CozytouchSensor):
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
-        """Initialize a Select entity."""
+        """Initialize a Time entity."""
         super().__init__(
             coordinator=coordinator,
             capability=capability,

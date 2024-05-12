@@ -13,6 +13,7 @@ from homeassistant import exceptions
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .capability import get_capability_infos
 from .const import COZYTOUCH_ATLANTIC_API, COZYTOUCH_CLIENT_ID
@@ -26,6 +27,11 @@ class Hub(DataUpdateCoordinator):
 
     manufacturer = "Atlantic Group"
     _localization = {}
+    _setup = {}
+
+    _timestamp_away_mode_last_change = None
+    _timestamp_away_mode_start = None
+    _timestamp_away_mode_end = None
 
     def __init__(
         self,
@@ -47,9 +53,6 @@ class Hub(DataUpdateCoordinator):
         self._username = username
         self._password = password
         self._deviceId = deviceId
-        self._setupId = None
-        self._mainDHWEnergyId = None
-        self._mainHeatingEnergyId = None
         self._access_token = ""
         self._id = "cozytouch." + username.lower()
         self._create_unknown = False
@@ -66,6 +69,8 @@ class Hub(DataUpdateCoordinator):
                 manufacturer="Atlantic",
                 name=modelInfos["name"],
             )
+
+        self._timestamps_away_mode_capability_id = None
 
         # Load json for test during dev
         self._test_load = False
@@ -131,12 +136,22 @@ class Hub(DataUpdateCoordinator):
                 ) as response:
                     json_data = await response.json()
 
-                    # Store setup and energy prices IDs
-                    self._setupId = json_data[0].get("id", None)
-                    self._mainDHWEnergyId = json_data[0].get("mainDHWEnergy", None)
-                    self._mainHeatingEnergyId = json_data[0].get(
-                        "mainHeatingEnergy", None
-                    )
+                    # Store setup
+                    for key in (
+                        "absence",
+                        "address",
+                        "area",
+                        "id",
+                        "mainDHWEnergy",
+                        "mainHeatingEnergy",
+                        "name",
+                        "numberOfRooms",
+                        "setupBuildingDate",
+                        "timeZone",
+                        "type",
+                    ):
+                        if key in json_data[0]:
+                            self._setup[key] = copy.deepcopy(json_data[0][key])
 
                     # Update devices infos
                     self.update_devices_from_json_data(json_data)
@@ -208,14 +223,6 @@ class Hub(DataUpdateCoordinator):
                     remote_device["capabilities"]
                 )
 
-    def get_dhw_energy_id(self) -> int:
-        """Get DHW energy ID."""
-        return self._mainDHWEnergyId
-
-    def get_heating_energy_id(self) -> int:
-        """Get heating energy ID."""
-        return self._mainHeatingEnergyId
-
     def set_create_entities_for_unknown_entities(self, create_unknown: bool) -> None:
         """Set option from config flow to create entities for unknown capabilities."""
         self._create_unknown = create_unknown
@@ -250,6 +257,23 @@ class Hub(DataUpdateCoordinator):
                         if dev["deviceId"] == self._deviceId:
                             dev["capabilities"] = copy.deepcopy(json_data)
                             break
+
+                    if (
+                        self._timestamp_away_mode_last_change is not None
+                        and self._timestamps_away_mode_capability_id is not None
+                        and self._timestamp_away_mode_start is not None
+                        and self._timestamp_away_mode_end is not None
+                    ):
+                        now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
+                        if now - self._timestamp_away_mode_last_change > 20:
+                            await self.set_away_mode_timestamps(
+                                None,
+                                None,
+                                self._timestamps_away_mode_capability_id,
+                                self._timestamp_away_mode_start,
+                                self._timestamp_away_mode_end,
+                            )
+
                 except ContentTypeError:
                     self.online = False
 
@@ -418,7 +442,7 @@ class Hub(DataUpdateCoordinator):
                                                     break
 
                                             nbRetry += 1
-                                            if nbRetry > 3:
+                                            if nbRetry > 5:
                                                 break
 
                                             time.sleep(1)
@@ -426,6 +450,112 @@ class Hub(DataUpdateCoordinator):
                                         if completed:
                                             capability["value"] = value
                             break
+
+    def away_mode_init(self, timestampStart, timestampEnd):
+        """Init away mode timestamps."""
+        self._timestamp_away_mode_start = timestampStart
+        self._timestamp_away_mode_end = timestampEnd
+
+    async def set_away_mode_start(
+        self,
+        capabilityIdTimestamps: int,
+        timestamp,
+    ):
+        """Set away mode start timestamp."""
+        self._timestamp_away_mode_start = timestamp
+        self._timestamps_away_mode_capability_id = capabilityIdTimestamps
+        self._timestamp_away_mode_last_change = datetime.now(
+            tz=dt_util.DEFAULT_TIME_ZONE
+        ).timestamp()
+
+    def get_away_mode_start(self):
+        """Get away mode start timestamp."""
+        return self._timestamp_away_mode_start
+
+    async def set_away_mode_end(
+        self,
+        capabilityIdTimestamps: int,
+        timestamp,
+    ):
+        """Set away mode end timestamp."""
+        self._timestamp_away_mode_end = timestamp
+        self._timestamps_away_mode_capability_id = capabilityIdTimestamps
+        self._timestamp_away_mode_last_change = datetime.now(
+            tz=dt_util.DEFAULT_TIME_ZONE
+        ).timestamp()
+
+    def get_away_mode_end(self):
+        """Get away mode end timestamp."""
+        return self._timestamp_away_mode_end
+
+    async def set_away_mode_timestamps(
+        self,
+        capabilityIdMode,
+        valueMode,
+        capabilityIdTimestamps: int,
+        timestampStart,
+        timestampEnd,
+    ):
+        """Set away mode timestamps."""
+
+        if self.online:
+            # Update setup
+            json_data = {}
+            for key in (
+                "address",
+                "area",
+                "id",
+                "mainDHWEnergy",
+                "mainHeatingEnergy",
+                "name",
+                "numberOfRooms",
+                "setupBuildingDate",
+                "timeZone",
+                "type",
+            ):
+                if key in self._setup:
+                    json_data[key] = copy.deepcopy(self._setup[key])
+
+            json_data["absence"] = {}
+            if timestampStart is not None and timestampEnd is not None:
+                json_data["absence"]["startDate"] = timestampStart
+                json_data["absence"]["endDate"] = timestampEnd
+                _timestamp_away_mode_start = timestampStart
+                _timestamp_away_mode_end = timestampEnd
+
+            async with self._session.post(
+                COZYTOUCH_ATLANTIC_API
+                + "/magellan/cozytouch/setups/"
+                + str(self._setup["id"])
+                + "/update",
+                json=json_data,
+                headers={
+                    "Authorization": f"Bearer {self._access_token}",
+                    "Content-Type": "application/json",
+                },
+            ) as response:
+                if response.status == 204:
+                    if timestampStart is not None and timestampEnd is not None:
+                        valueTimestamps = (
+                            "[" + str(timestampStart) + "," + str(timestampEnd) + "]"
+                        )
+                        await self.set_capability_value(
+                            capabilityIdTimestamps, valueTimestamps
+                        )
+                        _LOGGER.info(
+                            "Away mode enabled %d -> %d", timestampStart, timestampEnd
+                        )
+                    else:
+                        valueTimestamps = "[0,0]"
+                        await self.set_capability_value(
+                            capabilityIdTimestamps, valueTimestamps
+                        )
+                        _LOGGER.info("Away mode disabled")
+
+                    if capabilityIdMode is not None and valueMode is not None:
+                        await self.set_capability_value(capabilityIdMode, valueMode)
+
+                    self._timestamp_away_mode_last_change = None
 
     async def _update_localization(self, country: str):
         if len(self._localization) == 0:

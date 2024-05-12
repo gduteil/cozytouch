@@ -95,6 +95,7 @@ def get_model_infos(modelId: int):
         modelInfos["HeatingModes"] = {
             0: "Manual",
             3: "Eco+",
+            4: "Prog",
         }
     elif modelId == 556:
         modelInfos["name"] = "Naviclim Hub"
@@ -165,6 +166,7 @@ def get_model_infos(modelId: int):
         modelInfos["HeatingModes"] = {
             0: "Manual",
             3: "Eco+",
+            4: "Prog",
         }
 
     elif modelId == 1381:

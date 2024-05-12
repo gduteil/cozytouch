@@ -87,9 +87,9 @@ async def async_setup_entry(
                     native_unit_of_measurement=UnitOfPressure.BAR,
                 )
             )
-        elif capability["type"] == "timestamp_2":
+        elif capability["type"] == "away_mode_timestamps":
             sensors.append(
-                CozytouchTimestampSensor(
+                CozytouchAwayModeTimestampSensor(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
@@ -103,7 +103,7 @@ async def async_setup_entry(
             )
 
             sensors.append(
-                CozytouchTimestampSensor(
+                CozytouchAwayModeTimestampSensor(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
@@ -118,6 +118,15 @@ async def async_setup_entry(
         elif capability["type"] in ("switch", "binary"):
             sensors.append(
                 CozytouchBinarySensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                )
+            )
+        elif capability["type"] == "away_mode_switch":
+            sensors.append(
+                CozytouchAwayModeSensor(
                     capability=capability,
                     config_title=config_entry.title,
                     config_uniq_id=config_entry.entry_id,
@@ -375,8 +384,8 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
         self.async_write_ha_state()
 
 
-class CozytouchTimestampSensor(CozytouchSensor):
-    """Class for timestamp sensor."""
+class CozytouchAwayModeTimestampSensor(CozytouchSensor):
+    """Class for away mode timestamp sensor."""
 
     def __init__(
         self,
@@ -390,7 +399,7 @@ class CozytouchTimestampSensor(CozytouchSensor):
         timestamp_index: int | None = None,
         attr_uniq_id: str | None = None,
     ) -> None:
-        """Initialize a timestamp Sensor."""
+        """Initialize an away mode timestamp Sensor."""
         super().__init__(
             capability=capability,
             config_title=config_title,
@@ -410,10 +419,24 @@ class CozytouchTimestampSensor(CozytouchSensor):
         if value is not None:
             value = value.translate(str.maketrans("", "", "[]"))
             timestamps = value.split(self._separator, 2)
-            if self._timestamp_index < len(timestamps):
-                timestamp = int(timestamps[self._timestamp_index])
-                if timestamp > 0:
-                    ts = datetime.datetime.fromtimestamp(timestamp)
+            if len(timestamps) == 2:
+                if timestamps[0] != "0" and timestamps[1] != "0":
+                    timestamp = int(timestamps[self._timestamp_index])
+                    timeOffset = int(
+                        self.coordinator.get_capability_value(
+                            self._capability["timezoneCapabilityId"]
+                        )
+                    )
+                    ts = datetime.datetime.fromtimestamp(timestamp + timeOffset)
+
+                    # Check if we need to init timestamps in coordinator
+                    timestampStart = self.coordinator.get_away_mode_start()
+                    timestampEnd = self.coordinator.get_away_mode_end()
+                    if timestampStart is None or timestampEnd is None:
+                        self.coordinator.away_mode_init(
+                            int(timestamps[0]), int(timestamps[1])
+                        )
+
                     return ts.strftime("%H:%M %d/%m/%Y")
 
                 return "Undefined"
@@ -452,6 +475,43 @@ class CozytouchBinarySensor(BinarySensorEntity, CozytouchSensor):
             value_on = self._capability["value_on"]
 
         return self._last_value == value_on
+
+
+class CozytouchAwayModeSensor(CozytouchSensor):
+    """Class for away mode sensor."""
+
+    def __init__(
+        self,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+        coordinator: Hub,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize a binary Sensor."""
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            coordinator=coordinator,
+            name=name,
+            icon=icon,
+        )
+
+    def get_value(self) -> str:
+        """Retrieve value from hub."""
+        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
+        if value is not None:
+            strValue = "Unknown"
+            if value == self._capability["value_off"]:
+                strValue = "Off"
+            elif value == self._capability["value_pending"]:
+                strValue = "Pending"
+            elif value == self._capability["value_on"]:
+                strValue = "On"
+
+            return strValue
 
 
 class CozytouchUnitSensor(CozytouchSensor):
