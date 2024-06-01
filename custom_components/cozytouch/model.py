@@ -84,6 +84,20 @@ def get_model_infos(modelId: int):
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
         }
+
+    elif modelId == 236:
+        modelInfos["name"] = "Sauter Phazy"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+        modelInfos["HeatingModes"] = {
+            0: "Manual",
+            3: "Eco+",
+            4: "Prog",
+        }
+
     elif modelId == 390:
         modelInfos["name"] = "AQUEO ACI HYB VM 150L 2200M"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
@@ -91,12 +105,12 @@ def get_model_infos(modelId: int):
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
         }
-
         modelInfos["HeatingModes"] = {
             0: "Manual",
             3: "Eco+",
             4: "Prog",
         }
+
     elif modelId == 556:
         modelInfos["name"] = "Naviclim Hub"
         modelInfos["type"] = CozytouchDeviceType.HUB
@@ -104,11 +118,13 @@ def get_model_infos(modelId: int):
             0: HVACMode.OFF,
         }
 
-    elif modelId in (557, 558):
+    elif modelId in (557, 558, 559):
         if modelId == 557:
             modelInfos["name"] = "Takao M3 5.4kW"
-        else:
+        elif modelId == 558:
             modelInfos["name"] = "Takao M3 2kW"
+        else:
+            modelInfos["name"] = "ASYG 12 KMTE"
 
         modelInfos["type"] = CozytouchDeviceType.AC
         modelInfos["currentTemperatureAvailable"] = False
@@ -137,11 +153,13 @@ def get_model_infos(modelId: int):
             8: HVACMode.DRY,
         }
 
-    elif modelId in (562, 563):
+    elif modelId in (562, 563, 564):
         if modelId == 562:
             modelInfos["name"] = "Takao M3 5.4kW User Interface"
-        else:
+        elif modelId == 563:
             modelInfos["name"] = "Takao M3 2kW User Interface"
+        else:
+            modelInfos["name"] = "ASYG 12 KMTE User Interface"
 
         modelInfos["type"] = CozytouchDeviceType.AC_CONTROLLER
         modelInfos["HVACModes"] = {
@@ -156,7 +174,7 @@ def get_model_infos(modelId: int):
         }
 
     elif modelId in (1369, 1376):
-        modelInfos["name"] = "Calypso Split 270L"
+        modelInfos["name"] = "Calypso Split"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,

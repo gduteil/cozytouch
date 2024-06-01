@@ -28,6 +28,7 @@ class Hub(DataUpdateCoordinator):
     manufacturer = "Atlantic Group"
     _localization = {}
     _setup = {}
+    _zones = {}
 
     _timestamp_away_mode_last_change = None
     _timestamp_away_mode_start = None
@@ -78,7 +79,7 @@ class Hub(DataUpdateCoordinator):
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_aqueo.json",
+                self._hass.config.config_dir + "/cozytouch_split_k7.json",
                 encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()
@@ -162,6 +163,10 @@ class Hub(DataUpdateCoordinator):
                             json_data[0]["address"].get("country", None)
                         )
 
+                    # Store zones informations
+                    if "zones" in json_data[0]:
+                        copy.deepcopy(json_data[0]["zones"])
+
                 self.online = True
 
             except CannotConnect:
@@ -211,6 +216,7 @@ class Hub(DataUpdateCoordinator):
                         "gatewaySerialNumber": remote_device["gatewaySerialNumber"],
                         "modelId": remote_device["modelId"],
                         "productId": remote_device["productId"],
+                        "zoneId": remote_device["zoneId"],
                         "modelInfos": get_model_infos(remote_device["modelId"]),
                         "capabilities": [],
                     }

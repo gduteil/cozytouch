@@ -45,6 +45,15 @@ async def async_setup_entry(
                     config_uniq_id=config_entry.entry_id,
                 )
             )
+        elif capability["type"] == "temperature_percent_adjustment_number":
+            numbers.append(
+                TemperaturePercentAdjustmentNumber(
+                    coordinator=hub,
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                )
+            )
         elif capability["type"] == "hours_adjustment_number":
             numbers.append(
                 HoursAdjustmentNumber(
@@ -137,6 +146,84 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         await self.coordinator.set_capability_value(
             self._capability["capabilityId"],
             str(new_value),
+        )
+
+
+class TemperaturePercentAdjustmentNumber(NumberEntity, CozytouchSensor):
+    """Temperature percent adjustment class."""
+
+    def __init__(
+        self,
+        coordinator: Hub,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize a Number entity."""
+        capabilityId = capability["capabilityId"]
+        super().__init__(
+            coordinator=coordinator,
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            attr_uniq_id=f"{DOMAIN}_{config_uniq_id}_number_{str(capabilityId)}",
+            name=name,
+            icon=icon,
+        )
+        self._attr_device_class = NumberDeviceClass.TEMPERATURE
+        self._native_value = 0
+        self._attr_native_step = 0.5
+        self._attr_native_unit_of_measurement = "°C"
+
+        self._attr_native_min_value = 0.0
+        if "temperatureMin" in capability:
+            self._attr_native_min_value = capability["temperatureMin"]
+
+        self._attr_native_max_value = 60.0
+        if "temperatureMax" in capability:
+            self._attr_native_max_value = capability["temperatureMax"]
+
+        self._range = self._attr_native_max_value - self._attr_native_min_value
+
+    @property
+    def native_value(self) -> float | None:
+        """Value of the sensor."""
+        return self._native_value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update the value of the sensor from the hub."""
+        # Get last seen value from controller
+        valuePercent = float(
+            self.coordinator.get_capability_value(self._capability["capabilityId"])
+        )
+
+        value = self._attr_native_min_value + (valuePercent * self._range / 100.0)
+
+        if value < self._attr_native_min_value:
+            value = self._attr_native_min_value
+        elif value > self._attr_native_max_value:
+            value = self._attr_native_max_value
+
+        # Save value
+        self._native_value = value
+        self.async_write_ha_state()
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        new_value = value
+        if new_value < self._attr_native_min_value:
+            new_value = self._attr_native_min_value
+        elif new_value > self._attr_native_max_value:
+            new_value = self._attr_native_max_value
+
+        valuePercent = (new_value - self._attr_native_min_value) * 100 / self._range
+
+        await self.coordinator.set_capability_value(
+            self._capability["capabilityId"],
+            str(valuePercent),
         )
 
 

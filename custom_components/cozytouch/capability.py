@@ -413,6 +413,41 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diagnostic"
         capability["icon"] = "mdi:clock-outline"
 
+    elif capabilityId == 245:
+        capability["name"] = "Prog1 (Mon)"
+        capability["type"] = "progtime"
+        capability["category"] = "diag"
+
+    elif capabilityId == 246:
+        capability["name"] = "Prog2 (Tue)"
+        capability["type"] = "progtime"
+        capability["category"] = "diag"
+
+    elif capabilityId == 247:
+        capability["name"] = "Prog3 (Wed)"
+        capability["type"] = "progtime"
+        capability["category"] = "diag"
+
+    elif capabilityId == 248:
+        capability["name"] = "Prog4 (Thu)"
+        capability["type"] = "progtime"
+        capability["category"] = "diag"
+
+    elif capabilityId == 249:
+        capability["name"] = "Prog5 (Fri)"
+        capability["type"] = "progtime"
+        capability["category"] = "diag"
+
+    elif capabilityId == 250:
+        capability["name"] = "Prog6 (Sat)"
+        capability["type"] = "progtime"
+        capability["category"] = "diag"
+
+    elif capabilityId == 251:
+        capability["name"] = "Prog7 (Sun)"
+        capability["type"] = "progtime"
+        capability["category"] = "diag"
+
     elif capabilityId == 258:
         capability["name"] = "Tank Capacity"
         capability["type"] = "volume"
@@ -588,11 +623,25 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:heat-wave"
 
+    elif capabilityId == 105906:
+        capability["name"] = "Target 105906"
+        capability["type"] = "temperature_percent_adjustment_number"
+        capability["category"] = "sensor"
+        capability["temperatureMin"] = 15.0
+        capability["temperatureMax"] = 65.0
+
+    elif capabilityId == 105907:
+        capability["name"] = "Target 105907"
+        capability["type"] = "temperature_percent_adjustment_number"
+        capability["category"] = "sensor"
+        capability["temperatureMin"] = 15.0
+        capability["temperatureMax"] = 65.0
+
     # For test
-    # elif capabilityId in (22, 231, 234, 252, 312, 105300, 17, 18, 178, 22, 41, 42, 43):
-    #    capability["name"] = "Temp_" + str(capabilityId)
-    #    capability["type"] = "temperature_adjustment_number"
-    #    capability["category"] = "sensor"
+    elif capabilityId in (22, 312):
+        capability["name"] = "Temp_" + str(capabilityId)
+        capability["type"] = "temperature_adjustment_number"
+        capability["category"] = "sensor"
 
     else:
         return None

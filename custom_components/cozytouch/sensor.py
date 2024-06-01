@@ -239,6 +239,15 @@ async def async_setup_entry(
                     coordinator=hub,
                 )
             )
+        elif capability["type"] == "progtime":
+            sensors.append(
+                CozytouchProgTimeSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                )
+            )
         elif capability["type"] == "climate":
             sensors.append(
                 CozytouchSensor(
@@ -302,7 +311,7 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
         if translation_key:
             self._attr_translation_key = translation_key
         else:
-            self._attr_translation_key = self._attr_name
+            self._attr_translation_key = self._capability["name"]
 
         if "category" in self._capability:
             if self._capability["category"] == "diag":
@@ -670,7 +679,7 @@ class CozytouchProgSensor(CozytouchSensor):
         name: str | None = None,
         icon: str | None = None,
     ) -> None:
-        """Initialize a time Sensor."""
+        """Initialize a prog Sensor."""
         super().__init__(
             capability=capability,
             config_title=config_title,
@@ -696,6 +705,57 @@ class CozytouchProgSensor(CozytouchSensor):
                         strValue += " / "
                     strValue += "%02d:%02d " % (hours, minutes)
                     strValue += " %d°C" % (prog[1])
+
+            return strValue
+
+        return None
+
+
+class CozytouchProgTimeSensor(CozytouchSensor):
+    """Class for ProgTime sensor."""
+
+    def __init__(
+        self,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+        coordinator: Hub,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize a prog time Sensor."""
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            coordinator=coordinator,
+            name=name,
+            icon=icon,
+        )
+
+    def get_value(self) -> str:
+        """Retrieve value from hub."""
+        value = self.coordinator.get_capability_value(self._capability["capabilityId"])
+        if value is not None:
+            progList = json.loads(value)
+
+            strValue = ""
+            for prog in progList:
+                if len(prog) >= 2 and (prog[0] != 0 or prog[1] != 0):
+                    hoursfrom = int(prog[0] / 60)
+                    minutesfrom = int(prog[0] % 60)
+
+                    hoursto = int(prog[1] / 60)
+                    minutesto = int(prog[1] % 60)
+
+                    if strValue != "":
+                        strValue += " / "
+                    strValue += "%02d:%02d-%02d:%02d" % (
+                        hoursfrom,
+                        minutesfrom,
+                        hoursto,
+                        minutesto,
+                    )
 
             return strValue
 
