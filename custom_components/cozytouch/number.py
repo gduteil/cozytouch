@@ -93,11 +93,12 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
             icon=icon,
         )
         self._attr_device_class = NumberDeviceClass.TEMPERATURE
-        self._native_value = 0
+        self._attr_mode = "auto"
         self._attr_native_step = 0.5
         self._attr_native_unit_of_measurement = "°C"
         self._attr_native_min_value = 0.0
         self._attr_native_max_value = 60.0
+        self._native_value = 0
 
     @property
     def native_value(self) -> float | None:
@@ -173,9 +174,10 @@ class TemperaturePercentAdjustmentNumber(NumberEntity, CozytouchSensor):
             icon=icon,
         )
         self._attr_device_class = NumberDeviceClass.TEMPERATURE
-        self._native_value = 0
+        self._attr_mode = "auto"
         self._attr_native_step = 0.5
         self._attr_native_unit_of_measurement = "°C"
+        self._native_value = 0
 
         self._attr_native_min_value = 0.0
         if "temperatureMin" in capability:
@@ -251,10 +253,11 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
             icon=icon,
         )
         self._attr_device_class = None
-        self._native_value = 0
+        self._attr_mode = "auto"
         self._attr_native_step = 1
         self._attr_native_min_value = capability.get("lowest_value", 0)
         self._attr_native_max_value = capability.get("highest_value", 100)
+        self._native_value = 0
 
     @property
     def native_value(self) -> float | None:

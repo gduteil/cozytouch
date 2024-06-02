@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -303,15 +304,14 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
             capabilityId = self._capability["capabilityId"]
             self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_{str(capabilityId)}"
 
-        if name:
-            self._attr_name = name
-        else:
-            self._attr_name = self._capability["name"]
+        self.entity_description = SensorEntityDescription(
+            key="capability_" + str(capability["capabilityId"]),
+            name=name if name else self._capability["name"],
+        )
 
-        if translation_key:
-            self._attr_translation_key = translation_key
-        else:
-            self._attr_translation_key = self._capability["name"]
+        self._attr_translation_key = (
+            translation_key if translation_key else self.entity_description.name
+        )
 
         if "category" in self._capability:
             if self._capability["category"] == "diag":

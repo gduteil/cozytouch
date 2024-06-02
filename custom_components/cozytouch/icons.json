@@ -1,7 +1,7 @@
 {
     "entity": {
         "climate": {
-            "Air Conditioner": {
+            "air_conditioner": {
                 "state_attributes": {
                     "fan_mode": {
                         "state": {
@@ -11,44 +11,44 @@
                             "medium": "mdi:fan-speed-2",
                             "high": "mdi:fan-speed-3",
                             "auto": "mdi:fan-auto",
-                            "Quiet": "mdi:fan-minus"
+                            "quiet": "mdi:fan-minus"
                         }
                     },
                     "swing_mode": {
                         "state": {
-                            "Up": "mdi:arrow-up",
-                            "Middle Up": "mdi:arrow-top-right",
-                            "Middle Down": "mdi:arrow-bottom-right",
-                            "Down": "mdi:arrow-down"
+                            "up": "mdi:arrow-up",
+                            "middle_up": "mdi:arrow-top-right",
+                            "middle_down": "mdi:arrow-bottom-right",
+                            "down": "mdi:arrow-down"
                         }
                     },
                     "preset_mode": {
                         "state": {
-                            "Basic": "mdi:thermometer",
-                            "Prog": "mdi:clock-outline",
-                            "Override": "mdi:timer-sand-complete"
+                            "basic": "mdi:thermometer",
+                            "prog": "mdi:clock-outline",
+                            "override": "mdi:timer-sand-complete"
                         }
                     }
                 }
             },
-            "Central Heating": {
+            "central_heating": {
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
-                            "Basic": "mdi:thermostat",
-                            "Prog": "mdi:thermostat-auto",
-                            "Override": "mdi:thermostat-cog"
+                            "basic": "mdi:thermostat",
+                            "prog": "mdi:thermostat-auto",
+                            "override": "mdi:thermostat-cog"
                         }
                     }
                 }
             },
-            "Heat": {
+            "heat": {
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
-                            "Basic": "mdi:thermostat",
-                            "Prog": "mdi:thermostat-auto",
-                            "Override": "mdi:thermostat-cog"
+                            "basic": "mdi:thermostat",
+                            "prog": "mdi:thermostat-auto",
+                            "override": "mdi:thermostat-cog"
                         }
                     }
                 }

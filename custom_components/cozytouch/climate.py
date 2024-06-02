@@ -26,11 +26,11 @@ from .sensor import CozytouchSensor
 
 _LOGGER = logging.getLogger(__name__)
 
-FAN_QUIET = "Quiet"
+FAN_QUIET = "quiet"
 
-PRESET_BASIC = "Basic"
-PRESET_PROG = "Prog"
-PRESET_OVERRIDE = "Override"
+PRESET_BASIC = "basic"
+PRESET_PROG = "prog"
+PRESET_OVERRIDE = "override"
 
 
 # config flow setup

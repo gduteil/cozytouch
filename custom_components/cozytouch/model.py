@@ -30,6 +30,16 @@ from homeassistant.components.climate.const import (
     FAN_ON,
 )
 
+from .const import (
+    HEATING_MODE_ECO_PLUS,
+    HEATING_MODE_MANUAL,
+    HEATING_MODE_PROG,
+    SWING_MODE_DOWN,
+    SWING_MODE_MIDDLE_DOWN,
+    SWING_MODE_MIDDLE_UP,
+    SWING_MODE_UP,
+)
+
 
 class CozytouchDeviceType(StrEnum):
     """Device types enum."""
@@ -93,9 +103,9 @@ def get_model_infos(modelId: int):
             4: HVACMode.HEAT,
         }
         modelInfos["HeatingModes"] = {
-            0: "Manual",
-            3: "Eco+",
-            4: "Prog",
+            0: HEATING_MODE_MANUAL,
+            3: HEATING_MODE_ECO_PLUS,
+            4: HEATING_MODE_PROG,
         }
 
     elif modelId == 390:
@@ -106,9 +116,9 @@ def get_model_infos(modelId: int):
             4: HVACMode.HEAT,
         }
         modelInfos["HeatingModes"] = {
-            0: "Manual",
-            3: "Eco+",
-            4: "Prog",
+            0: HEATING_MODE_MANUAL,
+            3: HEATING_MODE_ECO_PLUS,
+            4: HEATING_MODE_PROG,
         }
 
     elif modelId == 556:
@@ -138,10 +148,10 @@ def get_model_infos(modelId: int):
         }
 
         modelInfos["swingModes"] = {
-            1: "Up",
-            2: "Middle Up",
-            3: "Middle Down",
-            4: "Down",
+            1: SWING_MODE_UP,
+            2: SWING_MODE_MIDDLE_UP,
+            3: SWING_MODE_MIDDLE_DOWN,
+            4: SWING_MODE_DOWN,
         }
 
         modelInfos["HVACModes"] = {
@@ -182,9 +192,23 @@ def get_model_infos(modelId: int):
         }
 
         modelInfos["HeatingModes"] = {
-            0: "Manual",
-            3: "Eco+",
-            4: "Prog",
+            0: HEATING_MODE_MANUAL,
+            3: HEATING_MODE_ECO_PLUS,
+            4: HEATING_MODE_PROG,
+        }
+
+    elif modelId == 1371:
+        modelInfos["name"] = "Aeromax SPLIT 3"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+        modelInfos["HeatingModes"] = {
+            0: HEATING_MODE_MANUAL,
+            3: HEATING_MODE_ECO_PLUS,
+            4: HEATING_MODE_PROG,
         }
 
     elif modelId == 1381:

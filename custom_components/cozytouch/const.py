@@ -20,3 +20,13 @@ class CozytouchCapabilityVariableType(IntEnum):
     FLOAT = 2
     INT = 3
     ARRAY = 4
+
+
+SWING_MODE_UP = "up"
+SWING_MODE_MIDDLE_UP = "middle_up"
+SWING_MODE_MIDDLE_DOWN = "middle_down"
+SWING_MODE_DOWN = "down"
+
+HEATING_MODE_MANUAL = "manual"
+HEATING_MODE_ECO_PLUS = "eco_plus"
+HEATING_MODE_PROG = "prog"

@@ -1,13 +1,6 @@
 {
+    "title": "Cozytouch",
     "config": {
-        "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-        },
-        "error": {
-            "cannot_connect": "Cannot connect to Atlantic Cozytouch servers",
-            "invalid_auth": "Invalid Atlantic Cozytouch authentication",
-            "unknown": "Unknown error"
-        },
         "step": {
             "user": {
                 "data": {
@@ -20,10 +13,18 @@
                     "create_unknown": "Create entities for unknown capabilities",
                     "dump_json": "Dump a JSON file with received data"
                 }
-              }
+            }
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "cannot_connect": "Cannot connect to Atlantic Cozytouch servers",
+            "invalid_auth": "Invalid Atlantic Cozytouch authentication",
+            "unknown": "Unknown error"
         }
-   },
-   "options": {
+    },
+    "options": {
         "step": {
             "init": {
                 "data": {
@@ -31,6 +32,236 @@
                     "dump_json": "Dump a JSON file with received data"
                 }
             }
+        }
+    },
+    "entity": {
+        "climate": {
+            "air_conditioner":
+            {
+                "name": "Air Conditioner",
+                "state_attributes":
+                {
+                    "fan_mode":
+                    {
+                        "state":
+                        {
+                            "quiet": "Quiet"
+                        }
+                    },
+                    "preset_mode":
+                    {
+                        "state":
+                        {
+                            "basic": "Basic",
+                            "prog": "Prog",
+                            "override": "Override"
+                        }
+                    },
+                    "swing_mode":
+                    {
+                        "state":
+                        {
+                            "down": "Down",
+                            "middle_down": "Middle Down",
+                            "middle_up": "Middle Up",
+                            "up": "Up"
+                        }
+                    }
+                }
+            },
+            "central_heating":
+            {
+                "name": "Central Heating",
+                "state_attributes":
+                {
+                    "preset_mode":
+                    {
+                        "state":
+                        {
+                            "basic": "Basic",
+                            "prog": "Prog",
+                            "override": "Override"
+                        }
+                    }
+                }
+            },
+            "heat":
+            {
+                "name": "Heat",
+                "state_attributes":
+                {
+                    "preset_mode":
+                    {
+                        "state":
+                        {
+                            "basic": "Basic",
+                            "prog": "Prog",
+                            "override": "Override"
+                        }
+                    }
+                }
+            },
+            "heat_pump_z1":
+            {
+                "name": "Heat Pump Z1",
+                "state_attributes":
+                {
+                    "preset_mode":
+                    {
+                        "state":
+                        {
+                            "basic": "Basic",
+                            "prog": "Prog",
+                            "override": "Override"
+                        }
+                    }
+                }
+            },
+            "heat_pump_z2":
+            {
+                "name": "Heat Pump Z2",
+                "state_attributes":
+                {
+                    "preset_mode":
+                    {
+                        "state":
+                        {
+                            "basic": "Basic",
+                            "prog": "Prog",
+                            "override": "Override"
+                        }
+                    }
+                }
+            }
+        },
+        "datetime": {
+            "away_mode_start":  { "name": "Away Mode Start" },
+            "away_mode_stop":   { "name": "Away Mode Stop" }
+        },
+        "number": {
+            "away_mode_temperature":    { "name": "Away Mode Temperature" },
+            "override_total_time":      { "name": "Override Total Time" },
+            "override_total_time_z1":   { "name": "Override Total Time Z1" },
+            "override_total_time_z2":   { "name": "Override Total Time Z2" },
+            "target_cool_temperature":  { "name": "Target Cool Temperature" },
+            "target_temperature":       { "name": "Target Temperature" }
+        },
+        "select": {
+            "heating_mode":
+            {
+                "name": "Heating Mode",
+                "state":
+                {
+                    "manual": "Manual",
+                    "eco_plus": "Eco+",
+                    "prog": "Prog"
+                }
+            }
+        },
+        "sensor": {
+            "air_conditioner":          { "name": "Air Conditioner" },
+            "away_mode":                { "name": "Away Mode" },
+            "away_mode_start":          { "name": "Away Mode Start" },
+            "away_mode_stop":           { "name": "Away Mode Stop" },
+            "boiler_water_temperature": { "name": "Boiler Water Temperature" },
+            "boost_mode":               { "name": "Boost Mode" },
+            "boost_total_time":         { "name": "Boost Total Time" },
+            "boost_remaining_time":     { "name": "Boost Remaining Time" },
+            "central_heating":          { "name": "Central Heating" },
+            "ch_power_consumption":     { "name": "CH Power consumption" },
+            "condenser_temperature":    { "name": "Condenser Temperature" },
+            "dhw_power_consumption":    { "name": "DHW Power consumption" },
+            "dhw_pump":                 { "name": "DHW Pump" },
+            "dhw_temperature":          { "name": "DHW Temperature" },
+            "domestic_hot_water":       { "name": "Domestic Hot Water" },
+            "eco_mode":                 { "name": "Eco Mode" },
+            "exhaust_temperature":      { "name": "Exhaust Temperature" },
+            "flame":                    { "name": "Flame" },
+            "heat":                     { "name": "Heat" },
+            "heat_pump_z1":             { "name": "Heat Pump Z1" },
+            "heat_pump_z2":             { "name": "Heat Pump Z2" },
+            "hot_water_available":      { "name": "Hot Water Available" },
+            "interface_fw":             { "name": "Interface FW" },
+            "temperature_setpoint":     { "name": "Temperature Setpoint" },
+            "number_of_hours_burner":   { "name": "Number of hours burner" },
+            "number_of_hours_ch_pump":  { "name": "Number of hours CH pump" },
+            "number_of_hours_dhw_pump": { "name": "Number of hours DHW pump" },
+            "number_of_starts_burner":  { "name": "Number of starts burner" },
+            "number_of_starts_ch_pump": { "name": "Number of starts CH pump" },
+            "number_of_starts_DHW_pump":{ "name": "Number of starts DHW pump" },
+            "off_peak_hours":           { "name": "Off-Peak Hours" },
+            "outside_temperature":      { "name": "Outside Temperature" },
+            "override_remain_time":     { "name": "Override Remaining Time" },
+            "override_remain_time_z1":  { "name": "Override Remaining Time Z1" },
+            "override_remain_time_z2":  { "name": "Override Remaining Time Z2" },
+            "power_consumption":        { "name": "Power consumption" },
+            "powerful_mode":            { "name": "Powerful Mode" },
+            "presence_mode":            { "name": "Presence Mode" },
+            "prog_01":                  { "name": "Prog 01 (Mon)" },
+            "prog_01_z1":               { "name": "Prog 01 (Mon Z1)" },
+            "prog_02":                  { "name": "Prog 02 (Tue)" },
+            "prog_02_z1":               { "name": "Prog 02 (Tue Z1)" },
+            "prog_03":                  { "name": "Prog 03 (Wed)" },
+            "prog_03_z1":               { "name": "Prog 03 (Wed Z1)" },
+            "prog_04":                  { "name": "Prog 04 (Thu)" },
+            "prog_04_z1":               { "name": "Prog 04 (Thu Z1)" },
+            "prog_05":                  { "name": "Prog 05 (Fri)" },
+            "prog_05_z1":               { "name": "Prog 05 (Fri Z1)" },
+            "prog_06":                  { "name": "Prog 06 (Sat)" },
+            "prog_06_z1":               { "name": "Prog 06 (Sat Z1)" },
+            "prog_07":                  { "name": "Prog 07 (Sun)" },
+            "prog_07_z1":               { "name": "Prog 07 (Sun Z1)" },
+            "prog_08_z2":               { "name": "Prog 08 (Mon Z2)" },
+            "prog_09_z2":               { "name": "Prog 09 (Tue Z2)" },
+            "prog_10_z2":               { "name": "Prog 10 (Wed Z2)" },
+            "prog_11_z2":               { "name": "Prog 11 (Thu Z2)" },
+            "prog_12_z2":               { "name": "Prog 12 (Fri Z2)" },
+            "prog_13_z2":               { "name": "Prog 13 (Sat Z2)" },
+            "prog_14_z2":               { "name": "Prog 14 (Sun Z2)" },
+            "prog_cool_monday":         { "name": "Monday Cool prog" },
+            "prog_cool_tuesday":        { "name": "Tuesday Cool prog" },
+            "prog_cool_wednesday":      { "name": "Wednesday Cool prog" },
+            "prog_cool_thursday":       { "name": "Thursday Cool prog" },
+            "prog_cool_friday":         { "name": "Friday Cool prog" },
+            "prog_cool_saturday":       { "name": "Saturday Cool prog" },
+            "prog_cool_sunday":         { "name": "Sunday Cool prog" },
+            "prog_heat_monday":         { "name": "Monday Heat prog" },
+            "prog_heat_tuesday":        { "name": "Tuesday Heat prog" },
+            "prog_heat_wednesday":      { "name": "Wednesday Heat prog" },
+            "prog_heat_thursday":       { "name": "Thursday Heat prog" },
+            "prog_heat_friday":         { "name": "Friday Heat prog" },
+            "prog_heat_saturday":       { "name": "Saturday Heat prog" },
+            "prog_heat_sunday":         { "name": "Sunday Heat prog" },
+            "prog_mode":                { "name": "Prog Mode" },
+            "quiet_mode":               { "name": "Quiet Mode" },
+            "resistance":               { "name": "Resistance" },
+            "swing_mode":               { "name": "Swing Mode" },
+            "tank_bottom_temperature":  { "name": "Tank Bottom Temperature" },
+            "tank_capacity":            { "name": "Tank Capacity" },
+            "tank_middle_temperature":  { "name": "Tank Middle Temperature" },
+            "tank_top_temperature":     { "name": "Tank Top Temperature" },
+            "target_temperature":       { "name": "Target Temperature" },
+            "thermostat_temperature":   { "name": "Thermostat Temperature" },
+            "timezone":                 { "name": "Timezone" },
+            "total_power_consumption":  { "name": "Total Power consumption" },
+            "version":                  { "name": "Version" },
+            "water_consumption":        { "name": "Water Consumption"},
+            "water_pressure":           { "name": "Water Pressure" },
+            "wifi_signal":              { "name": "Wifi Signal" },
+            "wifi_ssid":                { "name": "Wifi SSID" },
+            "zone_1":                   { "name": "Zone 1" },
+            "zone_2":                   { "name": "Zone 2" }
+        },
+        "switch": {
+            "away_mode":          { "name": "Away Mode" },
+            "boost_mode":         { "name": "Boost Mode" },
+            "domestic_hot_water": { "name": "Domestic Hot Water" },
+            "eco_mode":           { "name": "Eco Mode" },
+            "powerful_mode":      { "name": "Powerful Mode" },
+            "presence_mode":      { "name": "Presence Mode" },
+            "prog_mode":          { "name": "Prog Mode" },
+            "quiet_mode":         { "name": "Quiet Mode" },
+            "swing_mode":         { "name": "Swing Mode" }
         }
     }
 }
