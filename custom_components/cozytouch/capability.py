@@ -641,7 +641,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["temperatureMax"] = 65.0
 
     # For test
-    elif capabilityId in (22, 312):
+    elif capabilityId in (22, 231, 312):
         capability["name"] = "Temp_" + str(capabilityId)
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
