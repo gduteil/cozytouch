@@ -404,6 +404,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon_1"] = "mdi:airplane-landing"
         capability["timezoneCapabilityId"] = 315
 
+    elif capabilityId == 231:
+        capability["name"] = "target_temperature"
+        capability["type"] = "temperature_adjustment_number"
+        capability["category"] = "sensor"
+        capability["lowestValueCapabilityId"] = 105301
+        capability["highestValueCapabilityId"] = 105304
+
     elif capabilityId == 232:
         capability["name"] = "boost_total_time"
         capability["type"] = "time"
@@ -476,11 +483,23 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "temperature"
         capability["category"] = "sensor"
 
+    elif capabilityId == 268:
+        capability["name"] = "v40_water_available"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-thermometer"
+
     elif capabilityId == 269:
         capability["name"] = "water_consumption"
         capability["type"] = "volume"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-pump"
+
+    elif capabilityId == 270:
+        capability["name"] = "v40_water_capacity"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-thermometer"
 
     elif capabilityId == 271:
         capability["name"] = "hot_water_available"
@@ -641,7 +660,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["temperatureMax"] = 65.0
 
     # For test
-    elif capabilityId in (22, 231, 312):
+    elif capabilityId in (22, 312):
         capability["name"] = "Temp_" + str(capabilityId)
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"

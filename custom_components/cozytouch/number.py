@@ -115,14 +115,14 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
 
         if "lowestValueCapabilityId" in self._capability:
             lowestValue = self.coordinator.get_capability_value(
-                self._capability["lowestValueCapabilityId"]
+                self._capability["lowestValueCapabilityId"], None
             )
             if lowestValue:
                 self._attr_native_min_value = float(lowestValue)
 
         if "highestValueCapabilityId" in self._capability:
             highestValue = self.coordinator.get_capability_value(
-                self._capability["highestValueCapabilityId"]
+                self._capability["highestValueCapabilityId"], None
             )
             if highestValue:
                 self._attr_native_max_value = float(highestValue)

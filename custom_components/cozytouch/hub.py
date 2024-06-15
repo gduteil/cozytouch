@@ -360,7 +360,9 @@ class Hub(DataUpdateCoordinator):
         """Get capability infos."""
         return get_capability_infos(modelId, capabilityId, capabilityValue)
 
-    def get_capability_value(self, capabilityId: int):
+    def get_capability_value(
+        self, capabilityId: int, defaultIfNotExist: str | None = "0"
+    ):
         """Get value for a device capability."""
         for dev in self._devices:
             if dev["deviceId"] == self._deviceId:
@@ -368,7 +370,7 @@ class Hub(DataUpdateCoordinator):
                     if capabilityId == capability["capabilityId"]:
                         return capability["value"]
 
-                return "0"
+                return defaultIfNotExist
 
         return None
 

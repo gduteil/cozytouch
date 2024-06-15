@@ -244,6 +244,8 @@
             "thermostat_temperature":   { "name": "Température Thermostat" },
             "timezone":                 { "name": "Fuseau Horaire" },
             "total_power_consumption":  { "name": "Consommation Totale" },
+            "v40_water_available":      { "name": "Eau V40 Disponible"},
+            "v40_water_capacity":       { "name": "Eau V40 Capacité"},
             "version":                  { "name": "Version" },
             "water_consumption":        { "name": "Consommation Eau"},
             "water_pressure":           { "name": "Pression Eau" },
