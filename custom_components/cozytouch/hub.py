@@ -54,6 +54,7 @@ class Hub(DataUpdateCoordinator):
         self._username = username
         self._password = password
         self._deviceId = deviceId
+        self._zoneId = -1
         self._access_token = ""
         self._id = "cozytouch." + username.lower()
         self._create_unknown = False
@@ -79,7 +80,7 @@ class Hub(DataUpdateCoordinator):
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_aeromax.json",
+                self._hass.config.config_dir + "/cozytouch_colas.json",
                 encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()
@@ -188,6 +189,10 @@ class Hub(DataUpdateCoordinator):
                 json_object = json.dumps(json_data, indent=4)
                 outfile.write(json_object)
 
+        # Get zones
+        if len(self._zones) == 0 and "zones" in json_data[0]:
+            self._zones = copy.deepcopy(json_data[0]["zones"])
+
         # Start by removing old devices
         for local_device in self._devices[:]:
             bStillExists = False
@@ -206,21 +211,25 @@ class Hub(DataUpdateCoordinator):
             for i, local_device in enumerate(self._devices):
                 if remote_device["deviceId"] == local_device["deviceId"]:
                     deviceIndex = i
+                    self._zoneId = remote_device["zoneId"]
                     break
 
             if deviceIndex == -1:
-                self._devices.append(
-                    {
-                        "deviceId": remote_device["deviceId"],
-                        "name": remote_device["name"],
-                        "gatewaySerialNumber": remote_device["gatewaySerialNumber"],
-                        "modelId": remote_device["modelId"],
-                        "productId": remote_device["productId"],
-                        "zoneId": remote_device["zoneId"],
-                        "modelInfos": get_model_infos(remote_device["modelId"]),
-                        "capabilities": [],
-                    }
-                )
+                device = {
+                    "deviceId": remote_device["deviceId"],
+                    "name": remote_device["name"],
+                    "gatewaySerialNumber": remote_device["gatewaySerialNumber"],
+                    "modelId": remote_device["modelId"],
+                    "productId": remote_device["productId"],
+                    "zoneId": remote_device["zoneId"],
+                    "modelInfos": get_model_infos(remote_device["modelId"]),
+                    "capabilities": [],
+                    "tags": [],
+                }
+                if "tags" in remote_device:
+                    device["tags"] = copy.deepcopy(remote_device["tags"])
+
+                self._devices.append(device)
                 deviceIndex = len(self._devices) - 1
 
             # Only retrieve capabilites from current device
@@ -300,6 +309,17 @@ class Hub(DataUpdateCoordinator):
 
         return devs
 
+    def get_zone_name(self, zoneId: int | None = None) -> str:
+        """Get zone infos."""
+        if not zoneId:
+            zoneId = self._zoneId
+
+        for zone in self._zones:
+            if "id" in zone and zone["id"] == zoneId:
+                return zone["name"]
+
+        return str(zoneId)
+
     def get_model_infos(self, deviceId: int | None = None) -> str:
         """Get model infos."""
         if not deviceId:
@@ -307,7 +327,22 @@ class Hub(DataUpdateCoordinator):
 
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
-                return get_model_infos(dev["modelId"])
+                zoneId = dev["zoneId"]
+
+                # Special case for sub-devices, use master zone Id
+                for masterDev in self._devices:
+                    if "tags" in masterDev:
+                        for tag in masterDev["tags"]:
+                            if (
+                                "label" in tag
+                                and tag["label"] == "iothubChildrenIds"
+                                and "value" in tag
+                                and tag["value"] == dev["name"]
+                            ):
+                                zoneId = masterDev["zoneId"]
+                                break
+
+                return get_model_infos(dev["modelId"], self.get_zone_name(zoneId))
 
         return get_model_infos(-1)
 

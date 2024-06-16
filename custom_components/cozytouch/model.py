@@ -55,7 +55,7 @@ class CozytouchDeviceType(StrEnum):
     HUB = "hub"
 
 
-def get_model_infos(modelId: int):
+def get_model_infos(modelId: int, zoneName: str | None = None):
     """Return infos from model ID."""
     modelInfos = {"modelId": modelId}
 
@@ -128,15 +128,12 @@ def get_model_infos(modelId: int):
             0: HVACMode.OFF,
         }
 
-    elif modelId in (557, 558, 559, 560, 561):
-        if modelId == 557:
-            modelInfos["name"] = "Takao M3 5.4kW"
-        elif modelId == 558:
-            modelInfos["name"] = "Takao M3 2kW"
-        elif modelId == 559:
-            modelInfos["name"] = "ASYG 12 KMTE"
+    elif modelId >= 557 and modelId <= 561:
+        name = "Air Conditioner "
+        if zoneName is not None:
+            modelInfos["name"] = name + "(" + zoneName + ")"
         else:
-            modelInfos["name"] = "Unknown Air Conditioner (" + str(modelId) + ")"
+            modelInfos["name"] = name + "(#" + str(modelId - 556) + ")"
 
         modelInfos["type"] = CozytouchDeviceType.AC
         modelInfos["currentTemperatureAvailable"] = False
@@ -165,17 +162,12 @@ def get_model_infos(modelId: int):
             8: HVACMode.DRY,
         }
 
-    elif modelId in (562, 563, 564, 565, 566):
-        if modelId == 562:
-            modelInfos["name"] = "Takao M3 5.4kW User Interface"
-        elif modelId == 563:
-            modelInfos["name"] = "Takao M3 2kW User Interface"
-        elif modelId == 564:
-            modelInfos["name"] = "ASYG 12 KMTE User Interface"
+    elif modelId >= 562 and modelId <= 566:
+        name = "Air Conditioner User Interface "
+        if zoneName is not None:
+            modelInfos["name"] = name + "(" + zoneName + ")"
         else:
-            modelInfos["name"] = (
-                "Unknown Air Conditioner User Interface (" + str(modelId) + ")"
-            )
+            modelInfos["name"] = name + "(#" + str(modelId - 561) + ")"
 
         modelInfos["type"] = CozytouchDeviceType.AC_CONTROLLER
         modelInfos["HVACModes"] = {
