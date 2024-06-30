@@ -85,6 +85,26 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             4: HVACMode.HEAT,
         }
 
+        modelInfos["HeatingModes"] = {
+            0: HEATING_MODE_MANUAL,
+        }
+
+        modelInfos["exhaustTemperatureAvailable"] = False
+
+    elif modelId == 211:
+        modelInfos["name"] = "Alfea Extensa Duo A.I. 3 R32"
+        modelInfos["type"] = CozytouchDeviceType.HEAT_PUMP
+        modelInfos["currentTemperatureAvailableZ1"] = True
+        modelInfos["currentTemperatureAvailableZ2"] = True
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+        modelInfos["HeatingModes"] = {
+            0: HEATING_MODE_MANUAL,
+        }
+
         modelInfos["exhaustTemperatureAvailable"] = False
 
     elif modelId == 235:
@@ -211,6 +231,14 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
 
     elif modelId == 1381:
         modelInfos["name"] = "KELUD 1750W BLC"
+        modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+    elif modelId == 1382:
+        modelInfos["name"] = "KELUD 1750W Anthracite Standard"
         modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,

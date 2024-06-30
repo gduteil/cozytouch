@@ -188,7 +188,7 @@
             "number_of_hours_dhw_pump": { "name": "Number of hours DHW pump" },
             "number_of_starts_burner":  { "name": "Number of starts burner" },
             "number_of_starts_ch_pump": { "name": "Number of starts CH pump" },
-            "number_of_starts_DHW_pump":{ "name": "Number of starts DHW pump" },
+            "number_of_starts_dhw_pump":{ "name": "Number of starts DHW pump" },
             "off_peak_hours":           { "name": "Off-Peak Hours" },
             "outside_temperature":      { "name": "Outside Temperature" },
             "override_remain_time":     { "name": "Override Remaining Time" },
