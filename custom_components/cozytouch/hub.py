@@ -1,11 +1,12 @@
 """Atlantic Cozytouch Hub."""
+
 from __future__ import annotations
 
+import asyncio
 import copy
 from datetime import UTC, datetime, time as t, timedelta, timezone
 import json
 import logging
-import time
 
 from aiohttp import ClientSession, ContentTypeError, FormData
 
@@ -488,7 +489,7 @@ class Hub(DataUpdateCoordinator):
                                             if nbRetry > 5:
                                                 break
 
-                                            time.sleep(1)
+                                            await asyncio.sleep(1)
 
                                         if completed:
                                             capability["value"] = value
