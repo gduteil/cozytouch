@@ -81,7 +81,7 @@ class Hub(DataUpdateCoordinator):
             self._dump_json = False
             self.online = True
             with open(
-                self._hass.config.config_dir + "/cozytouch_colas.json",
+                self._hass.config.config_dir + "/cozytouch_eoras2.json",
                 encoding="utf-8",
             ) as json_file:
                 file_contents = json_file.read()

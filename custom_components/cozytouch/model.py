@@ -56,7 +56,7 @@ class CozytouchDeviceType(StrEnum):
 
 def get_model_infos(modelId: int, zoneName: str | None = None):
     """Return infos from model ID."""
-    modelInfos = {"modelId": modelId, "HVACModesCapabilityId": {1, 2}}
+    modelInfos = {"modelId": modelId, "HVACModesCapabilityId": {7, 8}}
 
     if modelId == 56:
         modelInfos["name"] = "Naema 2 Micro 25"
@@ -101,6 +101,7 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             1: HVACMode.HEAT,
+            2: HVACMode.AUTO,
         }
 
         modelInfos["HeatingModes"] = {

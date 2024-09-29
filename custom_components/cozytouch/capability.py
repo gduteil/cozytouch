@@ -63,8 +63,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
                 else:
                     capability["currentValueCapabilityId"] = None
 
-            capability["lowestValueCapabilityId"] = 172
-            capability["highestValueCapabilityId"] = 171
+            # capability["lowestValueCapabilityId"] = 172
+            # capability["highestValueCapabilityId"] = 171
+            capability.pop("lowestValueCapabilityId")
+            capability.pop("highestValueCapabilityId")
             capability["icon"] = "mdi:heat-pump"
         else:
             capability["name"] = "heat"
@@ -178,6 +180,18 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-boiler"
         capability["modelList"] = "HeatingModes"
+
+    elif capabilityId == 88:
+        capability["name"] = "model_name"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:tag"
+
+    elif capabilityId == 94:
+        capability["name"] = "product_number"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:tag"
 
     elif capabilityId == 99:
         if modelInfos["type"] == CozytouchDeviceType.WATER_HEATER:
@@ -317,6 +331,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         if modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
             capability["value_off"] = "false"
             capability["value_on"] = "true"
+
+    elif capabilityId == 169:
+        capability["name"] = "radio_signal"
+        capability["type"] = "percentage"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:radio-tower"
 
     elif capabilityId == 172:
         capability["name"] = "away_mode_temperature"
@@ -549,6 +569,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     elif capabilityId == 316:
         capability["name"] = "interface_fw"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:tag"
+
+    elif capabilityId == 335:
+        capability["name"] = "serial_number"
         capability["type"] = "string"
         capability["category"] = "diag"
         capability["icon"] = "mdi:tag"
