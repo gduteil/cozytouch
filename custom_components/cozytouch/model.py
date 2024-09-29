@@ -17,7 +17,6 @@ Optional :
 
 """  # noqa: D205
 
-
 from enum import StrEnum
 
 from homeassistant.components.climate import HVACMode
@@ -57,7 +56,7 @@ class CozytouchDeviceType(StrEnum):
 
 def get_model_infos(modelId: int, zoneName: str | None = None):
     """Return infos from model ID."""
-    modelInfos = {"modelId": modelId}
+    modelInfos = {"modelId": modelId, "HVACModesCapabilityId": {1, 2}}
 
     if modelId == 56:
         modelInfos["name"] = "Naema 2 Micro 25"
@@ -96,9 +95,12 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
         modelInfos["type"] = CozytouchDeviceType.HEAT_PUMP
         modelInfos["currentTemperatureAvailableZ1"] = True
         modelInfos["currentTemperatureAvailableZ2"] = True
+
+        modelInfos["HVACModesCapabilityId"] = {1, 2}
+
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
-            4: HVACMode.HEAT,
+            1: HVACMode.HEAT,
         }
 
         modelInfos["HeatingModes"] = {

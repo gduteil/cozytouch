@@ -144,7 +144,10 @@
             "override_total_time_z1":   { "name": "Durée Délégation Z1" },
             "override_total_time_z2":   { "name": "Durée Délégation Z2" },
             "target_cool_temperature":  { "name": "Température Consigne Cool" },
-            "target_temperature":       { "name": "Température Consigne" }
+            "target_temperature":       { "name": "Température Consigne" },
+            "target_temperature_dhw":   { "name": "Température Consigne DHW" },
+            "target_temperature_eco_z1":{ "name": "Température Consigne Eco Z1" },
+            "target_temperature_eco_z2":{ "name": "Température Consigne Eco Z2" }
         },
         "select": {
             "heating_mode":
@@ -241,7 +244,11 @@
             "tank_middle_temperature":  { "name": "Température Milieu Réservoir" },
             "tank_top_temperature":     { "name": "Température Haut Réservoir" },
             "target_temperature":       { "name": "Température Consigne" },
-            "thermostat_temperature":   { "name": "Température Thermostat" },
+            "target_temperature_dhw":   { "name": "Température Consigne DHW" },
+            "target_temperature_eco_z1":{ "name": "Température Consigne Eco Z1" },
+            "target_temperature_eco_z2":{ "name": "Température Consigne Eco Z2" },
+            "thermostat_temperature_z1":{ "name": "Température Thermostat Z1" },
+            "thermostat_temperature_z2":{ "name": "Température Thermostat Z2" },
             "timezone":                 { "name": "Fuseau Horaire" },
             "total_power_consumption":  { "name": "Consommation Totale" },
             "v40_water_available":      { "name": "Eau V40 Disponible"},

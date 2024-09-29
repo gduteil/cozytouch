@@ -144,7 +144,10 @@
             "override_total_time_z1":   { "name": "Override Total Time Z1" },
             "override_total_time_z2":   { "name": "Override Total Time Z2" },
             "target_cool_temperature":  { "name": "Target Cool Temperature" },
-            "target_temperature":       { "name": "Target Temperature" }
+            "target_temperature":       { "name": "Target Temperature" },
+            "target_temperature_dhw":   { "name": "Target Temperature DHW" },
+            "target_temperature_eco_z1":{ "name": "Target Temperature Eco Z1" },
+            "target_temperature_eco_z2":{ "name": "Target Temperature Eco Z2" }
         },
         "select": {
             "heating_mode":
@@ -241,7 +244,11 @@
             "tank_middle_temperature":  { "name": "Tank Middle Temperature" },
             "tank_top_temperature":     { "name": "Tank Top Temperature" },
             "target_temperature":       { "name": "Target Temperature" },
-            "thermostat_temperature":   { "name": "Thermostat Temperature" },
+            "target_temperature_dhw":   { "name": "Target Temperature DHW" },
+            "target_temperature_eco_z1":{ "name": "Target Temperature Eco Z1" },
+            "target_temperature_eco_z2":{ "name": "Target Temperature Eco Z2" },
+            "thermostat_temperature_z1":{ "name": "Thermostat Temperature Z1" },
+            "thermostat_temperature_z2":{ "name": "Thermostat Temperature Z2" },
             "timezone":                 { "name": "Timezone" },
             "total_power_consumption":  { "name": "Total Power consumption" },
             "v40_water_available":      { "name": "V40 Water Available"},

@@ -12,7 +12,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     capability = {"modelId": modelId}
 
-    if capabilityId in (7, 8):
+    if (
+        capabilityId in (1, 2, 7, 8)
+        and capabilityId in modelInfos["HVACModesCapabilityId"]
+    ):
         # Default Ids
         capability["targetCapabilityId"] = 40
         capability["lowestValueCapabilityId"] = 160
@@ -45,11 +48,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability["ecoCapabilityId"] = 100507
             capability["boostCapabilityId"] = 100505
         elif modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
-            if capabilityId == 7:
+            if capabilityId in (1, 7):
                 capability["name"] = "heat_pump_z1"
                 capability["targetCapabilityId"] = 17
                 if modelInfos.get("currentTemperatureAvailableZ1", True):
-                    capability["currentValueCapabilityId"] = 119
+                    capability["currentValueCapabilityId"] = 117
                 else:
                     capability["currentValueCapabilityId"] = None
             else:
@@ -84,6 +87,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "temperature"
         capability["category"] = "sensor"
 
+    elif capabilityId == 22:
+        capability["name"] = "target_temperature_dhw"
+        capability["type"] = "temperature_adjustment_number"
+        capability["category"] = "sensor"
+        capability["lowestValueCapabilityId"] = 160
+        capability["highestValueCapabilityId"] = 161
+
     elif capabilityId == 25:
         capability["name"] = "number_of_starts_ch_pump"
         capability["type"] = "int"
@@ -110,6 +120,20 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     elif capabilityId == 40:
         capability["name"] = "target_temperature"
+        capability["type"] = "temperature_adjustment_number"
+        capability["category"] = "sensor"
+        capability["lowestValueCapabilityId"] = 160
+        capability["highestValueCapabilityId"] = 161
+
+    elif capabilityId == 41:
+        capability["name"] = "target_temperature_eco_z1"
+        capability["type"] = "temperature_adjustment_number"
+        capability["category"] = "sensor"
+        capability["lowestValueCapabilityId"] = 160
+        capability["highestValueCapabilityId"] = 161
+
+    elif capabilityId == 42:
+        capability["name"] = "target_temperature_eco_z2"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
         capability["lowestValueCapabilityId"] = 160
@@ -197,7 +221,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             return {}
 
     elif capabilityId == 117:
-        capability["name"] = "thermostat_temperature"
+        capability["name"] = "thermostat_temperature_z1"
+        capability["type"] = "temperature"
+        capability["category"] = "sensor"
+
+    elif capabilityId == 118:
+        capability["name"] = "thermostat_temperature_z2"
         capability["type"] = "temperature"
         capability["category"] = "sensor"
 
@@ -660,7 +689,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["temperatureMax"] = 65.0
 
     # For test
-    elif capabilityId in (22, 312):
+    elif capabilityId == 312:
         capability["name"] = "Temp_" + str(capabilityId)
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
