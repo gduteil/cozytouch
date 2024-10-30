@@ -195,12 +195,13 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         # Target value
         if self._attr_hvac_mode in (
             HVACMode.OFF,
-            HVACMode.DRY,
-            HVACMode.FAN_ONLY,
+            HVACMode.FAN_ONLY
         ):
             self._native_value = None
         elif (
-            self._attr_hvac_mode == HVACMode.COOL
+            self._attr_hvac_mode in (
+                HVACMode.COOL,
+                HVACMode.DRY )
             and "targetCoolCapabilityId" in self._capability
         ):
             self._native_value = float(
@@ -224,7 +225,10 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
 
         # Lowest adjustment value
         if (
-            self._attr_hvac_mode == HVACMode.COOL
+            self._attr_hvac_mode in (
+                HVACMode.COOL,
+                HVACMode.DRY,
+                HVACMode.AUTO )
             and "lowestCoolValueCapabilityId" in self._capability
         ):
             lowestValueId = self._capability.get("lowestCoolValueCapabilityId", None)
@@ -239,7 +243,10 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
 
         # Highest adjustment value
         if (
-            self._attr_hvac_mode == HVACMode.COOL
+            self._attr_hvac_mode in (
+                HVACMode.COOL,
+                HVACMode.DRY,
+                HVACMode.AUTO )
             and "highestCoolValueCapabilityId" in self._capability
         ):
             highestValueId = self._capability["highestCoolValueCapabilityId"]
@@ -367,7 +374,9 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                 await self.async_set_preset_mode(PRESET_OVERRIDE)
 
             if (
-                self._attr_hvac_mode == HVACMode.COOL
+                self._attr_hvac_mode in (
+                    HVACMode.COOL,
+                    HVACMode.DRY )
                 and "targetCoolCapabilityId" in self._capability
             ):
                 await self.coordinator.set_capability_value(
