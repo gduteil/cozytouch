@@ -145,16 +145,11 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
         }
 
     elif modelId == 418:
-        modelInfos["name"] = "Loria Duo 3kW R32"
-        modelInfos["type"] = CozytouchDeviceType.HEAT_PUMP
-        modelInfos["HVACModes"] = { # not sure
+        modelInfos["name"] = "Thermostat Navilink 128 Radio-Connect"
+        modelInfos["type"] = CozytouchDeviceType.THERMOSTAT
+        modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
-        }
-        modelInfos["HeatingModes"] = { # not sure
-            0: HEATING_MODE_MANUAL,
-            3: HEATING_MODE_ECO_PLUS,
-            4: HEATING_MODE_PROG,
         }
 
     elif modelId == 556:
