@@ -238,6 +238,7 @@
             "prog_heat_saturday":       { "name": "Saturday Heat prog" },
             "prog_heat_sunday":         { "name": "Sunday Heat prog" },
             "prog_mode":                { "name": "Prog Mode" },
+            "prog_override"             { "name": "Override" },
             "quiet_mode":               { "name": "Quiet Mode" },
             "radio_signal":             { "name": "Radio Signal" },
             "resistance":               { "name": "Resistance" },
