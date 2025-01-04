@@ -296,7 +296,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["name"] = "prog_override"
         capability["type"] = "switch"
         capability["category"] = "sensor"
-        capability["icon"] = "mdi:clock-outline"
+        capability["icon"] = "mdi:hand-back-left"
 
     elif capabilityId == 158:
         if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
