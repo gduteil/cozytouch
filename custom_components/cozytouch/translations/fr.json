@@ -54,7 +54,7 @@
                         {
                             "basic": "Basique",
                             "prog": "Prog",
-                            "override": "Délégation"
+                            "override": "Dérogation"
                         }
                     },
                     "swing_mode":
@@ -80,7 +80,7 @@
                         {
                             "basic": "Basique",
                             "prog": "Prog",
-                            "override": "Délégation"
+                            "override": "Dérogation"
                         }
                     }
                 }
@@ -96,7 +96,7 @@
                         {
                             "basic": "Basique",
                             "prog": "Prog",
-                            "override": "Délégation"
+                            "override": "Dérogation"
                         }
                     }
                 }
@@ -112,7 +112,7 @@
                         {
                             "basic": "Basique",
                             "prog": "Prog",
-                            "override": "Délégation"
+                            "override": "Dérogation"
                         }
                     }
                 }
@@ -128,7 +128,7 @@
                         {
                             "basic": "Basique",
                             "prog": "Prog",
-                            "override": "Délégation"
+                            "override": "Dérogation"
                         }
                     }
                 }
@@ -140,9 +140,9 @@
         },
         "number": {
             "away_mode_temperature":    { "name": "Température Absence" },
-            "override_total_time":      { "name": "Durée Délégation" },
-            "override_total_time_z1":   { "name": "Durée Délégation Z1" },
-            "override_total_time_z2":   { "name": "Durée Délégation Z2" },
+            "override_total_time":      { "name": "Durée Dérogation" },
+            "override_total_time_z1":   { "name": "Durée Dérogation Z1" },
+            "override_total_time_z2":   { "name": "Durée Dérogation Z2" },
             "target_cool_temperature":  { "name": "Température Consigne Cool" },
             "target_temperature":       { "name": "Température Consigne" },
             "target_temperature_dhw":   { "name": "Température Consigne DHW" },
@@ -195,9 +195,9 @@
             "number_of_starts_dhw_pump":{ "name": "Nb démarrages pompe DHW" },
             "off_peak_hours":           { "name": "Heures Creuses" },
             "outside_temperature":      { "name": "Température Extérieure" },
-            "override_remain_time":     { "name": "Durée Délégation Restante" },
-            "override_remain_time_z1":  { "name": "Durée Délégation Restante Z1" },
-            "override_remain_time_z2":  { "name": "Durée Délégation Restante Z2" },
+            "override_remain_time":     { "name": "Durée Dérogation Restante" },
+            "override_remain_time_z1":  { "name": "Durée Dérogation Restante Z1" },
+            "override_remain_time_z2":  { "name": "Durée Dérogation Restante Z2" },
             "power_consumption":        { "name": "Consommation" },
             "powerful_mode":            { "name": "Mode Powerful" },
             "presence_mode":            { "name": "Mode Présence" },
@@ -238,6 +238,7 @@
             "prog_heat_saturday":       { "name": "Samedi Prog Heat" },
             "prog_heat_sunday":         { "name": "Dimanche Prog Heat" },
             "prog_mode":                { "name": "Mode Prog" },
+            "prog_override":            { "name": "Dérogation" },
             "quiet_mode":               { "name": "Mode Silence" },
             "radio_signal":             { "name": "Signal Radio" },
             "resistance":               { "name": "Résistance" },
@@ -273,6 +274,7 @@
             "powerful_mode":      { "name": "Mode Powerful" },
             "presence_mode":      { "name": "Mode Présence" },
             "prog_mode":          { "name": "Mode Prog" },
+            "prog_override":      { "name": "Dérogation" },
             "quiet_mode":         { "name": "Mode Silence" },
             "swing_mode":         { "name": "Mode Oscillation" }
         }
