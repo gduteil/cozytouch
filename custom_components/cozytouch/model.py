@@ -145,8 +145,13 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
         }
 
     elif modelId == 418:
-        modelInfos["name"] = "Thermostat Navilink 128 Radio-Connect"
+        modelInfos["name"] = "Atlantic Loria Duo 6006"
         modelInfos["type"] = CozytouchDeviceType.THERMOSTAT
+        modelInfos["exhaustTemperatureAvailable"] = True
+        modelInfos["currentTemperatureAvailableZ1"] = True
+        modelInfos["currentTemperatureAvailableZ2"] = False
+        modelInfos["overrideModeAvailable"] = True
+
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
