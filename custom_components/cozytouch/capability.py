@@ -361,6 +361,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:wifi"
 
+    elif capabilityId == 181:
+        # Ignore, same as heat sensor (7, 8)
+        return {}
+
     elif capabilityId == 184:
         capability["name"] = "prog_mode"
         capability["type"] = "switch"
