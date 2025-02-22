@@ -251,6 +251,8 @@
             "target_temperature_dhw":   { "name": "Température Consigne DHW" },
             "target_temperature_eco_z1":{ "name": "Température Consigne Eco Z1" },
             "target_temperature_eco_z2":{ "name": "Température Consigne Eco Z2" },
+            "temperature_adjustment_max": { "name": "Température Maximale" },
+            "temperature_adjustment_min": { "name": "Température Minimale" },
             "thermostat_temperature_z1":{ "name": "Température Thermostat Z1" },
             "thermostat_temperature_z2":{ "name": "Température Thermostat Z2" },
             "timezone":                 { "name": "Fuseau Horaire" },
