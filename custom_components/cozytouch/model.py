@@ -285,6 +285,14 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             4: HVACMode.HEAT,
         }
 
+    elif modelId == 1622:
+        modelInfos["name"] = "Thermor Riva 5"
+        modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
     else:
         modelInfos["name"] = "Unknown product (" + str(modelId) + ")"
         modelInfos["type"] = CozytouchDeviceType.UNKNOWN
