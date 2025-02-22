@@ -193,7 +193,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:tag"
 
-    elif capabilityId == 94:
+    elif capabilityId in (94, 98):
         capability["name"] = "product_number"
         capability["type"] = "string"
         capability["category"] = "diag"
