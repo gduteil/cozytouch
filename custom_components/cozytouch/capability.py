@@ -80,7 +80,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         if modelInfos.get("quietModeAvailable", False):
             capability["quietModeCapabilityId"] = 100802
 
-        if modelInfos.get("overrideModeAvailable", False):
+        if modelInfos.get("overrideModeAvailable", True):
             capability["progCapabilityId"] = 184
             capability["progOverrideCapabilityId"] = 157
             capability["progOverrideTotalTimeCapabilityId"] = 158
