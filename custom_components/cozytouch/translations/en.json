@@ -251,6 +251,8 @@
             "target_temperature_dhw":   { "name": "Target Temperature DHW" },
             "target_temperature_eco_z1":{ "name": "Target Temperature Eco Z1" },
             "target_temperature_eco_z2":{ "name": "Target Temperature Eco Z2" },
+            "temperature_adjustment_max": { "name": "Maximum Temperature" },
+            "temperature_adjustment_min": { "name": "Minimum Temperature" },
             "thermostat_temperature_z1":{ "name": "Thermostat Temperature Z1" },
             "thermostat_temperature_z2":{ "name": "Thermostat Temperature Z2" },
             "timezone":                 { "name": "Timezone" },
