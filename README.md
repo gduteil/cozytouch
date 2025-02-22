@@ -8,6 +8,7 @@ This has been tested using on :
   - `Atlantic Loria Duo 6006 R32` heat pump using a `Navilink Radio-Connect 128` thermostat
   - `Takao M3` air conditionning
   - `Kelud 1750W` towel rack
+  - `Sauter Asama Connecté II Ventilo 1750W` towel rack
 
 A special mapping needs to be done for each model type, feel free to create an issue to help supporting your device.
 
