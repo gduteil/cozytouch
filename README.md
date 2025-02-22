@@ -4,6 +4,7 @@ This is an Atlantic Cozytouch cloud integration. Atlantic use multiple protocols
 This has been tested using on : 
   - `Atlantic Naema 2 Micro 25` gas boiler using a `Ǹavilink Radio-Connect 128` thermostat
   - `Atlantic Naema 2 Duo 25` gas boiler using a `Ǹavilink Radio-Connect 128` thermostat
+  - `Atlantic Naia 2 Micro 25` gas boiler using a `Ǹavilink Radio-Connect 128` thermostat
   - `Atlantic Loria Duo 6006 R32` heat pump using a `Navilink Radio-Connect 128` thermostat
   - `Takao M3` air conditionning
   - `Kelud 1750W` towel rack
