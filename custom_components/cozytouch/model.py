@@ -269,6 +269,14 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             4: HVACMode.HEAT,
         }
 
+    elif modelId == 1388:
+        modelInfos["name"] = "Doris étroit 1500W BLC"
+        modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
     elif modelId == 1543:
         modelInfos["name"] = "Asama Connecté II Ventilo 1750W Blanc"
         modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
