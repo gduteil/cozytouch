@@ -152,6 +152,19 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             4: HEATING_MODE_PROG,
         }
 
+    elif modelId == 418:
+        modelInfos["name"] = "Atlantic Loria Duo 6006"
+        modelInfos["type"] = CozytouchDeviceType.THERMOSTAT
+        modelInfos["exhaustTemperatureAvailable"] = True
+        modelInfos["currentTemperatureAvailableZ1"] = True
+        modelInfos["currentTemperatureAvailableZ2"] = False
+        modelInfos["overrideModeAvailable"] = True
+
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
     elif modelId == 556:
         modelInfos["name"] = "Naviclim Hub"
         modelInfos["type"] = CozytouchDeviceType.HUB
