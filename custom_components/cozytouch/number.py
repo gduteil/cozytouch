@@ -63,6 +63,15 @@ async def async_setup_entry(
                     config_uniq_id=config_entry.entry_id,
                 )
             )
+        elif capability["type"] == "minutes_adjustment_number":
+            numbers.append(
+                MinutesAdjustmentNumber(
+                    coordinator=hub,
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                )
+            )
 
     # Add the entities to HA
     if len(numbers) > 0:
@@ -254,7 +263,7 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
         )
         self._attr_device_class = None
         self._attr_mode = "auto"
-        self._attr_native_step = 1
+        self._attr_native_step = capability.get("step", 1)
         self._attr_native_min_value = capability.get("lowest_value", 0)
         self._attr_native_max_value = capability.get("highest_value", 100)
         self._native_value = 0
@@ -293,6 +302,73 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
 
         await self.coordinator.set_capability_value(
             self._capability["capabilityId"], str(int(new_value * 60))
+        )
+
+        await self.coordinator.async_request_refresh()
+
+class MinutesAdjustmentNumber(NumberEntity, CozytouchSensor):
+    """Minutes adjustment number class."""
+
+    def __init__(
+        self,
+        coordinator: Hub,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+        name: str | None = None,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize a Number entity."""
+        capabilityId = capability["capabilityId"]
+        super().__init__(
+            capability=capability,
+            config_title=config_title,
+            config_uniq_id=config_uniq_id,
+            attr_uniq_id=f"{DOMAIN}_{config_uniq_id}_number_{str(capabilityId)}",
+            coordinator=coordinator,
+            name=name,
+            icon=icon,
+        )
+        self._attr_device_class = None
+        self._attr_mode = "auto"
+        self._attr_native_step = capability.get("step", 1)
+        self._attr_native_min_value = capability.get("lowest_value", 0)
+        self._attr_native_max_value = capability.get("highest_value", 60)
+        self._native_value = 0
+
+    @property
+    def native_value(self) -> float | None:
+        """Value of the sensor."""
+        return self._native_value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update the value of the sensor from the hub."""
+        # Get last seen value from controller
+        value = (
+            float(
+                self.coordinator.get_capability_value(self._capability["capabilityId"])
+            )
+        )
+
+        if value < self._attr_native_min_value:
+            value = self._attr_native_min_value
+        elif value > self._attr_native_max_value:
+            value = self._attr_native_max_value
+
+        self._native_value = value
+        self.async_write_ha_state()
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        new_value = value
+        if new_value < self._attr_native_min_value:
+            new_value = self._attr_native_min_value
+        elif new_value > self._attr_native_max_value:
+            new_value = self._attr_native_max_value
+
+        await self.coordinator.set_capability_value(
+            self._capability["capabilityId"], str(int(new_value))
         )
 
         await self.coordinator.async_request_refresh()
