@@ -170,6 +170,7 @@
             "boost_mode":               { "name": "Mode Boost" },
             "boost_total_time":         { "name": "Durée Boost Totale" },
             "boost_remaining_time":     { "name": "Durée Boost Restante" },
+            "boost_timeout_max":        { "name": "Temporisation Max. Boost" },
             "central_heating":          { "name": "Chauffage" },
             "ch_power_consumption":     { "name": "Consommation CH" },
             "condenser_temperature":    { "name": "Temperature Condensateur" },
