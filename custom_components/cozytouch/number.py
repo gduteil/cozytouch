@@ -5,6 +5,7 @@ import logging
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -331,6 +332,7 @@ class MinutesAdjustmentNumber(NumberEntity, CozytouchSensor):
         )
         self._attr_device_class = None
         self._attr_mode = "auto"
+        self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
         self._attr_native_step = capability.get("step", 1)
         self._attr_native_min_value = capability.get("lowest_value", 0)
         self._attr_native_max_value = capability.get("highest_value", 60)
