@@ -723,9 +723,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     elif capabilityId == 104047:
         # Boost timeout max. in minutes
         capability["name"] = "boost_timeout_max"
-        capability["type"] = "int"
+        capability["type"] = "minutes_adjustment_number"
         capability["category"] = "diag"
         capability["icon"] = "mdi:clock-outline"
+        capability["lowest_value"] = 5
+        capability["highest_value"] = 60
+        capability["step"] = 5
 
     elif capabilityId == 105906:
         capability["name"] = "Target 105906"

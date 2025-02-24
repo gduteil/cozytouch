@@ -140,6 +140,7 @@
         },
         "number": {
             "away_mode_temperature":    { "name": "Away Mode Temperature" },
+            "boost_timeout_max":        { "name": "Boost Timeout Max." },
             "override_total_time":      { "name": "Override Total Time" },
             "override_total_time_z1":   { "name": "Override Total Time Z1" },
             "override_total_time_z2":   { "name": "Override Total Time Z2" },
@@ -170,7 +171,6 @@
             "boost_mode":               { "name": "Boost Mode" },
             "boost_total_time":         { "name": "Boost Total Time" },
             "boost_remaining_time":     { "name": "Boost Remaining Time" },
-            "boost_timeout_max":        { "name": "Boost Timeout Max." },
             "central_heating":          { "name": "Central Heating" },
             "ch_power_consumption":     { "name": "CH Power consumption" },
             "condenser_temperature":    { "name": "Condenser Temperature" },
