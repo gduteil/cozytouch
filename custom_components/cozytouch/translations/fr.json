@@ -140,6 +140,7 @@
         },
         "number": {
             "away_mode_temperature":    { "name": "Température Absence" },
+            "boost_timeout_max":        { "name": "Temporisation Max. Boost" },
             "override_total_time":      { "name": "Durée Délégation" },
             "override_total_time_z1":   { "name": "Durée Délégation Z1" },
             "override_total_time_z2":   { "name": "Durée Délégation Z2" },
