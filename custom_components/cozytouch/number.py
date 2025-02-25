@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
+from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -104,10 +104,10 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         )
         self._attr_device_class = NumberDeviceClass.TEMPERATURE
         self._attr_mode = "auto"
-        self._attr_native_step = 0.5
-        self._attr_native_unit_of_measurement = "°C"
-        self._attr_native_min_value = 0.0
-        self._attr_native_max_value = 60.0
+        self._attr_native_step = capability.get("step", 0.5)
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._attr_native_min_value = capability.get("lowest_value", 0)
+        self._attr_native_max_value = capability.get("highest_value", 60.0)
         self._native_value = 0
 
     @property
