@@ -264,6 +264,7 @@ class HoursAdjustmentNumber(NumberEntity, CozytouchSensor):
         )
         self._attr_device_class = None
         self._attr_mode = "auto"
+        self._attr_native_unit_of_measurement = UnitOfTime.HOURS
         self._attr_native_step = capability.get("step", 1)
         self._attr_native_min_value = capability.get("lowest_value", 0)
         self._attr_native_max_value = capability.get("highest_value", 100)
