@@ -334,9 +334,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     elif capabilityId == 161:
         # Target temperature adjustment max limit
         capability["name"] = "temperature_adjustment_max"
-        capability["type"] = "temperature"
+        capability["type"] = "temperature_adjustment_number"
         capability["category"] = "diag"
         capability["icon"] = "mdi:thermometer-chevron-up"
+        capability["lowest_value"] = 19
+        capability["highest_value"] = 28
+        capability["step"] = 0.5
 
     elif capabilityId == 165:
         capability["name"] = "boost_mode"
