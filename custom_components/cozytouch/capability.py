@@ -1,6 +1,6 @@
 """Atlantic Cozytouch capabilility mapping."""
 
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import UnitOfEnergy, UnitOfPressure
 
 from .const import CozytouchCapabilityVariableType
 from .model import CozytouchDeviceType
@@ -215,6 +215,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "pressure"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:gauge"
+        capability["displayed_unit_of_measurement"] = UnitOfPressure.BAR
 
     elif capabilityId in (101, 102, 103, 104):
         capability["name"] = "Capability_" + str(capabilityId)
@@ -563,7 +564,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     elif capabilityId == 269:
         capability["name"] = "water_consumption"
-        capability["type"] = "volume"
+        capability["type"] = "water_consumption"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-pump"
 

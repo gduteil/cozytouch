@@ -1,4 +1,5 @@
 """Sensors for Atlantic Cozytouch integration."""
+
 from __future__ import annotations
 
 import datetime
@@ -199,6 +200,18 @@ async def async_setup_entry(
                     coordinator=hub,
                     device_class=SensorDeviceClass.VOLUME,
                     native_unit_of_measurement=UnitOfVolume.LITERS,
+                )
+            )
+        elif capability["type"] == "water_consumption":
+            sensors.append(
+                CozytouchUnitSensor(
+                    capability=capability,
+                    config_title=config_entry.title,
+                    config_uniq_id=config_entry.entry_id,
+                    coordinator=hub,
+                    device_class=SensorDeviceClass.WATER,
+                    native_unit_of_measurement=UnitOfVolume.LITERS,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
                 )
             )
         elif capability["type"] == "percentage":
@@ -557,6 +570,10 @@ class CozytouchUnitSensor(CozytouchSensor):
 
         if state_class:
             self._attr_state_class = state_class
+
+        self.displayed_unit_of_measurement = (
+            capability.get("displayed_unit_of_measurement", None),
+        )
 
         self._display_factor = display_factor
 
