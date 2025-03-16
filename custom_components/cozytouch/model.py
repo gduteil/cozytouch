@@ -65,7 +65,7 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
         }
-    
+
     elif modelId == 61:
         modelInfos["name"] = "Naia 2 Micro 25"
         modelInfos["type"] = CozytouchDeviceType.GAZ_BOILER
@@ -239,7 +239,7 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             4: HEATING_MODE_PROG,
         }
 
-    elif modelId == 1371:
+    elif modelId in (1371, 1372):
         modelInfos["name"] = "Aeromax SPLIT 3"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
         modelInfos["HVACModes"] = {
