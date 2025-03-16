@@ -139,16 +139,17 @@
             "away_mode_stop":   { "name": "Absence Fin" }
         },
         "number": {
-            "away_mode_temperature":    { "name": "Température Absence" },
-            "boost_timeout_max":        { "name": "Temporisation Max. Boost" },
-            "override_total_time":      { "name": "Durée Délégation" },
-            "override_total_time_z1":   { "name": "Durée Délégation Z1" },
-            "override_total_time_z2":   { "name": "Durée Délégation Z2" },
-            "target_cool_temperature":  { "name": "Température Consigne Cool" },
-            "target_temperature":       { "name": "Température Consigne" },
-            "target_temperature_dhw":   { "name": "Température Consigne DHW" },
-            "target_temperature_eco_z1":{ "name": "Température Consigne Eco Z1" },
-            "target_temperature_eco_z2":{ "name": "Température Consigne Eco Z2" }
+            "away_mode_temperature":      { "name": "Température Absence" },
+            "boost_timeout_max":          { "name": "Temporisation Max. Boost" },
+            "override_total_time":        { "name": "Durée Délégation" },
+            "override_total_time_z1":     { "name": "Durée Délégation Z1" },
+            "override_total_time_z2":     { "name": "Durée Délégation Z2" },
+            "target_cool_temperature":    { "name": "Température Consigne Cool" },
+            "target_temperature":         { "name": "Température Consigne" },
+            "target_temperature_dhw":     { "name": "Température Consigne DHW" },
+            "target_temperature_eco_z1":  { "name": "Température Consigne Eco Z1" },
+            "target_temperature_eco_z2":  { "name": "Température Consigne Eco Z2" },
+            "temperature_adjustment_max": { "name": "Température Maximale" }
         },
         "select": {
             "heating_mode":
@@ -252,7 +253,6 @@
             "target_temperature_dhw":   { "name": "Température Consigne ECS" },
             "target_temperature_eco_z1":{ "name": "Température Consigne Eco Z1" },
             "target_temperature_eco_z2":{ "name": "Température Consigne Eco Z2" },
-            "temperature_adjustment_max": { "name": "Température Maximale" },
             "temperature_adjustment_min": { "name": "Température Minimale" },
             "thermostat_temperature_z1":{ "name": "Température Thermostat Z1" },
             "thermostat_temperature_z2":{ "name": "Température Thermostat Z2" },
