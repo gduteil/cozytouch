@@ -177,9 +177,7 @@ class CozytouchAwayModeSwitch(SwitchEntity, CozytouchSensor):
             or timestampStart > timestampEnd
         ):
             timestampStart = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp() + 60
-            timestampEnd = timestampStart + 120
-
-            # timestampEnd = timestampStart + (2 * 24 * 60 * 60)
+            timestampEnd = timestampStart + (2 * 24 * 60 * 60)
 
         self._nb_ignore = 5
         self._state = True
