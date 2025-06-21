@@ -274,7 +274,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["value_off"] = "0"
         capability["value_on"] = "1"
         capability["value_pending"] = "2"
-        capability["timestampsCapabilityId"] = 222
+        if capabilityId == 152:
+            capability["timestampsCapabilityId"] = 222
+        elif capabilityId == 227:
+            capability["timestampsCapabilityId"] = 226
 
     elif capabilityId == 153:
         if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
@@ -467,7 +470,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:wifi"
 
-    elif capabilityId == 222:
+    elif capabilityId in (222, 226):
         capability["name"] = "away_mode"
         capability["name_0"] = "away_mode_start"
         capability["name_1"] = "away_mode_stop"
