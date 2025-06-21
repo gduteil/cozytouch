@@ -292,6 +292,21 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
         }
+    elif modelId == 1546:  # Asama Connecté II Ventilo 1500W
+        modelInfos["name"] = "Asama Connecté II Ventilo 1500W ANTH"
+        modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+    
+    elif modelId == 1547:  # Asama Connecté II Ventilo 1750W
+        modelInfos["name"] = "Asama Connecté II Ventilo 1750W ANTH"
+        modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+    }
 
     elif modelId == 1622:
         modelInfos["name"] = "Thermor Riva 5"
