@@ -235,9 +235,17 @@ class Hub(DataUpdateCoordinator):
 
             # Only retrieve capabilites from current device
             if self._deviceId == remote_device["deviceId"]:
-                self._devices[deviceIndex]["capabilities"] = copy.deepcopy(
-                    remote_device["capabilities"]
-                )
+                capabilities = remote_device.get("capabilities")
+                if isinstance(capabilities, list):
+                    self._devices[deviceIndex]["capabilities"] = copy.deepcopy(
+                        capabilities
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Unexpected capabilities payload for device %s: %s",
+                        remote_device["deviceId"],
+                        str(type(capabilities)),
+                    )
 
     def set_create_entities_for_unknown_entities(self, create_unknown: bool) -> None:
         """Set option from config flow to create entities for unknown capabilities."""
@@ -269,6 +277,15 @@ class Hub(DataUpdateCoordinator):
             ) as response:
                 try:
                     json_data = await response.json()
+                    if not isinstance(json_data, list):
+                        _LOGGER.warning(
+                            "Invalid capabilities response for device %s: %s",
+                            self._deviceId,
+                            str(json_data),
+                        )
+                        self.online = False
+                        return
+
                     for dev in self._devices:
                         if dev["deviceId"] == self._deviceId:
                             dev["capabilities"] = copy.deepcopy(json_data)
@@ -368,7 +385,15 @@ class Hub(DataUpdateCoordinator):
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
                 modelInfos = get_model_infos(dev["modelId"])
-                for capability in dev["capabilities"]:
+                capabilities_list = dev.get("capabilities", [])
+                if not isinstance(capabilities_list, list):
+                    _LOGGER.warning(
+                        "Invalid capabilities data for device %s: %s",
+                        deviceId,
+                        str(type(capabilities_list)),
+                    )
+                    return capabilities
+                for capability in capabilities_list:
                     capability_infos = get_capability_infos(
                         modelInfos,
                         capability["capabilityId"],
@@ -402,9 +427,20 @@ class Hub(DataUpdateCoordinator):
         """Get value for a device capability."""
         for dev in self._devices:
             if dev["deviceId"] == self._deviceId:
-                for capability in dev["capabilities"]:
-                    if capabilityId == capability["capabilityId"]:
-                        return capability["value"]
+                capabilities_list = dev.get("capabilities", [])
+                if not isinstance(capabilities_list, list):
+                    _LOGGER.warning(
+                        "Invalid capabilities data for device %s: %s",
+                        self._deviceId,
+                        str(type(capabilities_list)),
+                    )
+                    return defaultIfNotExist
+
+                for capability in capabilities_list:
+                    if isinstance(capability, dict) and capabilityId == capability.get(
+                        "capabilityId"
+                    ):
+                        return capability.get("value")
 
                 return defaultIfNotExist
 
@@ -418,8 +454,18 @@ class Hub(DataUpdateCoordinator):
         if self.online:
             for dev in self._devices:
                 if dev["deviceId"] == self._deviceId:
-                    for capability in dev["capabilities"]:
-                        if capabilityId == capability["capabilityId"]:
+                    capabilities_list = dev.get("capabilities", [])
+                    if not isinstance(capabilities_list, list):
+                        _LOGGER.warning(
+                            "Invalid capabilities data for device %s: %s",
+                            self._deviceId,
+                            str(type(capabilities_list)),
+                        )
+                        return
+                    for capability in capabilities_list:
+                        if isinstance(
+                            capability, dict
+                        ) and capabilityId == capability.get("capabilityId"):
                             if self._test_load:
                                 capability["value"] = value
                             else:
