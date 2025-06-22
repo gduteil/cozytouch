@@ -206,7 +206,7 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             8: HVACMode.DRY,
         }
 
-    elif modelId >= 562 and modelId <= 566:
+    elif modelId >= 562 and modelId <= 570:
         name = "Air Conditioner User Interface "
         if zoneName is not None:
             modelInfos["name"] = name + "(" + zoneName + ")"
@@ -299,14 +299,22 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
         }
-    
+
     elif modelId == 1547:  # Asama Connecté II Ventilo 1750W
         modelInfos["name"] = "Asama Connecté II Ventilo 1750W ANTH"
         modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
-    }
+        }
+
+    elif modelId == 1551:
+        modelInfos["name"] = "Asama Connecté II Ventilo 1750W Noir"
+        modelInfos["type"] = CozytouchDeviceType.TOWEL_RACK
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
 
     elif modelId == 1622:
         modelInfos["name"] = "Thermor Riva 5"
@@ -314,6 +322,20 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
+        }
+
+    elif modelId == 1656:
+        modelInfos["name"] = "Aeromax 6"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+        modelInfos["HeatingModes"] = {
+            0: HEATING_MODE_MANUAL,
+            3: HEATING_MODE_ECO_PLUS,
+            4: HEATING_MODE_PROG,
         }
 
     else:
