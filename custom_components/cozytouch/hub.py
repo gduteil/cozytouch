@@ -271,26 +271,30 @@ class Hub(DataUpdateCoordinator):
             ) as response:
                 try:
                     json_data = await response.json()
-                    for dev in self._devices:
-                        if dev["deviceId"] == self._deviceId:
-                            dev["capabilities"] = copy.deepcopy(json_data)
-                            break
 
-                    if (
-                        self._timestamp_away_mode_last_change is not None
-                        and self._timestamps_away_mode_capability_id is not None
-                        and self._timestamp_away_mode_start is not None
-                        and self._timestamp_away_mode_end is not None
-                    ):
-                        now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
-                        if now - self._timestamp_away_mode_last_change > 20:
-                            await self.set_away_mode_timestamps(
-                                None,
-                                None,
-                                self._timestamps_away_mode_capability_id,
-                                self._timestamp_away_mode_start,
-                                self._timestamp_away_mode_end,
-                            )
+                    if isinstance(json_data, list):
+                        for dev in self._devices:
+                            if dev["deviceId"] == self._deviceId:
+                                dev["capabilities"] = copy.deepcopy(json_data)
+                                break
+
+                        if (
+                            self._timestamp_away_mode_last_change is not None
+                            and self._timestamps_away_mode_capability_id is not None
+                            and self._timestamp_away_mode_start is not None
+                            and self._timestamp_away_mode_end is not None
+                        ):
+                            now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
+                            if now - self._timestamp_away_mode_last_change > 20:
+                                await self.set_away_mode_timestamps(
+                                    None,
+                                    None,
+                                    self._timestamps_away_mode_capability_id,
+                                    self._timestamp_away_mode_start,
+                                    self._timestamp_away_mode_end,
+                                )
+                    else:
+                        self.online = False
 
                 except ContentTypeError:
                     self.online = False
