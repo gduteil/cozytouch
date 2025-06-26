@@ -139,6 +139,19 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             4: HEATING_MODE_PROG,
         }
 
+    elif modelId == 389:
+        modelInfos["name"] = "AQUEO ACI HYB VS 300L 3000M"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+        modelInfos["HeatingModes"] = {
+            0: HEATING_MODE_MANUAL,
+            3: HEATING_MODE_ECO_PLUS,
+            4: HEATING_MODE_PROG,
+        }
+
     elif modelId == 390:
         modelInfos["name"] = "AQUEO ACI HYB VM 150L 2200M"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
