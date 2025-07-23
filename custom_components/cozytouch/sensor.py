@@ -348,6 +348,8 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
             value = self.coordinator.get_capability_value(
                 self._capability["capabilityId"]
             )
+            if value is None:
+                return None
             if self._value_type == CozytouchCapabilityVariableType.BOOL:
                 return bool(value)
             if self._value_type == CozytouchCapabilityVariableType.FLOAT:
