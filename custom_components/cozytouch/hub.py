@@ -134,7 +134,7 @@ class Hub(DataUpdateCoordinator):
                     "Content-Type": "application/json",
                 }
                 async with self._session.get(
-                    COZYTOUCH_ATLANTIC_API + "/magellan/cozytouch/setupview",
+                    COZYTOUCH_ATLANTIC_API + "/magellan/cozytouch/setupviewv2",
                     headers=headers,
                 ) as response:
                     json_data = await response.json()
@@ -619,10 +619,11 @@ class Hub(DataUpdateCoordinator):
             ) as response:
                 try:
                     json_data = await response.json()
-                    for localization in json_data:
-                        if localization.get("countryCode", "") == country:
-                            self._localization = copy.deepcopy(localization)
-                            break
+                    if isinstance(json_data, list):
+                        for localization in json_data:
+                            if localization.get("countryCode", "") == country:
+                                self._localization = copy.deepcopy(localization)
+                                break
 
                 except ContentTypeError:
                     self._localization = {}
