@@ -47,7 +47,7 @@ class Hub(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Cozytouch_" + str(deviceId),
-            update_interval=timedelta(seconds=10),
+            update_interval=timedelta(seconds=60),
         )
         self._session = ClientSession()
         self._host = "none"
@@ -144,13 +144,14 @@ class Hub(DataUpdateCoordinator):
                         "absence",
                         "address",
                         "area",
+                        "currency",
                         "id",
                         "mainDHWEnergy",
                         "mainHeatingEnergy",
                         "name",
+                        "numberOfPersons",
                         "numberOfRooms",
                         "setupBuildingDate",
-                        "timeZone",
                         "type",
                     ):
                         if key in json_data[0]:
@@ -554,13 +555,13 @@ class Hub(DataUpdateCoordinator):
             for key in (
                 "address",
                 "area",
-                "id",
-                "mainDHWEnergy",
+                "currency",
                 "mainHeatingEnergy",
+                "mainDHWEnergy",
                 "name",
+                "numberOfPersons",
                 "numberOfRooms",
                 "setupBuildingDate",
-                "timeZone",
                 "type",
             ):
                 if key in self._setup:
@@ -573,18 +574,17 @@ class Hub(DataUpdateCoordinator):
                 _timestamp_away_mode_start = timestampStart
                 _timestamp_away_mode_end = timestampEnd
 
-            async with self._session.post(
+            async with self._session.put(
                 COZYTOUCH_ATLANTIC_API
-                + "/magellan/cozytouch/setups/"
-                + str(self._setup["id"])
-                + "/update",
+                + "/magellan/v2/setups/"
+                + str(self._setup["id"]),
                 json=json_data,
                 headers={
-                    "Authorization": f"Bearer {self._access_token}",
+                    "Authorization": f"Bearer Bearer {self._access_token}",
                     "Content-Type": "application/json",
                 },
             ) as response:
-                if response.status == 204:
+                if response.status == 200:
                     if timestampStart is not None and timestampEnd is not None:
                         valueTimestamps = (
                             "[" + str(timestampStart) + "," + str(timestampEnd) + "]"
@@ -606,6 +606,12 @@ class Hub(DataUpdateCoordinator):
                         await self.set_capability_value(capabilityIdMode, valueMode)
 
                     self._timestamp_away_mode_last_change = None
+                else:
+                    _LOGGER.error(
+                        "Set away mode : response %d (%s)",
+                        response.status,
+                        str(response.request_info),
+                    )
 
     async def _update_localization(self, country: str):
         if len(self._localization) == 0:
