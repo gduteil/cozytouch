@@ -400,6 +400,8 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:radio-tower"
 
     elif capabilityId in (17, 172):
+        capability["name"] = "away_mode_temperature"
+        capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
         if modelId  in (557,):
             capability["name"] = "effective_target_temperature"
