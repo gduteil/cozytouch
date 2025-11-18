@@ -384,6 +384,7 @@ class Hub(DataUpdateCoordinator):
 
                     if capability_infos is None and self._create_unknown:
                         capability_infos = {
+                            "capabilityId": capability["capabilityId"],
                             "name": "Capability_" + str(capability["capabilityId"]),
                             "type": "string",
                             "category": "diag",
@@ -391,9 +392,19 @@ class Hub(DataUpdateCoordinator):
 
                     if capability_infos is not None and len(capability_infos) > 0:
                         capability_infos["deviceId"] = deviceId
-                        capability_infos["capabilityId"] = capability["capabilityId"]
 
-                        capabilities.append(capability_infos)
+                        isDuplicate = False
+                        if "capabilityDuplicate" in capability_infos:
+                            for cap in capabilities:
+                                if (
+                                    cap["capabilityId"]
+                                    == capability_infos["capabilityDuplicate"]
+                                ):
+                                    isDuplicate = True
+                                    break
+
+                        if not isDuplicate:
+                            capabilities.append(capability_infos)
 
         return capabilities
 

@@ -10,7 +10,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     """Get capabilities for a device."""
     modelId = modelInfos["modelId"]
 
-    capability = {"modelId": modelId}
+    capability = {"modelId": modelId, "capabilityId": capabilityId}
 
     if (
         capabilityId in (1, 2, 7, 8)
@@ -479,6 +479,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon_0"] = "mdi:airplane-takeoff"
         capability["icon_1"] = "mdi:airplane-landing"
         capability["timezoneCapabilityId"] = 315
+        if capabilityId == 222:
+            capability["capabilityDuplicate"] = 226
+        else:
+            capability["capabilityDuplicate"] = 222
 
     elif capabilityId == 231:
         capability["name"] = "target_temperature"
