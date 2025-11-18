@@ -50,7 +50,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         elif modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
             if capabilityId in (1, 7):
                 capability["name"] = "heat_pump_z1"
-                capability["targetCapabilityId"] = 17
+                #capability["targetCapabilityId"] = 17
                 if modelInfos.get("currentTemperatureAvailableZ1", True):
                     capability["currentValueCapabilityId"] = 117
                 else:
@@ -65,6 +65,9 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
             # capability["lowestValueCapabilityId"] = 172
             # capability["highestValueCapabilityId"] = 171
+            capability["progOverrideCapabilityId"] = 157
+            capability["progOverrideTotalTimeCapabilityId"] = 158
+            capability["progOverrideTimeCapabilityId"] = 159
             capability.pop("lowestValueCapabilityId")
             capability.pop("highestValueCapabilityId")
             capability["icon"] = "mdi:heat-pump"
@@ -361,7 +364,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:radio-tower"
 
-    elif capabilityId == 172:
+    elif capabilityId in (17, 172):
         capability["name"] = "away_mode_temperature"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
@@ -740,6 +743,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["lowest_value"] = 5
         capability["highest_value"] = 60
         capability["step"] = 5
+        
+    elif capabilityId == 105636:
+        capability["name"] = "heating_mode"
+        capability["type"] = "select"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+        capability["modelList"] = "HeatingModes"
 
     elif capabilityId == 105906:
         capability["name"] = "Target 105906"
