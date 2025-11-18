@@ -52,6 +52,17 @@
                         }
                     }
                 }
+            },
+            "heat_pump_z1": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "basic": "mdi:thermometer",
+                            "prog": "mdi:clock-outline",
+                            "override": "mdi:timer-sand-complete"
+                        }
+                    }
+                }
             }
         }
     }

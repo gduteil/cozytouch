@@ -37,6 +37,8 @@ from .const import (
     SWING_MODE_MIDDLE_DOWN,
     SWING_MODE_MIDDLE_UP,
     SWING_MODE_UP,
+    HEATING_MODE_ECO,
+    HEATING_MODE_COMFORT,
 )
 
 
@@ -185,7 +187,24 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
         }
 
-    elif modelId >= 557 and modelId <= 561:
+    # Alfea Excellia PAC
+    elif modelId == 557:
+        name = "PAC "
+        if zoneName is not None:
+            modelInfos["name"] = name + "(" + zoneName + ")"
+        else:
+            modelInfos["name"] = name + "(#" + str(modelId - 556) + ")"
+
+        modelInfos["type"] = CozytouchDeviceType.HEAT_PUMP
+        modelInfos["currentTemperatureAvailableZ1"] = True
+
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            1: HVACMode.AUTO,
+            4: HVACMode.HEAT,
+        }
+
+    elif modelId >= 558 and modelId <= 561:
         name = "Air Conditioner "
         if zoneName is not None:
             modelInfos["name"] = name + "(" + zoneName + ")"
@@ -238,7 +257,20 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
         }
 
-    elif modelId in (1369, 1376):
+    elif modelId == 1376:
+        modelInfos["name"] = "ECS Alfea Excellia"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            1: HVACMode.HEAT,
+        }
+
+        modelInfos["HeatingModes"] = {
+            0: HEATING_MODE_ECO,
+            1: HEATING_MODE_COMFORT
+        }
+
+    elif modelId in (1369, 1375):
         modelInfos["name"] = "Calypso Split"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
         modelInfos["HVACModes"] = {
