@@ -269,7 +269,7 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             1: HEATING_MODE_COMFORT
         }
 
-    elif modelId in (1369, 1375):
+    elif modelId == 1369:
         modelInfos["name"] = "Calypso Split"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
         modelInfos["HVACModes"] = {
