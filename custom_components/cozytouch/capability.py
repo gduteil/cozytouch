@@ -15,6 +15,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     if (
         capabilityId in (1, 2, 7, 8)
         and capabilityId in modelInfos["HVACModesCapabilityId"]
+        and float(capabilityValue) < 3000
     ):
         # Default Ids
         capability["targetCapabilityId"] = 40
@@ -50,7 +51,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         elif modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
             if capabilityId in (1, 7):
                 capability["name"] = "heat_pump_z1"
-                #capability["targetCapabilityId"] = 17
+                capability["targetCapabilityId"] = 17
                 if modelInfos.get("currentTemperatureAvailableZ1", True):
                     capability["currentValueCapabilityId"] = 117
                 else:
@@ -65,12 +66,17 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
             # capability["lowestValueCapabilityId"] = 172
             # capability["highestValueCapabilityId"] = 171
-            capability["progOverrideCapabilityId"] = 157
-            capability["progOverrideTotalTimeCapabilityId"] = 158
-            capability["progOverrideTimeCapabilityId"] = 159
             capability.pop("lowestValueCapabilityId")
             capability.pop("highestValueCapabilityId")
             capability["icon"] = "mdi:heat-pump"
+        elif modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            capability["name"] = "heat"
+            capability["progOverrideCapabilityId"] = 157
+            capability["progOverrideTotalTimeCapabilityId"] = 158
+            capability["progOverrideTimeCapabilityId"] = 159
+            capability["lowestCoolValueCapabilityId"] = 162
+            capability["highestCoolValueCapabilityId"] = 163
+            capability["icon"] = "mdi:thermostat"
         else:
             capability["name"] = "heat"
 
@@ -173,6 +179,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
     elif capabilityId in (57, 59):
         capability["name"] = "power_consumption"
+        capability["type"] = "energy"
+        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
+        capability["category"] = "sensor"
+
+    elif capabilityId == 60:
+        capability["name"] = "total_power_consumption"
         capability["type"] = "energy"
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
         capability["category"] = "sensor"
@@ -347,6 +359,18 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["lowest_value"] = 19
         capability["highest_value"] = 28
         capability["step"] = 0.5
+
+    elif capabilityId == 162:
+        capability["name"] = "temperature_min"
+        capability["type"] = "temperature"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:thermometer-chevron-down"
+
+    elif capabilityId == 163:
+        capability["name"] = "temperature_max"
+        capability["type"] = "temperature"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:thermometer-chevron-up"
 
     elif capabilityId == 165:
         capability["name"] = "boost_mode"
