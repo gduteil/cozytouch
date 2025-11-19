@@ -156,21 +156,21 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["lowestValueCapabilityId"] = 160
         capability["highestValueCapabilityId"] = 161
 
-    elif capabilityId == 44:
+    elif capabilityId == 44 and modelId not in (1693,):
         capability["name"] = "ch_power_consumption"
         capability["type"] = "energy"
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
         capability["category"] = "sensor"
         capability["icon"] = "mdi:radiator"
 
-    elif capabilityId == 45:
+    elif capabilityId == 45 and modelId not in (1693,):
         capability["name"] = "dhw_power_consumption"
         capability["type"] = "energy"
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
         capability["category"] = "sensor"
         capability["icon"] = "mdi:faucet"
 
-    elif capabilityId == 46:
+    elif capabilityId == 46 and modelId not in (1693,):
         capability["name"] = "total_power_consumption"
         capability["type"] = "energy"
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
@@ -195,9 +195,16 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["icon"] = "mdi:faucet"
 
-    elif capabilityId == 87:
+    elif capabilityId == 87 and modelId not in (1376,):
         capability["name"] = "heating_mode"
         capability["type"] = "select"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+        capability["modelList"] = "HeatingModes"
+
+    elif capabilityId == 87 and modelId in (1376,):
+        capability["name"] = "heating_mode"
+        capability["type"] = "string"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-boiler"
         capability["modelList"] = "HeatingModes"
@@ -497,7 +504,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:wifi"
 
-    elif capabilityId in (222, 226):
+    elif capabilityId in (222, 226) and modelId not in (1376,):
         capability["name"] = "away_mode"
         capability["name_0"] = "away_mode_start"
         capability["name_1"] = "away_mode_stop"
