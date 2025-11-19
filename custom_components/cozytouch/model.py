@@ -187,16 +187,15 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
         }
 
-    # Alfea Excellia PAC
     elif modelId == 557:
-        name = "PAC "
+        name = "Thermostat Navilink Connect 228"
         if zoneName is not None:
-            modelInfos["name"] = name + "(" + zoneName + ")"
-        else:
-            modelInfos["name"] = name + "(#" + str(modelId - 556) + ")"
+            modelInfos["name"] = name + " (" + zoneName + ")"
 
-        modelInfos["type"] = CozytouchDeviceType.HEAT_PUMP
+        modelInfos["type"] = CozytouchDeviceType.THERMOSTAT
         modelInfos["currentTemperatureAvailableZ1"] = True
+        modelInfos["currentTemperatureAvailableZ2"] = False
+        modelInfos["overrideModeAvailable"] = True
 
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
@@ -322,6 +321,16 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             4: HVACMode.HEAT,
         }
 
+    elif modelId == 1391:
+        name = "Alfea Excellia Generator"
+        if zoneName is not None:
+            modelInfos["name"] = name + " (" + zoneName + ")"
+
+        modelInfos["type"] = CozytouchDeviceType.UNKNOWN
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+        }
+
     elif modelId == 1444:
         modelInfos["name"] = "Naema 3 Micro 25"
         modelInfos["type"] = CozytouchDeviceType.GAZ_BOILER
@@ -396,6 +405,17 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             3: HEATING_MODE_ECO_PLUS,
             4: HEATING_MODE_PROG,
         }
+
+    elif modelId == 1693:
+        name = "Alfea Excellia User Interface"
+        if zoneName is not None:
+            modelInfos["name"] = name + " (" + zoneName + ")"
+
+        modelInfos["type"] = CozytouchDeviceType.UNKNOWN
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+        }
+        modelInfos["HVACModesCapabilityId"] = {}
 
     else:
         modelInfos["name"] = "Unknown product (" + str(modelId) + ")"
