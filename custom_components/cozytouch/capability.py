@@ -15,6 +15,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     if (
         capabilityId in (1, 2, 7, 8)
         and capabilityId in modelInfos["HVACModesCapabilityId"]
+        and float(capabilityValue) < 3000
     ):
         # Default Ids
         capability["targetCapabilityId"] = 40
@@ -68,6 +69,14 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability.pop("lowestValueCapabilityId")
             capability.pop("highestValueCapabilityId")
             capability["icon"] = "mdi:heat-pump"
+        elif modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            capability["name"] = "heat"
+            capability["progOverrideCapabilityId"] = 157
+            capability["progOverrideTotalTimeCapabilityId"] = 158
+            capability["progOverrideTimeCapabilityId"] = 159
+            capability["lowestCoolValueCapabilityId"] = 162
+            capability["highestCoolValueCapabilityId"] = 163
+            capability["icon"] = "mdi:thermostat"
         else:
             capability["name"] = "heat"
 
@@ -147,21 +156,21 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["lowestValueCapabilityId"] = 160
         capability["highestValueCapabilityId"] = 161
 
-    elif capabilityId == 44:
+    elif capabilityId == 44 and modelId not in (1693,):
         capability["name"] = "ch_power_consumption"
         capability["type"] = "energy"
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
         capability["category"] = "sensor"
         capability["icon"] = "mdi:radiator"
 
-    elif capabilityId == 45:
+    elif capabilityId == 45 and modelId not in (1693,):
         capability["name"] = "dhw_power_consumption"
         capability["type"] = "energy"
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
         capability["category"] = "sensor"
         capability["icon"] = "mdi:faucet"
 
-    elif capabilityId == 46:
+    elif capabilityId == 46 and modelId not in (1693,):
         capability["name"] = "total_power_consumption"
         capability["type"] = "energy"
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
@@ -174,15 +183,28 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
         capability["category"] = "sensor"
 
+    elif capabilityId == 60:
+        capability["name"] = "total_power_consumption"
+        capability["type"] = "energy"
+        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
+        capability["category"] = "sensor"
+
     elif capabilityId == 86:
         capability["name"] = "domestic_hot_water"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:faucet"
 
-    elif capabilityId == 87:
+    elif capabilityId == 87 and modelId not in (1376,):
         capability["name"] = "heating_mode"
         capability["type"] = "select"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+        capability["modelList"] = "HeatingModes"
+
+    elif capabilityId == 87 and modelId in (1376,):
+        capability["name"] = "heating_mode"
+        capability["type"] = "string"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:water-boiler"
         capability["modelList"] = "HeatingModes"
@@ -345,6 +367,18 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["highest_value"] = 28
         capability["step"] = 0.5
 
+    elif capabilityId == 162:
+        capability["name"] = "temperature_min"
+        capability["type"] = "temperature"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:thermometer-chevron-down"
+
+    elif capabilityId == 163:
+        capability["name"] = "temperature_max"
+        capability["type"] = "temperature"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:thermometer-chevron-up"
+
     elif capabilityId == 165:
         capability["name"] = "boost_mode"
         capability["type"] = "switch"
@@ -361,7 +395,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:radio-tower"
 
-    elif capabilityId == 172:
+    elif capabilityId in (17, 172):
         capability["name"] = "away_mode_temperature"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
@@ -470,7 +504,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
         capability["icon"] = "mdi:wifi"
 
-    elif capabilityId in (222, 226):
+    elif capabilityId in (222, 226) and modelId not in (1376,):
         capability["name"] = "away_mode"
         capability["name_0"] = "away_mode_start"
         capability["name_1"] = "away_mode_stop"
@@ -740,6 +774,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["lowest_value"] = 5
         capability["highest_value"] = 60
         capability["step"] = 5
+        
+    elif capabilityId == 105636:
+        capability["name"] = "heating_mode"
+        capability["type"] = "select"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+        capability["modelList"] = "HeatingModes"
 
     elif capabilityId == 105906:
         capability["name"] = "Target 105906"
