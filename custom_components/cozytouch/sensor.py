@@ -723,7 +723,7 @@ class CozytouchProgSensor(CozytouchSensor):
                     if strValue != "":
                         strValue += " / "
                     strValue += "%02d:%02d " % (hours, minutes)
-                    strValue += " %d°C" % (prog[1])
+                    strValue += " %g°C" % (prog[1])
 
             return strValue
 
