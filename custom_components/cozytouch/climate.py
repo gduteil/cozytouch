@@ -8,6 +8,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
+    HVACAction,
 )
 from homeassistant.components.climate.const import (
     PRESET_ACTIVITY,
@@ -363,7 +364,46 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
     def target_temperature(self):
         """Return target temperature."""
         return self._native_value
+    
+    @property
+    def extra_state_attributes(self):
+        """Return the computed target temperature."""
+        if "effectiveTargetTemperatureId" in self._capability:
+            effective_temp = self.coordinator.get_capability_value(
+                self._capability["effectiveTargetTemperatureId"]
+            )
+            if effective_temp is not None:
+                return {
+                    "effective_target_temperature": float(effective_temp),
+                }
+        return None
+        
+    @property
+    def hvac_action(self):
+        """Return the current HVAC action."""
+        if self._attr_hvac_mode == HVACMode.OFF:
+            return HVACAction.OFF
 
+        # Get effective target temperature
+        effective_temp = None
+        if "effectiveTargetTemperatureId" in self._capability:
+            temp_value = self.coordinator.get_capability_value(
+                self._capability["effectiveTargetTemperatureId"]
+            )
+            if temp_value is not None:
+                effective_temp = float(temp_value)
+        
+        # If no effective temp, fall back to target temperature
+        if effective_temp is None:
+            effective_temp = self._native_value
+        
+        # Determine action based on current vs target temperature
+        if self._current_value is not None and effective_temp is not None:
+            if self._current_value < effective_temp - 0.2:
+                return HVACAction.HEATING
+        
+        return HVACAction.IDLE
+    
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get("temperature")
