@@ -139,17 +139,17 @@
             "away_mode_stop":   { "name": "Away Mode Stop" }
         },
         "number": {
-            "away_mode_temperature":      { "name": "Away Mode Temperature" },
-            "boost_timeout_max":          { "name": "Boost Timeout Max." },
-            "override_total_time":        { "name": "Override Total Time" },
-            "override_total_time_z1":     { "name": "Override Total Time Z1" },
-            "override_total_time_z2":     { "name": "Override Total Time Z2" },
-            "target_cool_temperature":    { "name": "Target Cool Temperature" },
-            "target_temperature":         { "name": "Target Temperature" },
-            "target_temperature_dhw":     { "name": "Target Temperature DHW" },
-            "target_temperature_eco_z1":  { "name": "Target Temperature Eco Z1" },
-            "target_temperature_eco_z2":  { "name": "Target Temperature Eco Z2" },
-            "temperature_adjustment_max": { "name": "Maximum Temperature" }
+            "away_mode_temperature":        { "name": "Away Mode Temperature" },
+            "boost_timeout_max":            { "name": "Boost Timeout Max." },
+            "override_total_time":          { "name": "Override Total Time" },
+            "override_total_time_z1":       { "name": "Override Total Time Z1" },
+            "override_total_time_z2":       { "name": "Override Total Time Z2" },
+            "target_cool_temperature":      { "name": "Target Cool Temperature" },
+            "target_temperature":           { "name": "Target Temperature" },
+            "target_temperature_dhw":       { "name": "Target Temperature DHW" },
+            "target_temperature_eco_z1":    { "name": "Target Temperature Eco Z1" },
+            "target_temperature_eco_z2":    { "name": "Target Temperature Eco Z2" },
+            "temperature_adjustment_max":   { "name": "Maximum Temperature" }
         },
         "select": {
             "heating_mode":
@@ -266,7 +266,8 @@
             "wifi_signal":              { "name": "Wifi Signal" },
             "wifi_ssid":                { "name": "Wifi SSID" },
             "zone_1":                   { "name": "Zone 1" },
-            "zone_2":                   { "name": "Zone 2" }
+            "zone_2":                   { "name": "Zone 2" },
+            "effective_target_temperature": { "name": "Effective Target Temperature" }
         },
         "switch": {
             "away_mode":          { "name": "Away Mode" },

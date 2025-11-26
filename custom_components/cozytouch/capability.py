@@ -80,6 +80,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         else:
             capability["name"] = "heat"
 
+        # Add effective target temperature for model 557
+        if modelId == 557:
+            capability["effectiveTargetTemperatureId"] = 17
+
         capability["type"] = "climate"
         capability["category"] = "sensor"
 
@@ -396,14 +400,18 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:radio-tower"
 
     elif capabilityId in (17, 172):
-        capability["name"] = "away_mode_temperature"
-        capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
+        if modelId  in (557,):
+            capability["name"] = "effective_target_temperature"
+            capability["type"] = "temperature"
+        else:
+            capability["name"] = "away_mode_temperature"
+            capability["type"] = "temperature_adjustment_number"
+            capability["lowestValueCapabilityId"] = 160
+            capability["highestValueCapabilityId"] = 161
 
     elif capabilityId == 177:
-        if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER:
+        if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER or modelId in (557,):
             return {}
 
         capability["name"] = "target_cool_temperature"
