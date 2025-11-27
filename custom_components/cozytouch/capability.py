@@ -82,7 +82,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
 
         # Add effective target temperature for model 557
         if modelId == 557:
-            capability["effectiveTargetTemperatureId"] = 17
+            capability["setpointTemperatureId"] = 17
 
         capability["type"] = "climate"
         capability["category"] = "sensor"
@@ -404,7 +404,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
         if modelId  in (557,):
-            capability["name"] = "effective_target_temperature"
+            capability["name"] = "temperature_setpoint"
             capability["type"] = "temperature"
         else:
             capability["name"] = "away_mode_temperature"

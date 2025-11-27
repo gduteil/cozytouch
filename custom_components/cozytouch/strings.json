@@ -266,8 +266,7 @@
             "wifi_signal":              { "name": "Wifi Signal" },
             "wifi_ssid":                { "name": "Wifi SSID" },
             "zone_1":                   { "name": "Zone 1" },
-            "zone_2":                   { "name": "Zone 2" },
-            "effective_target_temperature": { "name": "Effective Target Temperature" }
+            "zone_2":                   { "name": "Zone 2" }
         },
         "switch": {
             "away_mode":          { "name": "Away Mode" },

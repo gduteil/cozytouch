@@ -368,13 +368,13 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
     @property
     def extra_state_attributes(self):
         """Return the computed target temperature."""
-        if "effectiveTargetTemperatureId" in self._capability:
+        if "setpointTemperatureId" in self._capability:
             effective_temp = self.coordinator.get_capability_value(
-                self._capability["effectiveTargetTemperatureId"]
+                self._capability["setpointTemperatureId"]
             )
             if effective_temp is not None:
                 return {
-                    "effective_target_temperature": float(effective_temp),
+                    "temperature_setpoint": float(effective_temp),
                 }
         return None
         
@@ -385,21 +385,21 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             return HVACAction.OFF
 
         # Get effective target temperature
-        effective_temp = None
-        if "effectiveTargetTemperatureId" in self._capability:
-            temp_value = self.coordinator.get_capability_value(
-                self._capability["effectiveTargetTemperatureId"]
+        setpoint_temp = None
+        if "setpointTemperatureId" in self._capability:
+            setpoint_temp_value = self.coordinator.get_capability_value(
+                self._capability["setpointTemperatureId"]
             )
-            if temp_value is not None:
-                effective_temp = float(temp_value)
+            if setpoint_temp_value is not None:
+                setpoint_temp = float(setpoint_temp_value)
         
-        # If no effective temp, fall back to target temperature
-        if effective_temp is None:
-            effective_temp = self._native_value
+        # If no setpoint temp, fall back to target temperature
+        if setpoint_temp is None:
+            setpoint_temp = self._native_value
         
         # Determine action based on current vs target temperature
-        if self._current_value is not None and effective_temp is not None:
-            if self._current_value < effective_temp - 0.2:
+        if self._current_value is not None and setpoint_temp is not None:
+            if self._current_value < setpoint_temp:
                 return HVACAction.HEATING
         
         return HVACAction.IDLE

@@ -187,7 +187,7 @@
             "heat_pump_z2":             { "name": "PAC Z2" },
             "hot_water_available":      { "name": "Hot Water Available" },
             "interface_fw":             { "name": "Interface FW" },
-            "temperature_setpoint":     { "name": "Température Consigne" },
+            "temperature_setpoint":     { "name": "Température Cible" },
             "model_name":               { "name": "Modèle" },
             "number_of_hours_burner":   { "name": "Nb heures brûleur" },
             "number_of_hours_ch_pump":  { "name": "Nb heures pompe CH" },
@@ -266,8 +266,7 @@
             "wifi_signal":              { "name": "Signal Wifi" },
             "wifi_ssid":                { "name": "Wifi SSID" },
             "zone_1":                   { "name": "Zone 1" },
-            "zone_2":                   { "name": "Zone 2" },
-            "effective_target_temperature": { "name": "Température Cible Effective" }
+            "zone_2":                   { "name": "Zone 2" }
         },
         "switch": {
             "away_mode":          { "name": "Absence" },
