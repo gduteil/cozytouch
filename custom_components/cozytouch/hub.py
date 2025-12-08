@@ -7,6 +7,7 @@ import copy
 from datetime import UTC, datetime, time as t, timedelta, timezone
 import json
 import logging
+from typing import Any, Dict
 
 from aiohttp import ClientSession, ContentTypeError, FormData
 
@@ -328,7 +329,7 @@ class Hub(DataUpdateCoordinator):
 
         return str(zoneId)
 
-    def get_model_infos(self, deviceId: int | None = None) -> str:
+    def get_model_infos(self, deviceId: int | None = None) -> Dict[str, Any]:
         """Get model infos."""
         if not deviceId:
             deviceId = self._deviceId
@@ -336,6 +337,7 @@ class Hub(DataUpdateCoordinator):
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
                 zoneId = dev["zoneId"]
+                tags = dev["tags"]
 
                 # Special case for sub-devices, use master zone Id
                 for masterDev in self._devices:
@@ -350,7 +352,7 @@ class Hub(DataUpdateCoordinator):
                                 zoneId = masterDev["zoneId"]
                                 break
 
-                return get_model_infos(dev["modelId"], self.get_zone_name(zoneId))
+                return get_model_infos(dev["modelId"], self.get_zone_name(zoneId), tags)
 
         return get_model_infos(-1)
 

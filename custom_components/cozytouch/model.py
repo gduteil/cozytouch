@@ -18,6 +18,7 @@ Optional :
 """  # noqa: D205
 
 from enum import StrEnum
+from typing import Dict, List
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.climate.const import (
@@ -54,7 +55,7 @@ class CozytouchDeviceType(StrEnum):
     HUB = "hub"
 
 
-def get_model_infos(modelId: int, zoneName: str | None = None):
+def get_model_infos(modelId: int, zoneName: str | None = None, tags: List[Dict[str, str]] | None = None):
     """Return infos from model ID."""
     modelInfos = {"modelId": modelId, "HVACModesCapabilityId": {7, 8}}
 
@@ -186,38 +187,113 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
         }
 
     elif modelId >= 557 and modelId <= 561:
-        name = "Air Conditioner "
+        name = "Unknown product (" + str(modelId) + ")"
+        modelInfos["type"] = CozytouchDeviceType.UNKNOWN
+        # modelInfos["fanModes"] = {}
+        # modelInfos["swingModes"] = {}
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+        childrenIds = []
+        for tag in tags if tags is not None else []:
+            if (
+                "label" in tag
+                and tag["label"] == "iothubChildrenIds"
+                and "value" in tag
+            ):
+                childrenIds = tag["value"].split(",")
+                break
+
+        if any(childId.startswith("UI_") for childId in childrenIds): # Air conditioner detected
+            name = "Air Conditioner "
+            modelInfos["type"] = CozytouchDeviceType.AC
+            modelInfos["currentTemperatureAvailable"] = False
+            modelInfos["quietModeAvailable"] = True
+
+            modelInfos["fanModes"] = {
+                1: FAN_LOW,
+                2: FAN_MEDIUM,
+                3: FAN_HIGH,
+                5: FAN_AUTO,
+            }
+
+            modelInfos["swingModes"] = {
+                1: SWING_MODE_UP,
+                2: SWING_MODE_MIDDLE_UP,
+                3: SWING_MODE_MIDDLE_DOWN,
+                4: SWING_MODE_DOWN,
+            }
+
+            modelInfos["HVACModes"] = {
+                0: HVACMode.OFF,
+                1: HVACMode.AUTO,
+                3: HVACMode.COOL,
+                4: HVACMode.HEAT,
+                7: HVACMode.FAN_ONLY,
+                8: HVACMode.DRY,
+            }
+        elif any(childId.startswith("THZONE_") for childId in childrenIds): # Thermostat detected
+            name = "Thermostat (THZONE) "
+            if zoneName is not None:
+                modelInfos["name"] = name + "(" + zoneName + ")"
+            else:
+                modelInfos["name"] = name + "(#" + str(modelId - 556) + ")"
+
+            modelInfos["type"] = CozytouchDeviceType.THERMOSTAT
+            modelInfos["currentTemperatureAvailable"] = False
+            modelInfos["currentTemperatureAvailableZ1"] = True
+            modelInfos["quietModeAvailable"] = False
+
+            modelInfos["HVACModes"] = {
+                0: HVACMode.OFF,
+                4: HVACMode.HEAT,
+            }
+            modelInfos["HeatingModes"] = {
+                0: HEATING_MODE_MANUAL,
+                3: HEATING_MODE_ECO_PLUS,
+                4: HEATING_MODE_PROG,
+            }
+        # else: # Fallback to AC if none found to keep backward compatibility
+        #     name = "Air Conditioner "
+        #     if zoneName is not None:
+        #         modelInfos["name"] = name + "(" + zoneName + ")"
+        #     else:
+        #         modelInfos["name"] = name + "(#" + str(modelId - 556) + ")"
+
+        #     modelInfos["type"] = CozytouchDeviceType.AC
+        #     modelInfos["currentTemperatureAvailable"] = False
+        #     modelInfos["quietModeAvailable"] = True
+
+        #     modelInfos["fanModes"] = {
+        #         1: FAN_LOW,
+        #         2: FAN_MEDIUM,
+        #         3: FAN_HIGH,
+        #         5: FAN_AUTO,
+        #     }
+
+        #     modelInfos["swingModes"] = {
+        #         1: SWING_MODE_UP,
+        #         2: SWING_MODE_MIDDLE_UP,
+        #         3: SWING_MODE_MIDDLE_DOWN,
+        #         4: SWING_MODE_DOWN,
+        #     }
+
+        #     modelInfos["HVACModes"] = {
+        #         0: HVACMode.OFF,
+        #         1: HVACMode.AUTO,
+        #         3: HVACMode.COOL,
+        #         4: HVACMode.HEAT,
+        #         7: HVACMode.FAN_ONLY,
+        #         8: HVACMode.DRY,
+        #     }
+
         if zoneName is not None:
             modelInfos["name"] = name + "(" + zoneName + ")"
         else:
             modelInfos["name"] = name + "(#" + str(modelId - 556) + ")"
 
-        modelInfos["type"] = CozytouchDeviceType.AC
-        modelInfos["currentTemperatureAvailable"] = False
-        modelInfos["quietModeAvailable"] = True
-
-        modelInfos["fanModes"] = {
-            1: FAN_LOW,
-            2: FAN_MEDIUM,
-            3: FAN_HIGH,
-            5: FAN_AUTO,
-        }
-
-        modelInfos["swingModes"] = {
-            1: SWING_MODE_UP,
-            2: SWING_MODE_MIDDLE_UP,
-            3: SWING_MODE_MIDDLE_DOWN,
-            4: SWING_MODE_DOWN,
-        }
-
-        modelInfos["HVACModes"] = {
-            0: HVACMode.OFF,
-            1: HVACMode.AUTO,
-            3: HVACMode.COOL,
-            4: HVACMode.HEAT,
-            7: HVACMode.FAN_ONLY,
-            8: HVACMode.DRY,
-        }
 
     elif modelId >= 562 and modelId <= 570:
         name = "Air Conditioner User Interface "
@@ -296,6 +372,18 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
         modelInfos["HVACModes"] = {
             0: HVACMode.OFF,
             4: HVACMode.HEAT,
+        }
+
+    elif modelId >= 1505 and modelId <= 1513:
+        name = "Thermostat Thermal Zone "
+        if zoneName is not None:
+            modelInfos["name"] = name + "(" + zoneName + ")"
+        else:
+            modelInfos["name"] = name + "(#" + str(modelId - 561) + ")"
+
+        modelInfos["type"] = CozytouchDeviceType.THERMOSTAT
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
         }
 
     elif modelId == 1543:
