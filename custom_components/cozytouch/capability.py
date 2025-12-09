@@ -68,6 +68,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability.pop("lowestValueCapabilityId")
             capability.pop("highestValueCapabilityId")
             capability["icon"] = "mdi:heat-pump"
+        elif modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            capability["name"] = "heat"
+            capability["icon"] = "mdi:thermostat"
+            capability["targetCapabilityId"] = 40
         else:
             capability["name"] = "heat"
 
@@ -369,9 +373,8 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["highestValueCapabilityId"] = 161
 
     elif capabilityId == 177:
-        if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER:
+        if modelInfos["type"] in [CozytouchDeviceType.GAZ_BOILER, CozytouchDeviceType.THERMOSTAT]:
             return {}
-
         capability["name"] = "target_cool_temperature"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
@@ -623,21 +626,24 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:fire"
 
     elif capabilityId == 100505:
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "powerful_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:wind-power"
 
     elif capabilityId == 100506:
-        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
-            capability = {}
-        else:
-            capability["name"] = "presence_mode"
-            capability["type"] = "switch"
-            capability["category"] = "sensor"
-            capability["icon"] = "mdi:account"
+        if modelInfos["type"] in [CozytouchDeviceType.TOWEL_RACK, CozytouchDeviceType.THERMOSTAT]:
+            return {}
+        capability["name"] = "presence_mode"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:account"
 
     elif capabilityId == 100507:
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "eco_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
@@ -714,18 +720,24 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
 
     elif capabilityId == 100802:
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "quiet_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:fan-minus"
 
     elif capabilityId == 100804:
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "swing_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:arrow-oscillating"
 
     elif capabilityId == 104044:
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "boost_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"

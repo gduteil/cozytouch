@@ -227,7 +227,7 @@ class Hub(DataUpdateCoordinator):
                     "modelId": remote_device["modelId"],
                     "productId": remote_device["productId"],
                     "zoneId": remote_device["zoneId"],
-                    "modelInfos": get_model_infos(remote_device["modelId"]),
+                    "modelInfos": get_model_infos(remote_device["modelId"], remote_device["tags"]),
                     "capabilities": [],
                     "tags": [],
                 }
@@ -329,7 +329,7 @@ class Hub(DataUpdateCoordinator):
 
         return str(zoneId)
 
-    def get_model_infos(self, deviceId: int | None = None) -> Dict[str, Any]:
+    def get_model_infos(self, deviceId: int | None = None) -> dict:
         """Get model infos."""
         if not deviceId:
             deviceId = self._deviceId
@@ -352,9 +352,9 @@ class Hub(DataUpdateCoordinator):
                                 zoneId = masterDev["zoneId"]
                                 break
 
-                return get_model_infos(dev["modelId"], self.get_zone_name(zoneId), tags)
+                return get_model_infos(dev["modelId"], tags, self.get_zone_name(zoneId))
 
-        return get_model_infos(-1)
+        return get_model_infos(-1, [])
 
     def get_serial_number(self, deviceId: int | None = None) -> str:
         """Get serial number."""
@@ -376,7 +376,7 @@ class Hub(DataUpdateCoordinator):
         capabilities = []
         for dev in self._devices:
             if dev["deviceId"] == deviceId:
-                modelInfos = get_model_infos(dev["modelId"])
+                modelInfos = get_model_infos(dev["modelId"], dev["tags"])
                 for capability in dev["capabilities"]:
                     capability_infos = get_capability_infos(
                         modelInfos,
