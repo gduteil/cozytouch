@@ -432,7 +432,6 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
         modelInfos["HeatingModes"] = {
             0: HEATING_MODE_MANUAL,
             3: HEATING_MODE_ECO_PLUS,
-            4: HEATING_MODE_PROG,
         }
     else:
         modelInfos["name"] = "Unknown product (" + str(modelId) + ")"
