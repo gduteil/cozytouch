@@ -185,7 +185,14 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
         }
 
-    elif modelId >= 557 and modelId <= 561:
+    elif modelId == 1457:
+        modelInfos["name"] = "HUB Cozytouch"
+        modelInfos["type"] = CozytouchDeviceType.HUB
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+        }
+        
+    elif (modelId >= 557 and modelId <= 561) or modelId in (1734):
         name = "Air Conditioner "
         if zoneName is not None:
             modelInfos["name"] = name + "(" + zoneName + ")"
