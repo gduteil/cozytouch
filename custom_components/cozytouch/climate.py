@@ -131,18 +131,12 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         if "quietModeCapabilityId" in self._capability:
             self._attr_fan_modes.append(FAN_QUIET)
 
-        if len(self._attr_fan_modes) > 0:
-            self._attr_fan_mode = self._attr_fan_modes[0]
-
     def _configure_swing_modes(self):
         self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
         self._attr_swing_modes = list(self._modelInfos["swingModes"].values())
 
         if "swingOnCapabilityId" in self._capability:
             self._attr_swing_modes.append(SWING_ON)
-
-        if len(self._attr_swing_modes) > 0:
-            self._attr_swing_mode = self._attr_swing_modes[0]
 
     def _configure_presets(self):
         self._attr_preset_modes = []
