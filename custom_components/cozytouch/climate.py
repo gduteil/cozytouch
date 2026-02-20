@@ -154,7 +154,6 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             or "boostCapabilityId" in self._capability
         ):
             self._attr_preset_modes.append(PRESET_NONE)
-            self._attr_preset_mode = PRESET_NONE
 
         if "activityCapabilityId" in self._capability:
             self._attr_preset_modes.append(PRESET_ACTIVITY)
@@ -171,9 +170,6 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
 
             if "progOverrideCapabilityId" in self._capability:
                 self._attr_preset_modes.append(PRESET_OVERRIDE)
-
-            if PRESET_NONE not in self._attr_preset_modes :
-                self._attr_preset_mode = PRESET_BASIC
 
     @callback
     def _handle_coordinator_update(self) -> None:
