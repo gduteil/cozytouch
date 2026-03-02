@@ -6,6 +6,7 @@ This has been tested using on :
   - `Atlantic Naema 2 Duo 25` gas boiler using a `Ǹavilink Radio-Connect 128` thermostat
   - `Atlantic Naia 2 Micro 25` gas boiler using a `Ǹavilink Radio-Connect 128` thermostat
   - `Atlantic Loria Duo 6006 R32` heat pump using a `Navilink Radio-Connect 128` thermostat
+  - `Atlantic Alfea Excellia Duo` heat pump using a `Navilink Radio-Connect 228` thermostat
   - `Takao M3` air conditionning
   - `Kelud 1750W` towel rack
   - `Sauter Asama Connecté II Ventilo 1750W` towel rack
@@ -25,7 +26,7 @@ More informations about HACS [here](https://hacs.xyz/).
 
 #### Manually
 
-Clone this repository and copy `custom_components/cozytouch` to your Home Assistant config durectory (ex : `config/custom_components/cozytouch`)
+Clone this repository and copy `custom_components/cozytouch` to your Home Assistant config directory (ex : `config/custom_components/cozytouch`)
 
 Restart Home Assistant.
 
