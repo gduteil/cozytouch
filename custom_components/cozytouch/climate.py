@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.components.climate import (
@@ -33,6 +34,9 @@ FAN_QUIET = "quiet"
 PRESET_BASIC = "basic"
 PRESET_PROG = "prog"
 PRESET_OVERRIDE = "override"
+
+PRESET_TRANSITION_TIMEOUT = 15.0
+PRESET_TRANSITION_POLL_INTERVAL = 0.5
 
 
 # config flow setup
@@ -98,6 +102,7 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
 
         self._native_value = 0
         self._current_value = None
+        self._current_boiler_temperature_value = None
         self._attr_native_step = 0.5
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_min_temp = 0
@@ -182,6 +187,29 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             if PRESET_NONE not in self._attr_preset_modes :
                 self._attr_preset_mode = PRESET_BASIC
 
+    async def _wait_for_capability_value(
+        self,
+        capability_id,
+        expected_value,
+        *,
+        timeout: float = PRESET_TRANSITION_TIMEOUT,
+        interval: float = PRESET_TRANSITION_POLL_INTERVAL,
+    ) -> bool:
+        """Wait until a capability reaches the expected value."""
+        expected = str(expected_value)
+        deadline = asyncio.get_running_loop().time() + timeout
+
+        while True:
+            current_value = self.coordinator.get_capability_value(capability_id)
+            if current_value is not None and str(current_value) == expected:
+                return True
+
+            if asyncio.get_running_loop().time() >= deadline:
+                return False
+
+            await asyncio.sleep(interval)
+            await self.coordinator.async_request_refresh()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the values from the hub."""
@@ -223,6 +251,13 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         if currentValueId:
             self._current_value = float(
                 self.coordinator.get_capability_value(currentValueId)
+            )
+
+        # Current boiler water temperature value
+        currentBoilerTemperatureValueId = 109
+        if currentBoilerTemperatureValueId:
+            self._current_boiler_temperature_value = float(
+                self.coordinator.get_capability_value(currentBoilerTemperatureValueId)
             )
 
         # Lowest adjustment value
@@ -398,8 +433,8 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             setpoint_temp = self._native_value
         
         # Determine action based on current vs target temperature
-        if self._current_value is not None and setpoint_temp is not None:
-            if self._current_value < setpoint_temp:
+        if self._current_boiler_temperature_value is not None and setpoint_temp is not None:
+            if self._current_boiler_temperature_value < setpoint_temp:
                 return HVACAction.HEATING
         
         return HVACAction.IDLE
@@ -529,8 +564,19 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             if preset_mode == PRESET_BASIC:
                 await self.coordinator.set_capability_value(progCapabilityId, "0")
 
-            elif preset_mode == PRESET_PROG:
+            elif preset_mode in (PRESET_PROG, PRESET_OVERRIDE):
                 await self.coordinator.set_capability_value(progCapabilityId, "1")
+
+                if preset_mode == PRESET_OVERRIDE:
+                    await self.coordinator.async_request_refresh()
+                    prog_ok = await self._wait_for_capability_value(
+                        progCapabilityId,
+                        "1",
+                    )
+                    if not prog_ok:
+                        _LOGGER.warning(
+                            "Timeout while waiting for prog mode before applying override"
+                        )
 
             if progOverrideCapabilityId:
                 progOverrideTimeCapabilityId = self._capability.get(
@@ -555,6 +601,16 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                     await self.coordinator.set_capability_value(
                         progOverrideCapabilityId, "1"
                     )
+
+                    await self.coordinator.async_request_refresh()
+                    override_ok = await self._wait_for_capability_value(
+                        progOverrideCapabilityId,
+                        "1",
+                    )
+                    if not override_ok:
+                        _LOGGER.warning(
+                            "Timeout while waiting for override mode to be applied"
+                        )
 
                 else:
                     if progOverrideTimeCapabilityId:

@@ -46,9 +46,9 @@
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
-                            "basic": "mdi:thermostat",
-                            "prog": "mdi:thermostat-auto",
-                            "override": "mdi:thermostat-cog"
+                            "basic": "mdi:thermometer",
+                            "prog": "mdi:clock-outline",
+                            "override": "mdi:timer-sand-complete"
                         }
                     }
                 }

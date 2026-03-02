@@ -240,6 +240,7 @@
             "prog_heat_saturday":       { "name": "Samedi Prog Heat" },
             "prog_heat_sunday":         { "name": "Dimanche Prog Heat" },
             "prog_mode":                { "name": "Mode Prog" },
+            "override":                 { "name": "Délégation" },
             "quiet_mode":               { "name": "Mode Silence" },
             "radio_signal":             { "name": "Signal Radio" },
             "resistance":               { "name": "Résistance" },
