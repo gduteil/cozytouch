@@ -303,6 +303,7 @@ class CozytouchSensor(SensorEntity, CoordinatorEntity):
         self._config_uniq_id = config_uniq_id
         self._last_value: str | None = None
         self._device_uniq_id = config_uniq_id
+        self._attr_name = name
 
         if value_type:
             self._value_type = value_type
