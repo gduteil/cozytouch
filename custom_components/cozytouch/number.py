@@ -16,6 +16,19 @@ from .sensor import CozytouchSensor
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_temperature_adjustment_max_fallback(capability: dict) -> float:
+    """Return model-aware fallback max for temperature adjustment entities."""
+    default_max = capability.get("highest_value", 60.0)
+
+    if capability.get("modelId") != 2374:
+        return default_max
+
+    if capability.get("name") not in {"target_temperature", "target_temperature_dhw"}:
+        return default_max
+
+    return 62.0
+
+
 # config flow setup
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -107,7 +120,9 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         self._attr_native_step = capability.get("step", 0.5)
         self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         self._attr_native_min_value = capability.get("lowest_value", 0)
-        self._attr_native_max_value = capability.get("highest_value", 60.0)
+        self._attr_native_max_value = _get_temperature_adjustment_max_fallback(
+            capability
+        )
         self._native_value = 0
 
     @property
