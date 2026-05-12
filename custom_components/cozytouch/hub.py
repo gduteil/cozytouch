@@ -22,6 +22,16 @@ from .model import get_model_infos
 
 _LOGGER = logging.getLogger(__name__)
 
+EXPLORER_EVO_3_MODEL_ID = 2374
+EXPLORER_EVO_3_REQUIRED_CAPABILITIES = (
+    258,  # Tank Capacity
+    265,  # Tank Middle Temperature
+    267,  # Tank Bottom Temperature
+    268,  # V40 Water Available
+    270,  # V40 Water Capacity
+    271,  # Hot Water Available
+)
+
 
 class Hub(DataUpdateCoordinator):
     """Atlantic Cozytouch Hub."""
@@ -116,7 +126,15 @@ class Hub(DataUpdateCoordinator):
                         "Content-Type": "application/x-www-form-urlencoded",
                     },
                 ) as response:
-                    token = await response.json()
+                    try:
+                        token = await response.json()
+                    except ContentTypeError as err:
+                        _LOGGER.warning(
+                            "Cozytouch token response is not JSON: HTTP %s, content-type %s",
+                            response.status,
+                            response.headers.get("content-type"),
+                        )
+                        raise CannotConnect from err
 
                     if "error" in token and token["error"] == "invalid_grant":
                         raise CannotConnect
@@ -137,7 +155,17 @@ class Hub(DataUpdateCoordinator):
                     COZYTOUCH_ATLANTIC_API + "/magellan/cozytouch/setupviewv2",
                     headers=headers,
                 ) as response:
-                    json_data = await response.json()
+                    try:
+                        json_data = await response.json()
+                    except ContentTypeError as err:
+                        _LOGGER.warning(
+                            "Cozytouch setup response is not JSON: HTTP %s, content-type %s",
+                            response.status,
+                            response.headers.get("content-type"),
+                        )
+                        raise CannotConnect from err
+
+                    setup_data = self._extract_setup_data(json_data)
 
                     # Store setup
                     for key in (
@@ -154,23 +182,23 @@ class Hub(DataUpdateCoordinator):
                         "setupBuildingDate",
                         "type",
                     ):
-                        if key in json_data[0]:
-                            self._setup[key] = copy.deepcopy(json_data[0][key])
+                        if key in setup_data:
+                            self._setup[key] = copy.deepcopy(setup_data[key])
 
                     # Update devices infos
                     await asyncio.get_event_loop().run_in_executor(
-                        None, self.update_devices_from_json_data, json_data
+                        None, self.update_devices_from_setup_data, setup_data
                     )
 
                     # Store country to retrieve localization informations
-                    if "address" in json_data[0]:
+                    if "address" in setup_data:
                         await self._update_localization(
-                            json_data[0]["address"].get("country", None)
+                            setup_data["address"].get("country", None)
                         )
 
                     # Store zones informations
-                    if "zones" in json_data[0]:
-                        copy.deepcopy(json_data[0]["zones"])
+                    if "zones" in setup_data:
+                        copy.deepcopy(setup_data["zones"])
 
                 self.online = True
 
@@ -183,24 +211,110 @@ class Hub(DataUpdateCoordinator):
         """Close session."""
         await self._session.close()
 
+    def _extract_setup_data(self, json_data):
+        """Return the setup object from known Cozytouch API response shapes."""
+        candidates = [json_data]
+        if isinstance(json_data, dict):
+            candidates.extend(
+                json_data.get(key) for key in ("setup", "data", "result", "items")
+            )
+
+        for candidate in candidates:
+            if isinstance(candidate, list) and candidate:
+                first = candidate[0]
+                if isinstance(first, dict) and "devices" in first:
+                    return first
+            if isinstance(candidate, dict) and "devices" in candidate:
+                return candidate
+
+        _LOGGER.warning(
+            "Unexpected Cozytouch setup payload shape: %s",
+            self._payload_shape(json_data),
+        )
+        raise CannotConnect
+
+    def _extract_capabilities_data(self, json_data):
+        """Return a capabilities list from known Cozytouch API response shapes."""
+        if isinstance(json_data, list):
+            return json_data
+        if isinstance(json_data, dict):
+            for key in ("capabilities", "data", "result", "items"):
+                candidate = json_data.get(key)
+                if isinstance(candidate, list):
+                    return candidate
+
+        _LOGGER.warning(
+            "Unexpected Cozytouch capabilities payload shape for device %s: %s",
+            self._deviceId,
+            self._payload_shape(json_data),
+        )
+        return None
+
+    def _payload_shape(self, payload) -> str:
+        """Describe an unexpected payload without logging sensitive content."""
+        if isinstance(payload, dict):
+            return "dict keys=" + ",".join(sorted(str(key) for key in payload.keys()))
+        if isinstance(payload, list):
+            return f"list len={len(payload)}"
+        return type(payload).__name__
+
+    def _ensure_model_required_capabilities(self, capabilities, model_id: int):
+        """Keep known telemetry entities available when setupview omits them."""
+        merged = copy.deepcopy(capabilities) if isinstance(capabilities, list) else []
+        if model_id == EXPLORER_EVO_3_MODEL_ID:
+            existing_ids = {
+                capability.get("capabilityId")
+                for capability in merged
+                if isinstance(capability, dict)
+            }
+            for capability_id in EXPLORER_EVO_3_REQUIRED_CAPABILITIES:
+                if capability_id not in existing_ids:
+                    merged.append({"capabilityId": capability_id, "value": None})
+        return merged
+
+    def _merge_capabilities(self, existing, incoming, model_id: int):
+        """Merge API updates without dropping known-but-temporarily-omitted caps."""
+        merged_by_id = {}
+        for capability in existing or []:
+            if isinstance(capability, dict) and "capabilityId" in capability:
+                merged_by_id[capability["capabilityId"]] = copy.deepcopy(capability)
+        for capability in incoming or []:
+            if isinstance(capability, dict) and "capabilityId" in capability:
+                merged_by_id[capability["capabilityId"]] = copy.deepcopy(capability)
+        return self._ensure_model_required_capabilities(
+            list(merged_by_id.values()), model_id
+        )
+
     def update_devices_from_json_data(self, json_data) -> None:
-        """Update the devices list."""
+        """Update the devices list from a raw setup API response."""
+        self.update_devices_from_setup_data(self._extract_setup_data(json_data))
+
+    def update_devices_from_setup_data(self, setup_data) -> None:
+        """Update the devices list from a normalized setup object."""
 
         if self._dump_json:
             with open(
                 self._hass.config.config_dir + "/Cozytouch.json", "w", encoding="utf-8"
             ) as outfile:
-                json_object = json.dumps(json_data, indent=4)
+                json_object = json.dumps(setup_data, indent=4)
                 outfile.write(json_object)
 
         # Get zones
-        if len(self._zones) == 0 and "zones" in json_data[0]:
-            self._zones = copy.deepcopy(json_data[0]["zones"])
+        if len(self._zones) == 0 and "zones" in setup_data:
+            self._zones = copy.deepcopy(setup_data["zones"])
+
+        remote_devices = setup_data.get("devices", [])
+        if not isinstance(remote_devices, list):
+            _LOGGER.warning(
+                "Unexpected Cozytouch devices payload shape: %s",
+                self._payload_shape(remote_devices),
+            )
+            return
 
         # Start by removing old devices
         for local_device in self._devices[:]:
             bStillExists = False
-            for remote_device in json_data[0]["devices"]:
+            for remote_device in remote_devices:
                 if remote_device["deviceId"] == local_device["deviceId"]:
                     bStillExists = True
                     break
@@ -210,7 +324,7 @@ class Hub(DataUpdateCoordinator):
 
         # Create new devices
         deviceIndex = -1
-        for remote_device in json_data[0]["devices"]:
+        for remote_device in remote_devices:
             deviceIndex = -1
             for i, local_device in enumerate(self._devices):
                 if remote_device["deviceId"] == local_device["deviceId"]:
@@ -238,8 +352,10 @@ class Hub(DataUpdateCoordinator):
 
             # Only retrieve capabilites from current device
             if self._deviceId == remote_device["deviceId"]:
-                self._devices[deviceIndex]["capabilities"] = copy.deepcopy(
-                    remote_device["capabilities"]
+                self._devices[deviceIndex]["capabilities"] = self._merge_capabilities(
+                    self._devices[deviceIndex].get("capabilities", []),
+                    remote_device.get("capabilities", []),
+                    remote_device.get("modelId"),
                 )
 
     def set_create_entities_for_unknown_entities(self, create_unknown: bool) -> None:
@@ -273,10 +389,15 @@ class Hub(DataUpdateCoordinator):
                 try:
                     json_data = await response.json()
 
-                    if isinstance(json_data, list):
+                    capabilities_data = self._extract_capabilities_data(json_data)
+                    if capabilities_data is not None:
                         for dev in self._devices:
                             if dev["deviceId"] == self._deviceId:
-                                dev["capabilities"] = copy.deepcopy(json_data)
+                                dev["capabilities"] = self._merge_capabilities(
+                                    dev.get("capabilities", []),
+                                    capabilities_data,
+                                    dev.get("modelId"),
+                                )
                                 break
 
                         if (
@@ -294,10 +415,11 @@ class Hub(DataUpdateCoordinator):
                                     self._timestamp_away_mode_start,
                                     self._timestamp_away_mode_end,
                                 )
-                    else:
-                        self.online = False
-
                 except ContentTypeError:
+                    _LOGGER.warning(
+                        "Cozytouch capabilities response is not JSON for device %s",
+                        self._deviceId,
+                    )
                     self.online = False
 
         else:
