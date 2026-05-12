@@ -71,6 +71,7 @@ class Hub(DataUpdateCoordinator):
         self._create_unknown = False
         self._dump_json = False
         self._devices = []
+        self._last_explorer_capability_diagnostic = None
 
         self.online = False
 
@@ -281,9 +282,70 @@ class Hub(DataUpdateCoordinator):
         for capability in incoming or []:
             if isinstance(capability, dict) and "capabilityId" in capability:
                 merged_by_id[capability["capabilityId"]] = copy.deepcopy(capability)
-        return self._ensure_model_required_capabilities(
+        merged = self._ensure_model_required_capabilities(
             list(merged_by_id.values()), model_id
         )
+        self._log_explorer_capability_diagnostic(merged, model_id)
+        return merged
+
+    def _log_explorer_capability_diagnostic(self, capabilities, model_id: int) -> None:
+        """Log Explorer payload details once when expected telemetry is absent."""
+        if model_id != EXPLORER_EVO_3_MODEL_ID:
+            return
+
+        by_id = {
+            capability.get("capabilityId"): capability
+            for capability in capabilities or []
+            if isinstance(capability, dict)
+        }
+        missing = [
+            capability_id
+            for capability_id in EXPLORER_EVO_3_REQUIRED_CAPABILITIES
+            if by_id.get(capability_id, {}).get("value") is None
+        ]
+        if not missing:
+            self._last_explorer_capability_diagnostic = None
+            return
+
+        summary = self._safe_capability_summary(capabilities)
+        diagnostic_key = (tuple(missing), summary)
+        if diagnostic_key == self._last_explorer_capability_diagnostic:
+            return
+        self._last_explorer_capability_diagnostic = diagnostic_key
+
+        _LOGGER.warning(
+            "Explorer EVO 3 telemetry missing values for capabilities %s; "
+            "current Cozytouch payload capabilities: %s",
+            missing,
+            summary,
+        )
+
+    def _safe_capability_summary(self, capabilities) -> str:
+        """Summarize capability IDs and non-sensitive values for diagnostics."""
+        redacted_ids = {
+            88,  # model name
+            94,  # product number
+            98,  # product number
+            121,  # firmware/version
+            219,  # Wi-Fi SSID
+            316,  # interface firmware
+            335,  # serial number
+        }
+        parts = []
+        for capability in sorted(
+            (item for item in capabilities or [] if isinstance(item, dict)),
+            key=lambda item: str(item.get("capabilityId")),
+        ):
+            capability_id = capability.get("capabilityId")
+            value = capability.get("value")
+            if capability_id in redacted_ids:
+                value_text = "<redacted>"
+            elif isinstance(value, (str, int, float, bool)) or value is None:
+                value_text = repr(value)
+            else:
+                value_text = f"<{type(value).__name__}>"
+            parts.append(f"{capability_id}={value_text[:80]}")
+        return ", ".join(parts)
 
     def update_devices_from_json_data(self, json_data) -> None:
         """Update the devices list from a raw setup API response."""
