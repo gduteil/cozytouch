@@ -31,6 +31,16 @@ EXPLORER_EVO_3_REQUIRED_CAPABILITIES = (
     270,  # V40 Water Capacity
     271,  # Hot Water Available
 )
+EXPLORER_EVO_3_OVERKIZ_STATE_TO_CAPABILITY = {
+    "io:MiddleWaterTemperatureState": 265,
+    "core:MiddleWaterTemperatureState": 265,
+    "core:MiddleWaterTemperatureInState": 265,
+    "core:BottomTankWaterTemperatureState": 267,
+}
+EXPLORER_EVO_3_OVERKIZ_FALLBACK_INTERVAL = timedelta(minutes=5)
+OVERKIZ_ENDUSER_API = (
+    "https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI"
+)
 
 
 class Hub(DataUpdateCoordinator):
@@ -72,6 +82,8 @@ class Hub(DataUpdateCoordinator):
         self._dump_json = False
         self._devices = []
         self._last_explorer_capability_diagnostic = None
+        self._last_explorer_overkiz_fallback_attempt = None
+        self._last_explorer_overkiz_fallback_diagnostic = None
 
         self.online = False
 
@@ -190,6 +202,12 @@ class Hub(DataUpdateCoordinator):
                     await asyncio.get_event_loop().run_in_executor(
                         None, self.update_devices_from_setup_data, setup_data
                     )
+                    for dev in self._devices:
+                        if dev["deviceId"] == self._deviceId:
+                            await self._apply_explorer_overkiz_temperature_fallback(
+                                dev
+                            )
+                            break
 
                     # Store country to retrieve localization informations
                     if "address" in setup_data:
@@ -287,6 +305,207 @@ class Hub(DataUpdateCoordinator):
         )
         self._log_explorer_capability_diagnostic(merged, model_id)
         return merged
+
+    def _explorer_missing_capabilities(self, capabilities, capability_ids):
+        """Return known Explorer capabilities that currently have no value."""
+        by_id = {
+            capability.get("capabilityId"): capability
+            for capability in capabilities or []
+            if isinstance(capability, dict)
+        }
+        return [
+            capability_id
+            for capability_id in capability_ids
+            if by_id.get(capability_id, {}).get("value") is None
+        ]
+
+    async def _apply_explorer_overkiz_temperature_fallback(self, dev) -> None:
+        """Fill missing Explorer temperatures from the Overkiz state payload."""
+        if dev.get("modelId") != EXPLORER_EVO_3_MODEL_ID:
+            return
+
+        missing = self._explorer_missing_capabilities(
+            dev.get("capabilities", []),
+            set(EXPLORER_EVO_3_OVERKIZ_STATE_TO_CAPABILITY.values()),
+        )
+        if not missing:
+            return
+
+        now = datetime.now(UTC)
+        if (
+            self._last_explorer_overkiz_fallback_attempt is not None
+            and now - self._last_explorer_overkiz_fallback_attempt
+            < EXPLORER_EVO_3_OVERKIZ_FALLBACK_INTERVAL
+        ):
+            return
+        self._last_explorer_overkiz_fallback_attempt = now
+
+        overkiz_setup = await self._fetch_overkiz_setup()
+        if overkiz_setup is None:
+            return
+
+        overkiz_values = self._extract_explorer_overkiz_temperature_values(
+            overkiz_setup
+        )
+        if not overkiz_values:
+            self._log_explorer_overkiz_fallback_diagnostic(
+                "no-supported-temperature-states", []
+            )
+            return
+
+        applied = []
+        capabilities_by_id = {
+            capability.get("capabilityId"): capability
+            for capability in dev.get("capabilities", [])
+            if isinstance(capability, dict)
+        }
+        for state_name, value in overkiz_values.items():
+            capability_id = EXPLORER_EVO_3_OVERKIZ_STATE_TO_CAPABILITY[state_name]
+            if capability_id not in missing or value is None:
+                continue
+            capability = capabilities_by_id.get(capability_id)
+            if capability is None:
+                continue
+            capability["value"] = value
+            applied.append(f"{state_name}->{capability_id}={value}")
+
+        if applied:
+            self._log_explorer_overkiz_fallback_diagnostic("applied", applied)
+            self._log_explorer_capability_diagnostic(
+                dev.get("capabilities", []), dev.get("modelId")
+            )
+        else:
+            self._log_explorer_overkiz_fallback_diagnostic(
+                "found-no-missing-match",
+                [f"{name}={value}" for name, value in overkiz_values.items()],
+            )
+
+    async def _fetch_overkiz_setup(self):
+        """Fetch the read-only Overkiz setup using the Atlantic account token."""
+        if not self._access_token:
+            return None
+
+        headers = {
+            "Authorization": f"Bearer {self._access_token}",
+            "Content-Type": "application/json",
+        }
+        async with self._session.get(
+            COZYTOUCH_ATLANTIC_API + "/magellan/accounts/jwt",
+            headers=headers,
+        ) as response:
+            if response.status != 200:
+                self._log_explorer_overkiz_fallback_diagnostic(
+                    f"jwt-http-{response.status}", []
+                )
+                return None
+            jwt = self._parse_overkiz_jwt(await response.text())
+
+        if not jwt:
+            self._log_explorer_overkiz_fallback_diagnostic("jwt-empty", [])
+            return None
+
+        async with self._session.post(
+            OVERKIZ_ENDUSER_API + "/login",
+            data=FormData({"jwt": jwt}),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        ) as response:
+            if response.status != 200:
+                self._log_explorer_overkiz_fallback_diagnostic(
+                    f"login-http-{response.status}", []
+                )
+                return None
+
+        async with self._session.get(
+            OVERKIZ_ENDUSER_API + "/setup",
+            headers={"Content-Type": "application/json"},
+        ) as response:
+            if response.status != 200:
+                self._log_explorer_overkiz_fallback_diagnostic(
+                    f"setup-http-{response.status}", []
+                )
+                return None
+            try:
+                return await response.json()
+            except ContentTypeError:
+                self._log_explorer_overkiz_fallback_diagnostic(
+                    "setup-not-json", []
+                )
+                return None
+
+    def _parse_overkiz_jwt(self, payload: str):
+        """Extract a JWT from known Atlantic response shapes."""
+        text = payload.strip()
+        if not text:
+            return None
+
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return text.strip('"')
+
+        if isinstance(parsed, str):
+            return parsed
+        if isinstance(parsed, dict):
+            for key in ("jwt", "token", "access_token", "id_token"):
+                value = parsed.get(key)
+                if isinstance(value, str) and value:
+                    return value
+        return None
+
+    def _extract_explorer_overkiz_temperature_values(self, overkiz_setup):
+        """Return supported temperature states from the best Overkiz device match."""
+        devices = []
+        if isinstance(overkiz_setup, dict):
+            devices = overkiz_setup.get("devices", [])
+        elif isinstance(overkiz_setup, list):
+            devices = overkiz_setup
+
+        best_values = {}
+        best_score = 0
+        for device in devices or []:
+            if not isinstance(device, dict):
+                continue
+            states = device.get("states", [])
+            if not isinstance(states, list):
+                continue
+
+            values = {}
+            for state in states:
+                if not isinstance(state, dict):
+                    continue
+                state_name = state.get("name")
+                if state_name not in EXPLORER_EVO_3_OVERKIZ_STATE_TO_CAPABILITY:
+                    continue
+                value = self._coerce_overkiz_temperature_value(state.get("value"))
+                if value is not None:
+                    values[state_name] = value
+
+            if len(values) > best_score:
+                best_values = values
+                best_score = len(values)
+
+        return best_values
+
+    def _coerce_overkiz_temperature_value(self, value):
+        """Coerce a numeric Overkiz temperature state value."""
+        if value is None or isinstance(value, bool):
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _log_explorer_overkiz_fallback_diagnostic(self, status: str, details) -> None:
+        """Log Overkiz fallback status without account or device identifiers."""
+        diagnostic_key = (status, tuple(details))
+        if diagnostic_key == self._last_explorer_overkiz_fallback_diagnostic:
+            return
+        self._last_explorer_overkiz_fallback_diagnostic = diagnostic_key
+        _LOGGER.warning(
+            "Explorer EVO 3 Overkiz temperature fallback %s: %s",
+            status,
+            ", ".join(details) if details else "no details",
+        )
 
     def _log_explorer_capability_diagnostic(self, capabilities, model_id: int) -> None:
         """Log Explorer payload details once when expected telemetry is absent."""
@@ -459,6 +678,9 @@ class Hub(DataUpdateCoordinator):
                                     dev.get("capabilities", []),
                                     capabilities_data,
                                     dev.get("modelId"),
+                                )
+                                await self._apply_explorer_overkiz_temperature_fallback(
+                                    dev
                                 )
                                 break
 
