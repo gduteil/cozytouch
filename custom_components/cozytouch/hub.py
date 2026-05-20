@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import copy
 from datetime import UTC, datetime, time as t, timedelta, timezone
 import json
 import logging
+import re
 
 from aiohttp import ClientSession, ContentTypeError, FormData
 
@@ -38,6 +40,7 @@ EXPLORER_EVO_3_OVERKIZ_STATE_TO_CAPABILITY = {
     "core:BottomTankWaterTemperatureState": 267,
 }
 EXPLORER_EVO_3_OVERKIZ_FALLBACK_INTERVAL = timedelta(minutes=5)
+EXPLORER_EVO_3_MAGELLAN_PROBE_INTERVAL = timedelta(hours=6)
 OVERKIZ_ENDUSER_API = (
     "https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI"
 )
@@ -86,7 +89,9 @@ class Hub(DataUpdateCoordinator):
         self._devices = []
         self._last_explorer_capability_diagnostic = None
         self._last_explorer_overkiz_fallback_attempt = None
+        self._last_explorer_magellan_probe_attempt = None
         self._explorer_overkiz_fallback_diagnostics_seen = set()
+        self._explorer_magellan_probe_diagnostics_seen = set()
 
         self.online = False
 
@@ -207,6 +212,7 @@ class Hub(DataUpdateCoordinator):
                     )
                     for dev in self._devices:
                         if dev["deviceId"] == self._deviceId:
+                            await self._probe_explorer_magellan_endpoints(dev)
                             await self._apply_explorer_overkiz_temperature_fallback(
                                 dev
                             )
@@ -383,6 +389,243 @@ class Hub(DataUpdateCoordinator):
                 [f"{name}={value}" for name, value in overkiz_values.items()],
             )
 
+    async def _probe_explorer_magellan_endpoints(self, dev) -> None:
+        """Probe read-only Magellan endpoint variants when Explorer values are absent."""
+        if dev.get("modelId") != EXPLORER_EVO_3_MODEL_ID:
+            return
+
+        missing = self._explorer_missing_capabilities(
+            dev.get("capabilities", []),
+            EXPLORER_EVO_3_REQUIRED_CAPABILITIES,
+        )
+        if not missing or not self._access_token:
+            return
+
+        now = datetime.now(UTC)
+        if (
+            self._last_explorer_magellan_probe_attempt is not None
+            and now - self._last_explorer_magellan_probe_attempt
+            < EXPLORER_EVO_3_MAGELLAN_PROBE_INTERVAL
+        ):
+            return
+        self._last_explorer_magellan_probe_attempt = now
+
+        setup_id = self._setup.get("id")
+        endpoint_templates = [
+            ("setupviewv2", "/magellan/cozytouch/setupviewv2"),
+            ("setupview", "/magellan/cozytouch/setupview"),
+            ("setupviewv3", "/magellan/cozytouch/setupviewv3"),
+            ("capabilities", "/magellan/capabilities/?deviceId={device_id}"),
+            ("device", "/magellan/devices/{device_id}"),
+            ("device-capabilities", "/magellan/devices/{device_id}/capabilities"),
+            ("v2-device", "/magellan/v2/devices/{device_id}"),
+            (
+                "v2-device-capabilities",
+                "/magellan/v2/devices/{device_id}/capabilities",
+            ),
+            ("setup-v2", "/magellan/v2/setups/{setup_id}"),
+            ("setup", "/magellan/setups/{setup_id}"),
+        ]
+        headers = {
+            "Authorization": f"Bearer {self._access_token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        results = []
+        for label, endpoint_template in endpoint_templates:
+            if "{setup_id}" in endpoint_template and setup_id is None:
+                continue
+            endpoint = endpoint_template.format(
+                device_id=dev.get("deviceId"),
+                setup_id=setup_id,
+            )
+            try:
+                async with self._session.get(
+                    COZYTOUCH_ATLANTIC_API + endpoint,
+                    headers=headers,
+                ) as response:
+                    if response.status != 200:
+                        details = await self._safe_response_error_details(response)
+                        result = f"{label}=http-{response.status}"
+                        if details:
+                            result += f"({details})"
+                        results.append(result)
+                        continue
+                    try:
+                        payload = await response.json()
+                    except ContentTypeError:
+                        results.append(
+                            f"{label}=not-json({response.headers.get('content-type')})"
+                        )
+                        continue
+                    results.append(
+                        f"{label}=ok "
+                        + self._summarize_explorer_probe_payload(
+                            payload, dev.get("deviceId")
+                        )
+                    )
+            except Exception as err:
+                results.append(f"{label}=error-{err.__class__.__name__}")
+
+        self._log_explorer_magellan_probe_diagnostic(missing, results)
+
+    def _summarize_explorer_probe_payload(self, payload, device_id) -> str:
+        """Summarize endpoint payload without logging account/device identifiers."""
+        target = self._find_explorer_probe_target(payload, device_id) or payload
+        summary = self._payload_shape(target)
+
+        capabilities = None
+        if isinstance(target, list):
+            capabilities = target
+        elif isinstance(target, dict) and isinstance(target.get("capabilities"), list):
+            capabilities = target["capabilities"]
+
+        if capabilities is not None:
+            capability_summary = self._safe_probe_capability_summary(capabilities)
+            return f"{summary} caps[{capability_summary}]"
+
+        numeric_candidates = self._probe_numeric_candidates(target)
+        if numeric_candidates:
+            return f"{summary} values[{', '.join(numeric_candidates)}]"
+        return summary
+
+    def _find_explorer_probe_target(self, payload, device_id):
+        """Return the matching device object from a setup-like payload."""
+        candidates = [payload]
+        if isinstance(payload, dict):
+            candidates.extend(
+                payload.get(key) for key in ("setup", "data", "result", "items")
+            )
+
+        for candidate in candidates:
+            if isinstance(candidate, list):
+                for item in candidate:
+                    found = self._find_explorer_probe_target(item, device_id)
+                    if found is not None:
+                        return found
+            elif isinstance(candidate, dict):
+                if candidate.get("deviceId") == device_id:
+                    return candidate
+                devices = candidate.get("devices")
+                if isinstance(devices, list):
+                    for device in devices:
+                        if isinstance(device, dict) and device.get("deviceId") == device_id:
+                            return device
+        return None
+
+    def _safe_probe_capability_summary(self, capabilities) -> str:
+        """Summarize capability values for endpoint comparison."""
+        parts = []
+        for capability in sorted(
+            (item for item in capabilities or [] if isinstance(item, dict)),
+            key=lambda item: str(item.get("capabilityId")),
+        ):
+            capability_id = capability.get("capabilityId")
+            if capability_id in {88, 94, 98, 121, 219, 316, 335}:
+                continue
+            value = capability.get("value")
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                value_text = repr(value)
+            else:
+                value_text = f"<{type(value).__name__}>"
+            parts.append(f"{capability_id}={value_text[:50]}")
+        return ", ".join(parts)[:900]
+
+    def _probe_numeric_candidates(self, payload) -> list[str]:
+        """Collect plausible numeric telemetry candidates from an unknown payload."""
+        candidates = []
+        self._collect_probe_numeric_candidates(payload, "$", candidates)
+        return candidates[:40]
+
+    def _collect_probe_numeric_candidates(self, payload, path: str, candidates) -> None:
+        """Recursive worker for numeric probe summaries."""
+        if len(candidates) >= 40:
+            return
+
+        if isinstance(payload, dict):
+            if "capabilityId" in payload and "value" in payload:
+                capability_id = payload.get("capabilityId")
+                value = self._coerce_probe_numeric(payload.get("value"))
+                if value is None and capability_id in EXPLORER_EVO_3_REQUIRED_CAPABILITIES:
+                    candidates.append(f"cap{capability_id}=None")
+                elif value is not None and -50 <= value <= 700:
+                    candidates.append(
+                        f"cap{capability_id}={self._format_probe_number(value)}"
+                    )
+            for key, value in payload.items():
+                if key in {
+                    "gatewaySerialNumber",
+                    "name",
+                    "productId",
+                    "deviceId",
+                    "id",
+                    "address",
+                }:
+                    continue
+                self._collect_probe_numeric_candidates(value, f"{path}.{key}", candidates)
+                if len(candidates) >= 40:
+                    return
+        elif isinstance(payload, list):
+            for index, item in enumerate(payload[:80]):
+                self._collect_probe_numeric_candidates(item, f"{path}[{index}]", candidates)
+                if len(candidates) >= 40:
+                    return
+        else:
+            value = self._coerce_probe_numeric(payload)
+            if value is not None and -50 <= value <= 700:
+                lowered_path = path.lower()
+                if any(
+                    token in lowered_path
+                    for token in (
+                        "temp",
+                        "water",
+                        "tank",
+                        "v40",
+                        "dhw",
+                        "capacity",
+                        "value",
+                        "state",
+                    )
+                ):
+                    candidates.append(
+                        f"{path}={self._format_probe_number(value)}"
+                    )
+
+    def _coerce_probe_numeric(self, value):
+        """Coerce safe numeric probe values."""
+        if value is None or isinstance(value, bool):
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            text = value.strip()
+            if not text or len(text) > 20:
+                return None
+            try:
+                return float(text)
+            except ValueError:
+                return None
+        return None
+
+    def _format_probe_number(self, value: float) -> str:
+        """Format a numeric probe value compactly."""
+        if abs(value - round(value)) < 0.000001:
+            return str(int(round(value)))
+        return f"{value:.3f}".rstrip("0").rstrip(".")
+
+    def _log_explorer_magellan_probe_diagnostic(self, missing, results) -> None:
+        """Log Magellan endpoint probe results once per result set."""
+        diagnostic_key = (tuple(missing), tuple(results))
+        if diagnostic_key in self._explorer_magellan_probe_diagnostics_seen:
+            return
+        self._explorer_magellan_probe_diagnostics_seen.add(diagnostic_key)
+        _LOGGER.warning(
+            "Explorer EVO 3 Magellan read-only probe build 1.4.7 missing "
+            "capabilities %s: %s",
+            missing,
+            "; ".join(results)[:3500],
+        )
+
     async def _fetch_overkiz_setup(self):
         """Fetch the read-only Overkiz setup using the Atlantic account token."""
         if not self._access_token:
@@ -425,16 +668,14 @@ class Hub(DataUpdateCoordinator):
             )
             return None
 
-        async with self._session.post(
-            OVERKIZ_ENDUSER_API + "/login",
-            data=FormData({"jwt": jwt}),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-        ) as response:
-            if response.status != 200:
-                self._log_explorer_overkiz_fallback_diagnostic(
-                    f"{source}-login-http-{response.status}", []
-                )
-                return None
+        jwt_summary = self._safe_jwt_principal_summary(jwt)
+        if jwt_summary:
+            self._log_explorer_overkiz_fallback_diagnostic(
+                f"{source}-jwt-{jwt_summary}", []
+            )
+
+        if not await self._login_overkiz_with_jwt(jwt, source):
+            return None
 
         async with self._session.get(
             OVERKIZ_ENDUSER_API + "/setup",
@@ -452,6 +693,41 @@ class Hub(DataUpdateCoordinator):
                     f"{source}-setup-not-json", []
                 )
                 return None
+
+    async def _login_overkiz_with_jwt(self, jwt: str, source: str) -> bool:
+        """Try known Overkiz JWT login payload formats."""
+        attempts = (
+            (
+                "form",
+                {
+                    "data": FormData({"jwt": jwt}),
+                    "headers": {"Content-Type": "application/x-www-form-urlencoded"},
+                },
+            ),
+            (
+                "json",
+                {
+                    "json": {"jwt": jwt},
+                    "headers": {"Content-Type": "application/json"},
+                },
+            ),
+        )
+        for label, kwargs in attempts:
+            async with self._session.post(
+                OVERKIZ_ENDUSER_API + "/login",
+                **kwargs,
+            ) as response:
+                if 200 <= response.status < 300:
+                    self._log_explorer_overkiz_fallback_diagnostic(
+                        f"{source}-login-{label}-ok", []
+                    )
+                    return True
+                details = await self._safe_response_error_details(response)
+                self._log_explorer_overkiz_fallback_diagnostic(
+                    f"{source}-login-{label}-http-{response.status}",
+                    [details] if details else [],
+                )
+        return False
 
     async def _fetch_legacy_overkiz_access_token(self):
         """Fetch the legacy Atlantic token used by public Overkiz scripts."""
@@ -512,6 +788,34 @@ class Hub(DataUpdateCoordinator):
                     return value
         return None
 
+    def _safe_jwt_principal_summary(self, jwt: str):
+        """Return a non-identifying summary of the JWT principal class."""
+        parts = jwt.split(".")
+        if len(parts) < 2:
+            return None
+        payload = parts[1]
+        payload += "=" * (-len(payload) % 4)
+        try:
+            decoded = base64.urlsafe_b64decode(payload.encode("ascii"))
+            claims = json.loads(decoded.decode("utf-8"))
+        except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+            return None
+        if not isinstance(claims, dict):
+            return None
+
+        for key in ("sub", "username", "user_name", "preferred_username"):
+            value = claims.get(key)
+            if not isinstance(value, str) or not value:
+                continue
+            if value.startswith("GACOMA_Production_"):
+                return "subject-class-GACOMA_Production"
+            if value.startswith("GA-PRIVATEPERSON/"):
+                return "subject-class-GA-PRIVATEPERSON"
+            if "@" in value:
+                return "subject-class-email"
+            return "subject-class-other"
+        return None
+
     def _extract_explorer_overkiz_temperature_values(self, overkiz_setup):
         """Return supported temperature states from the best Overkiz device match."""
         devices = []
@@ -562,10 +866,41 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.4.6 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.4.7 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
+
+    async def _safe_response_error_details(self, response) -> str | None:
+        """Return sanitized error response details for API diagnostics."""
+        try:
+            text = await response.text()
+        except Exception:
+            return None
+        return self._redact_error_text(text)
+
+    def _redact_error_text(self, text: str) -> str | None:
+        """Remove account identifiers from an API error body."""
+        if not text:
+            return None
+        redacted = text.replace(self._username, "<username>")
+        redacted = re.sub(
+            r"GA-PRIVATEPERSON/[^\s\"']+",
+            "GA-PRIVATEPERSON/<redacted>",
+            redacted,
+        )
+        redacted = re.sub(
+            r"GACOMA_Production_[A-Za-z0-9._-]+",
+            "GACOMA_Production_<redacted>",
+            redacted,
+        )
+        redacted = re.sub(
+            r"[A-Za-z0-9_.+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+",
+            "<email>",
+            redacted,
+        )
+        redacted = " ".join(redacted.split())
+        return redacted[:240] if redacted else None
 
     def _log_explorer_capability_diagnostic(self, capabilities, model_id: int) -> None:
         """Log Explorer payload details once when expected telemetry is absent."""
@@ -739,6 +1074,7 @@ class Hub(DataUpdateCoordinator):
                                     capabilities_data,
                                     dev.get("modelId"),
                                 )
+                                await self._probe_explorer_magellan_endpoints(dev)
                                 await self._apply_explorer_overkiz_temperature_fallback(
                                     dev
                                 )
