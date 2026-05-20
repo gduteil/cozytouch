@@ -86,7 +86,7 @@ class Hub(DataUpdateCoordinator):
         self._devices = []
         self._last_explorer_capability_diagnostic = None
         self._last_explorer_overkiz_fallback_attempt = None
-        self._last_explorer_overkiz_fallback_diagnostic = None
+        self._explorer_overkiz_fallback_diagnostics_seen = set()
 
         self.online = False
 
@@ -558,11 +558,11 @@ class Hub(DataUpdateCoordinator):
     def _log_explorer_overkiz_fallback_diagnostic(self, status: str, details) -> None:
         """Log Overkiz fallback status without account or device identifiers."""
         diagnostic_key = (status, tuple(details))
-        if diagnostic_key == self._last_explorer_overkiz_fallback_diagnostic:
+        if diagnostic_key in self._explorer_overkiz_fallback_diagnostics_seen:
             return
-        self._last_explorer_overkiz_fallback_diagnostic = diagnostic_key
+        self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.4.5 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.4.6 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
