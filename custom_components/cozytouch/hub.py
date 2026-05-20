@@ -41,6 +41,9 @@ EXPLORER_EVO_3_OVERKIZ_FALLBACK_INTERVAL = timedelta(minutes=5)
 OVERKIZ_ENDUSER_API = (
     "https://ha110-1.overkiz.com/enduser-mobile-web/enduserAPI"
 )
+COZYTOUCH_OVERKIZ_CLIENT_ID = (
+    "ZThEMW5BM2h2djF0bmMxTXBvQTdHNXVENDZBYTo3aktaS1N3ZlVJNGRvaDdqRWZJVWRzR2VHNWth"
+)
 
 
 class Hub(DataUpdateCoordinator):
@@ -385,8 +388,24 @@ class Hub(DataUpdateCoordinator):
         if not self._access_token:
             return None
 
+        setup = await self._fetch_overkiz_setup_with_token(
+            self._access_token, "primary"
+        )
+        if setup is not None:
+            return setup
+
+        legacy_access_token = await self._fetch_legacy_overkiz_access_token()
+        if legacy_access_token:
+            return await self._fetch_overkiz_setup_with_token(
+                legacy_access_token, "legacy"
+            )
+
+        return None
+
+    async def _fetch_overkiz_setup_with_token(self, access_token: str, source: str):
+        """Fetch the read-only Overkiz setup using a given Atlantic token."""
         headers = {
-            "Authorization": f"Bearer {self._access_token}",
+            "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
         }
         async with self._session.get(
@@ -395,13 +414,15 @@ class Hub(DataUpdateCoordinator):
         ) as response:
             if response.status != 200:
                 self._log_explorer_overkiz_fallback_diagnostic(
-                    f"jwt-http-{response.status}", []
+                    f"{source}-jwt-http-{response.status}", []
                 )
                 return None
             jwt = self._parse_overkiz_jwt(await response.text())
 
         if not jwt:
-            self._log_explorer_overkiz_fallback_diagnostic("jwt-empty", [])
+            self._log_explorer_overkiz_fallback_diagnostic(
+                f"{source}-jwt-empty", []
+            )
             return None
 
         async with self._session.post(
@@ -411,7 +432,7 @@ class Hub(DataUpdateCoordinator):
         ) as response:
             if response.status != 200:
                 self._log_explorer_overkiz_fallback_diagnostic(
-                    f"login-http-{response.status}", []
+                    f"{source}-login-http-{response.status}", []
                 )
                 return None
 
@@ -421,16 +442,55 @@ class Hub(DataUpdateCoordinator):
         ) as response:
             if response.status != 200:
                 self._log_explorer_overkiz_fallback_diagnostic(
-                    f"setup-http-{response.status}", []
+                    f"{source}-setup-http-{response.status}", []
                 )
                 return None
             try:
                 return await response.json()
             except ContentTypeError:
                 self._log_explorer_overkiz_fallback_diagnostic(
-                    "setup-not-json", []
+                    f"{source}-setup-not-json", []
                 )
                 return None
+
+    async def _fetch_legacy_overkiz_access_token(self):
+        """Fetch the legacy Atlantic token used by public Overkiz scripts."""
+        async with self._session.post(
+            COZYTOUCH_ATLANTIC_API + "/token",
+            data=FormData(
+                {
+                    "grant_type": "password",
+                    "scope": "openid",
+                    "username": "GA-PRIVATEPERSON/" + self._username,
+                    "password": self._password,
+                }
+            ),
+            headers={
+                "Authorization": f"Basic {COZYTOUCH_OVERKIZ_CLIENT_ID}",
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        ) as response:
+            if response.status != 200:
+                self._log_explorer_overkiz_fallback_diagnostic(
+                    f"legacy-token-http-{response.status}", []
+                )
+                return None
+            try:
+                token = await response.json()
+            except ContentTypeError:
+                self._log_explorer_overkiz_fallback_diagnostic(
+                    "legacy-token-not-json", []
+                )
+                return None
+
+        access_token = token.get("access_token") if isinstance(token, dict) else None
+        if not access_token:
+            self._log_explorer_overkiz_fallback_diagnostic(
+                "legacy-token-missing-access-token", []
+            )
+            return None
+
+        return access_token
 
     def _parse_overkiz_jwt(self, payload: str):
         """Extract a JWT from known Atlantic response shapes."""
