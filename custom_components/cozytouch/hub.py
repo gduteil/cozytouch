@@ -562,7 +562,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._last_explorer_overkiz_fallback_diagnostic = diagnostic_key
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.4.5 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
