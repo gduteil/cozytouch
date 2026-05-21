@@ -411,19 +411,30 @@ class Hub(DataUpdateCoordinator):
         self._last_explorer_magellan_probe_attempt = now
 
         setup_id = self._setup.get("id")
+        gateway_id = dev.get("gatewayId")
         endpoint_templates = [
             ("setupviewv2", "/magellan/cozytouch/setupviewv2"),
             ("setupview", "/magellan/cozytouch/setupview"),
             ("setupviewv3", "/magellan/cozytouch/setupviewv3"),
             ("capabilities", "/magellan/capabilities/?deviceId={device_id}"),
+            ("devices", "/magellan/devices"),
+            ("devices-slash", "/magellan/devices/"),
             ("device", "/magellan/devices/{device_id}"),
             ("device-capabilities", "/magellan/devices/{device_id}/capabilities"),
+            ("gateways", "/magellan/gateways"),
+            ("gateway", "/magellan/gateways/{gateway_id}"),
+            ("v2-gateway", "/magellan/v2/gateways/{gateway_id}"),
+            ("v2-gateways-slash", "/magellan/v2/gateways/"),
             ("v2-device", "/magellan/v2/devices/{device_id}"),
             (
                 "v2-device-capabilities",
                 "/magellan/v2/devices/{device_id}/capabilities",
             ),
+            ("setup-v3", "/magellan/v3/setups/{setup_id}"),
+            ("gateway-v3", "/magellan/v3/gateways/{gateway_id}"),
+            ("v3-gateways-slash", "/magellan/v3/gateways/"),
             ("setup-v2", "/magellan/v2/setups/{setup_id}"),
+            ("setups", "/magellan/setups"),
             ("setup", "/magellan/setups/{setup_id}"),
         ]
         headers = {
@@ -435,9 +446,12 @@ class Hub(DataUpdateCoordinator):
         for label, endpoint_template in endpoint_templates:
             if "{setup_id}" in endpoint_template and setup_id is None:
                 continue
+            if "{gateway_id}" in endpoint_template and gateway_id is None:
+                continue
             endpoint = endpoint_template.format(
                 device_id=dev.get("deviceId"),
                 setup_id=setup_id,
+                gateway_id=gateway_id,
             )
             try:
                 async with self._session.get(
@@ -620,10 +634,10 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_magellan_probe_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Magellan read-only probe build 1.4.7 missing "
+            "Explorer EVO 3 Magellan read-only probe build 1.4.8 missing "
             "capabilities %s: %s",
             missing,
-            "; ".join(results)[:3500],
+            "; ".join(results)[:6000],
         )
 
     async def _fetch_overkiz_setup(self):
@@ -866,7 +880,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.4.7 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.4.8 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
