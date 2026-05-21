@@ -838,7 +838,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_magellan_probe_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Magellan read-only probe build 1.5.2 missing "
+            "Explorer EVO 3 Magellan read-only probe build 1.5.3 missing "
             "capabilities %s: %s",
             missing,
             "; ".join(results)[:9000],
@@ -1084,7 +1084,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.5.2 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.5.3 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
@@ -1284,35 +1284,44 @@ class Hub(DataUpdateCoordinator):
                     json_data = await response.json()
 
                     capabilities_data = self._extract_capabilities_data(json_data)
-                    if capabilities_data is not None:
-                        for dev in self._devices:
-                            if dev["deviceId"] == self._deviceId:
-                                dev["capabilities"] = self._merge_capabilities(
-                                    dev.get("capabilities", []),
-                                    capabilities_data,
-                                    dev.get("modelId"),
-                                )
-                                await self._probe_explorer_magellan_endpoints(dev)
-                                await self._apply_explorer_overkiz_temperature_fallback(
-                                    dev
-                                )
-                                break
+                    if capabilities_data is None:
+                        _LOGGER.warning(
+                            "Cozytouch capabilities payload for device %s did not "
+                            "contain capabilities; forcing reconnect",
+                            self._deviceId,
+                        )
+                        self.online = False
+                        await self.connect()
+                        return
 
-                        if (
-                            self._timestamp_away_mode_last_change is not None
-                            and self._timestamps_away_mode_capability_id is not None
-                            and self._timestamp_away_mode_start is not None
-                            and self._timestamp_away_mode_end is not None
-                        ):
-                            now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
-                            if now - self._timestamp_away_mode_last_change > 20:
-                                await self.set_away_mode_timestamps(
-                                    None,
-                                    None,
-                                    self._timestamps_away_mode_capability_id,
-                                    self._timestamp_away_mode_start,
-                                    self._timestamp_away_mode_end,
-                                )
+                    for dev in self._devices:
+                        if dev["deviceId"] == self._deviceId:
+                            dev["capabilities"] = self._merge_capabilities(
+                                dev.get("capabilities", []),
+                                capabilities_data,
+                                dev.get("modelId"),
+                            )
+                            await self._probe_explorer_magellan_endpoints(dev)
+                            await self._apply_explorer_overkiz_temperature_fallback(
+                                dev
+                            )
+                            break
+
+                    if (
+                        self._timestamp_away_mode_last_change is not None
+                        and self._timestamps_away_mode_capability_id is not None
+                        and self._timestamp_away_mode_start is not None
+                        and self._timestamp_away_mode_end is not None
+                    ):
+                        now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
+                        if now - self._timestamp_away_mode_last_change > 20:
+                            await self.set_away_mode_timestamps(
+                                None,
+                                None,
+                                self._timestamps_away_mode_capability_id,
+                                self._timestamp_away_mode_start,
+                                self._timestamp_away_mode_end,
+                            )
                 except ContentTypeError:
                     _LOGGER.warning(
                         "Cozytouch capabilities response is not JSON for device %s",
