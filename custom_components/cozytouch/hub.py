@@ -421,9 +421,13 @@ class Hub(DataUpdateCoordinator):
             ("devices-slash", "/magellan/devices/"),
             ("device", "/magellan/devices/{device_id}"),
             ("device-capabilities", "/magellan/devices/{device_id}/capabilities"),
+            ("zones", "/magellan/zones"),
+            ("zones-slash", "/magellan/zones/"),
             ("gateways", "/magellan/gateways"),
             ("gateway", "/magellan/gateways/{gateway_id}"),
+            ("gateway-slash", "/magellan/gateways/{gateway_id}/"),
             ("v2-gateway", "/magellan/v2/gateways/{gateway_id}"),
+            ("v2-gateway-slash", "/magellan/v2/gateways/{gateway_id}/"),
             ("v2-gateways-slash", "/magellan/v2/gateways/"),
             ("v2-device", "/magellan/v2/devices/{device_id}"),
             (
@@ -431,7 +435,9 @@ class Hub(DataUpdateCoordinator):
                 "/magellan/v2/devices/{device_id}/capabilities",
             ),
             ("setup-v3", "/magellan/v3/setups/{setup_id}"),
+            ("setup-v3-slash", "/magellan/v3/setups/{setup_id}/"),
             ("gateway-v3", "/magellan/v3/gateways/{gateway_id}"),
+            ("gateway-v3-slash", "/magellan/v3/gateways/{gateway_id}/"),
             ("v3-gateways-slash", "/magellan/v3/gateways/"),
             ("setup-v2", "/magellan/v2/setups/{setup_id}"),
             ("setups", "/magellan/setups"),
@@ -472,6 +478,15 @@ class Hub(DataUpdateCoordinator):
                             f"{label}=not-json({response.headers.get('content-type')})"
                         )
                         continue
+                    target = self._find_explorer_probe_target(
+                        payload, dev.get("deviceId")
+                    )
+                    if (
+                        gateway_id is None
+                        and isinstance(target, dict)
+                        and target.get("gatewayId") is not None
+                    ):
+                        gateway_id = target.get("gatewayId")
                     results.append(
                         f"{label}=ok "
                         + self._summarize_explorer_probe_payload(
@@ -489,7 +504,9 @@ class Hub(DataUpdateCoordinator):
         summary = self._payload_shape(target)
 
         capabilities = None
-        if isinstance(target, list):
+        if isinstance(target, list) and any(
+            isinstance(item, dict) and "capabilityId" in item for item in target
+        ):
             capabilities = target
         elif isinstance(target, dict) and isinstance(target.get("capabilities"), list):
             capabilities = target["capabilities"]
@@ -634,10 +651,10 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_magellan_probe_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Magellan read-only probe build 1.4.8 missing "
+            "Explorer EVO 3 Magellan read-only probe build 1.4.9 missing "
             "capabilities %s: %s",
             missing,
-            "; ".join(results)[:6000],
+            "; ".join(results)[:9000],
         )
 
     async def _fetch_overkiz_setup(self):
@@ -880,7 +897,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.4.8 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.4.9 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
