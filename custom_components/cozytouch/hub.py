@@ -123,6 +123,10 @@ class Hub(DataUpdateCoordinator):
         """ID for hub."""
         return self._id
 
+    def _cozytouch_token_scope(self) -> str:
+        """Return the current Cozytouch mobile-app token scope shape."""
+        return f"openid device_{int(datetime.now(UTC).timestamp())}"
+
     async def test_connection(self) -> bool:
         """Test connection."""
         await self.connect()
@@ -137,7 +141,7 @@ class Hub(DataUpdateCoordinator):
                     data=FormData(
                         {
                             "grant_type": "password",
-                            "scope": "openid",
+                            "scope": self._cozytouch_token_scope(),
                             "username": "GA-PRIVATEPERSON/" + self._username,
                             "password": self._password,
                         }
@@ -417,15 +421,69 @@ class Hub(DataUpdateCoordinator):
             ("setupview", "/magellan/cozytouch/setupview"),
             ("setupviewv3", "/magellan/cozytouch/setupviewv3"),
             ("capabilities", "/magellan/capabilities/?deviceId={device_id}"),
+            (
+                "capabilities-op",
+                "/magellan/capabilities/?deviceId={device_id}",
+                {
+                    "X-Operation-ID": (
+                        "GacomaWcfService.CapabilitiesService.GetCapabilities"
+                    )
+                },
+            ),
             ("devices", "/magellan/devices"),
             ("devices-slash", "/magellan/devices/"),
+            (
+                "devices-gateway-op",
+                "/magellan/devices/?gatewayId={gateway_id}",
+                {
+                    "X-Operation-ID": (
+                        "GacomaWcfService.DeviceService.GetAllLinkedToGatewayId"
+                    )
+                },
+            ),
             ("device", "/magellan/devices/{device_id}"),
             ("device-capabilities", "/magellan/devices/{device_id}/capabilities"),
+            (
+                "device-details-op",
+                "/magellan/devices/{device_id}/details",
+                {
+                    "X-Operation-ID": (
+                        "GacomaWcfService.DeviceService.GetDeviceInformation"
+                    )
+                },
+            ),
             ("zones", "/magellan/zones"),
             ("zones-slash", "/magellan/zones/"),
+            (
+                "zones-setup-op",
+                "/magellan/zones/?setupId={setup_id}",
+                {
+                    "X-Operation-ID": (
+                        "GacomaWcfService.ZoneService.GetZoneFromSetup"
+                    )
+                },
+            ),
             ("gateways", "/magellan/gateways"),
+            (
+                "gateways-setup-op",
+                "/magellan/gateways/?setupId={setup_id}",
+                {
+                    "X-Operation-ID": (
+                        "GacomaWcfService.GatewayService.GetGateways"
+                    )
+                },
+            ),
             ("gateway", "/magellan/gateways/{gateway_id}"),
             ("gateway-slash", "/magellan/gateways/{gateway_id}/"),
+            (
+                "gateway-details-op",
+                "/magellan/gateways/{gateway_id}/details",
+                {
+                    "X-Operation-ID": (
+                        "GacomaWcfService.GatewayService.GetGatewayDetails"
+                    )
+                },
+            ),
             ("v2-gateway", "/magellan/v2/gateways/{gateway_id}"),
             ("v2-gateway-slash", "/magellan/v2/gateways/{gateway_id}/"),
             ("v2-gateways-slash", "/magellan/v2/gateways/"),
@@ -449,7 +507,12 @@ class Hub(DataUpdateCoordinator):
             "Accept": "application/json",
         }
         results = []
-        for label, endpoint_template in endpoint_templates:
+        for endpoint_definition in endpoint_templates:
+            label = endpoint_definition[0]
+            endpoint_template = endpoint_definition[1]
+            extra_headers = (
+                endpoint_definition[2] if len(endpoint_definition) > 2 else None
+            )
             if "{setup_id}" in endpoint_template and setup_id is None:
                 continue
             if "{gateway_id}" in endpoint_template and gateway_id is None:
@@ -459,10 +522,13 @@ class Hub(DataUpdateCoordinator):
                 setup_id=setup_id,
                 gateway_id=gateway_id,
             )
+            request_headers = dict(headers)
+            if extra_headers is not None:
+                request_headers.update(extra_headers)
             try:
                 async with self._session.get(
                     COZYTOUCH_ATLANTIC_API + endpoint,
-                    headers=headers,
+                    headers=request_headers,
                 ) as response:
                     if response.status != 200:
                         details = await self._safe_response_error_details(response)
@@ -651,7 +717,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_magellan_probe_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Magellan read-only probe build 1.4.9 missing "
+            "Explorer EVO 3 Magellan read-only probe build 1.5.0 missing "
             "capabilities %s: %s",
             missing,
             "; ".join(results)[:9000],
@@ -767,7 +833,7 @@ class Hub(DataUpdateCoordinator):
             data=FormData(
                 {
                     "grant_type": "password",
-                    "scope": "openid",
+                    "scope": self._cozytouch_token_scope(),
                     "username": "GA-PRIVATEPERSON/" + self._username,
                     "password": self._password,
                 }
@@ -897,7 +963,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.4.9 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.5.0 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
