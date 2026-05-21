@@ -33,6 +33,12 @@ EXPLORER_EVO_3_REQUIRED_CAPABILITIES = (
     270,  # V40 Water Capacity
     271,  # Hot Water Available
 )
+EXPLORER_EVO_3_FALLBACK_TANK_CAPACITY_CAPABILITY = 900258
+EXPLORER_EVO_3_FALLBACK_TANK_MIDDLE_TEMPERATURE_CAPABILITY = 900265
+EXPLORER_EVO_3_FALLBACK_V40_AVAILABLE_CAPABILITY = 900268
+EXPLORER_EVO_3_FALLBACK_V40_CAPACITY_CAPABILITY = 900270
+EXPLORER_EVO_3_FALLBACK_TANK_CAPACITY_L = 260.0
+EXPLORER_EVO_3_MIXED_WATER_TEMPERATURE_C = 40.0
 EXPLORER_EVO_3_OVERKIZ_STATE_TO_CAPABILITY = {
     "io:MiddleWaterTemperatureState": 265,
     "core:MiddleWaterTemperatureState": 265,
@@ -316,8 +322,132 @@ class Hub(DataUpdateCoordinator):
         merged = self._ensure_model_required_capabilities(
             list(merged_by_id.values()), model_id
         )
+        merged = self._apply_explorer_calculated_fallbacks(merged, model_id)
         self._log_explorer_capability_diagnostic(merged, model_id)
         return merged
+
+    def _apply_explorer_calculated_fallbacks(self, capabilities, model_id: int):
+        """Add Explorer fallback values derived from the app-visible payload."""
+        if model_id != EXPLORER_EVO_3_MODEL_ID:
+            return capabilities
+
+        merged_by_id = {
+            capability.get("capabilityId"): copy.deepcopy(capability)
+            for capability in capabilities or []
+            if isinstance(capability, dict) and "capabilityId" in capability
+        }
+
+        cold_water_temperature = self._get_capability_float(
+            merged_by_id, 280, default=15.0
+        )
+        water_limit = self._get_capability_float(merged_by_id, 105300, default=62.0)
+        max_user_target = self._get_capability_float(
+            merged_by_id,
+            252,
+            default=water_limit,
+        )
+        water_limit = self._get_capability_float(
+            merged_by_id, 105300, default=max_user_target
+        )
+        cursor_percent = self._get_first_capability_float(
+            merged_by_id, (105906, 105907)
+        )
+        hot_water_available_percent = self._get_capability_float(merged_by_id, 271)
+
+        tank_capacity = self._get_capability_float(
+            merged_by_id,
+            258,
+            default=EXPLORER_EVO_3_FALLBACK_TANK_CAPACITY_L,
+        )
+        self._set_synthetic_capability(
+            merged_by_id,
+            EXPLORER_EVO_3_FALLBACK_TANK_CAPACITY_CAPABILITY,
+            tank_capacity,
+        )
+
+        real_tank_middle = self._get_capability_float(merged_by_id, 265)
+        tank_middle_fallback = real_tank_middle
+        if (
+            tank_middle_fallback is None
+            and cursor_percent is not None
+            and cold_water_temperature is not None
+            and max_user_target is not None
+            and max_user_target > cold_water_temperature
+        ):
+            tank_middle_fallback = cold_water_temperature + (
+                cursor_percent * (max_user_target - cold_water_temperature) / 100.0
+            )
+        self._set_synthetic_capability(
+            merged_by_id,
+            EXPLORER_EVO_3_FALLBACK_TANK_MIDDLE_TEMPERATURE_CAPABILITY,
+            tank_middle_fallback,
+        )
+
+        real_v40_capacity = self._get_capability_float(merged_by_id, 270)
+        v40_capacity_fallback = real_v40_capacity
+        if (
+            v40_capacity_fallback is None
+            and tank_capacity is not None
+            and cold_water_temperature is not None
+            and water_limit is not None
+            and EXPLORER_EVO_3_MIXED_WATER_TEMPERATURE_C > cold_water_temperature
+            and water_limit > cold_water_temperature
+        ):
+            v40_capacity_fallback = tank_capacity * (
+                (water_limit - cold_water_temperature)
+                / (EXPLORER_EVO_3_MIXED_WATER_TEMPERATURE_C - cold_water_temperature)
+            )
+        self._set_synthetic_capability(
+            merged_by_id,
+            EXPLORER_EVO_3_FALLBACK_V40_CAPACITY_CAPABILITY,
+            v40_capacity_fallback,
+        )
+
+        real_v40_available = self._get_capability_float(merged_by_id, 268)
+        v40_available_fallback = real_v40_available
+        if (
+            v40_available_fallback is None
+            and v40_capacity_fallback is not None
+            and hot_water_available_percent is not None
+        ):
+            v40_available_fallback = (
+                v40_capacity_fallback * hot_water_available_percent / 100.0
+            )
+        self._set_synthetic_capability(
+            merged_by_id,
+            EXPLORER_EVO_3_FALLBACK_V40_AVAILABLE_CAPABILITY,
+            v40_available_fallback,
+        )
+
+        return list(merged_by_id.values())
+
+    def _get_first_capability_float(self, capabilities_by_id, capability_ids):
+        """Return the first available numeric value from candidate capabilities."""
+        for capability_id in capability_ids:
+            value = self._get_capability_float(capabilities_by_id, capability_id)
+            if value is not None:
+                return value
+        return None
+
+    def _get_capability_float(self, capabilities_by_id, capability_id, default=None):
+        """Return a numeric capability value from a capabilities dictionary."""
+        capability = capabilities_by_id.get(capability_id)
+        if not isinstance(capability, dict):
+            return default
+        value = capability.get("value")
+        if value is None or isinstance(value, bool):
+            return default
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _set_synthetic_capability(self, capabilities_by_id, capability_id, value):
+        """Set a synthetic capability value while keeping it clearly separate."""
+        capabilities_by_id[capability_id] = {
+            "capabilityId": capability_id,
+            "value": None if value is None else round(float(value), 2),
+        }
 
     def _explorer_missing_capabilities(self, capabilities, capability_ids):
         """Return known Explorer capabilities that currently have no value."""
@@ -717,7 +847,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_magellan_probe_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Magellan read-only probe build 1.5.0 missing "
+            "Explorer EVO 3 Magellan read-only probe build 1.5.1 missing "
             "capabilities %s: %s",
             missing,
             "; ".join(results)[:9000],
@@ -963,7 +1093,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.5.0 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.5.1 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )

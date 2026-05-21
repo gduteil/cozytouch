@@ -751,6 +751,30 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["highest_value"] = 60
         capability["step"] = 5
 
+    elif capabilityId == 900258:
+        capability["name"] = "tank_capacity_fallback"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+
+    elif capabilityId == 900265:
+        capability["name"] = "tank_middle_temperature_fallback"
+        capability["type"] = "temperature"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:thermometer-water"
+
+    elif capabilityId == 900268:
+        capability["name"] = "v40_water_available_fallback"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-thermometer"
+
+    elif capabilityId == 900270:
+        capability["name"] = "v40_water_capacity_fallback"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-thermometer"
+
     elif capabilityId == 105906:
         capability["name"] = "dhw_main_cursor_temperature"
         capability["type"] = "temperature_percent_adjustment_number"
