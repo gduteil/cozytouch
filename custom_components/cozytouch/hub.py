@@ -349,9 +349,6 @@ class Hub(DataUpdateCoordinator):
         water_limit = self._get_capability_float(
             merged_by_id, 105300, default=max_user_target
         )
-        cursor_percent = self._get_first_capability_float(
-            merged_by_id, (105906, 105907)
-        )
         hot_water_available_percent = self._get_capability_float(merged_by_id, 271)
 
         tank_capacity = self._get_capability_float(
@@ -369,13 +366,15 @@ class Hub(DataUpdateCoordinator):
         tank_middle_fallback = real_tank_middle
         if (
             tank_middle_fallback is None
-            and cursor_percent is not None
+            and hot_water_available_percent is not None
             and cold_water_temperature is not None
             and max_user_target is not None
             and max_user_target > cold_water_temperature
         ):
             tank_middle_fallback = cold_water_temperature + (
-                cursor_percent * (max_user_target - cold_water_temperature) / 100.0
+                hot_water_available_percent
+                * (max_user_target - cold_water_temperature)
+                / 100.0
             )
         self._set_synthetic_capability(
             merged_by_id,
@@ -420,14 +419,6 @@ class Hub(DataUpdateCoordinator):
         )
 
         return list(merged_by_id.values())
-
-    def _get_first_capability_float(self, capabilities_by_id, capability_ids):
-        """Return the first available numeric value from candidate capabilities."""
-        for capability_id in capability_ids:
-            value = self._get_capability_float(capabilities_by_id, capability_id)
-            if value is not None:
-                return value
-        return None
 
     def _get_capability_float(self, capabilities_by_id, capability_id, default=None):
         """Return a numeric capability value from a capabilities dictionary."""
@@ -847,7 +838,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_magellan_probe_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Magellan read-only probe build 1.5.1 missing "
+            "Explorer EVO 3 Magellan read-only probe build 1.5.2 missing "
             "capabilities %s: %s",
             missing,
             "; ".join(results)[:9000],
@@ -1093,7 +1084,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.5.1 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.5.2 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
