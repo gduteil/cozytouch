@@ -99,8 +99,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["name"] = "target_temperature_dhw"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
+        if modelId == 2374:
+            capability["lowestValueCapabilityId"] = 253
+            capability["highestValueCapabilityId"] = 252
+            capability["step"] = 1
+        else:
+            capability["lowestValueCapabilityId"] = 160
+            capability["highestValueCapabilityId"] = 161
 
     elif capabilityId == 25:
         capability["name"] = "number_of_starts_ch_pump"
@@ -488,8 +493,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["name"] = "target_temperature"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 105301
-        capability["highestValueCapabilityId"] = 105304
+        if modelId == 2374:
+            capability["lowestValueCapabilityId"] = 253
+            capability["highestValueCapabilityId"] = 252
+            capability["step"] = 1
+        else:
+            capability["lowestValueCapabilityId"] = 105301
+            capability["highestValueCapabilityId"] = 105304
 
     elif capabilityId == 232:
         capability["name"] = "boost_total_time"
@@ -741,19 +751,53 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["highest_value"] = 60
         capability["step"] = 5
 
+    elif capabilityId == 900258:
+        capability["name"] = "tank_capacity_fallback"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-boiler"
+
+    elif capabilityId == 900265:
+        capability["name"] = "tank_middle_temperature_fallback"
+        capability["type"] = "temperature"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:thermometer-water"
+
+    elif capabilityId == 900268:
+        capability["name"] = "v40_water_available_fallback"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-thermometer"
+
+    elif capabilityId == 900270:
+        capability["name"] = "v40_water_capacity_fallback"
+        capability["type"] = "volume"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-thermometer"
+
     elif capabilityId == 105906:
-        capability["name"] = "Target 105906"
+        capability["name"] = "dhw_main_cursor_temperature"
         capability["type"] = "temperature_percent_adjustment_number"
         capability["category"] = "sensor"
         capability["temperatureMin"] = 15.0
-        capability["temperatureMax"] = 65.0
+        capability["temperatureMax"] = 62.0
+        capability["temperatureMinCapabilityId"] = 280
+        capability["temperatureMaxCapabilityId"] = 252
+        capability["lowestValueCapabilityId"] = 253
+        capability["highestValueCapabilityId"] = 252
+        capability["stepCapabilityId"] = 340
 
     elif capabilityId == 105907:
-        capability["name"] = "Target 105907"
+        capability["name"] = "dhw_secondary_cursor_temperature"
         capability["type"] = "temperature_percent_adjustment_number"
         capability["category"] = "sensor"
         capability["temperatureMin"] = 15.0
-        capability["temperatureMax"] = 65.0
+        capability["temperatureMax"] = 62.0
+        capability["temperatureMinCapabilityId"] = 280
+        capability["temperatureMaxCapabilityId"] = 252
+        capability["lowestValueCapabilityId"] = 253
+        capability["highestValueCapabilityId"] = 252
+        capability["stepCapabilityId"] = 340
 
     # For test
     elif capabilityId == 312:

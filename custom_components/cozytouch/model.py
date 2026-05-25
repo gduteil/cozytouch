@@ -420,6 +420,25 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             3: HEATING_MODE_ECO_PLUS,
             4: HEATING_MODE_PROG,
         }
+
+    elif modelId == 2374:
+        modelInfos["name"] = "Explorer EVO 3 (260L)"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+        modelInfos["HeatingModes"] = {
+            0: HEATING_MODE_MANUAL,
+            3: HEATING_MODE_ECO_PLUS,
+            4: HEATING_MODE_PROG,
+        }
+
+        # Cozytouch does not appear to expose the standard setpoint max
+        # capability reliably for this model. Falling back to 62 C matches
+        # the device datasheet and observed app behavior.
+        modelInfos["targetTemperatureFallbackMax"] = 62.0
    
     else:
         modelInfos["name"] = "Unknown product (" + str(modelId) + ")"

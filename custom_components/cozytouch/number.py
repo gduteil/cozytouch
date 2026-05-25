@@ -16,6 +16,19 @@ from .sensor import CozytouchSensor
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_temperature_adjustment_max_fallback(capability: dict) -> float:
+    """Return model-aware fallback max for temperature adjustment entities."""
+    default_max = capability.get("highest_value", 60.0)
+
+    if capability.get("modelId") != 2374:
+        return default_max
+
+    if capability.get("name") not in {"target_temperature", "target_temperature_dhw"}:
+        return default_max
+
+    return 62.0
+
+
 # config flow setup
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -107,7 +120,9 @@ class TemperatureAdjustmentNumber(NumberEntity, CozytouchSensor):
         self._attr_native_step = capability.get("step", 0.5)
         self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         self._attr_native_min_value = capability.get("lowest_value", 0)
-        self._attr_native_max_value = capability.get("highest_value", 60.0)
+        self._attr_native_max_value = _get_temperature_adjustment_max_fallback(
+            capability
+        )
         self._native_value = 0
 
     @property
@@ -198,21 +213,113 @@ class TemperaturePercentAdjustmentNumber(NumberEntity, CozytouchSensor):
             self._attr_native_max_value = capability["temperatureMax"]
 
         self._range = self._attr_native_max_value - self._attr_native_min_value
+        self._attr_native_step = capability.get("step", self._attr_native_step)
+        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        self._native_value = None
+        self._conversion_min_value = float(capability.get("temperatureMin", 0.0))
+        self._conversion_max_value = float(capability.get("temperatureMax", 60.0))
+        self._attr_native_min_value = self._conversion_min_value
+        self._attr_native_max_value = self._conversion_max_value
 
     @property
     def native_value(self) -> float | None:
         """Value of the sensor."""
         return self._native_value
 
+    def _coerce_float(self, value) -> float | None:
+        """Coerce a capability value to float."""
+        if value is None or isinstance(value, bool):
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _get_float_capability_value(
+        self,
+        capability_id: int | None,
+        fallback: float,
+    ) -> float:
+        """Return a float capability value with a safe fallback."""
+        if capability_id is None:
+            return float(fallback)
+
+        value = self._coerce_float(
+            self.coordinator.get_capability_value(capability_id, None)
+        )
+        if value is None:
+            return float(fallback)
+
+        return value
+
+    def _refresh_temperature_bounds(self) -> tuple[float, float]:
+        """Refresh conversion and writable limits from companion capabilities."""
+        fallback_min = float(self._capability.get("temperatureMin", 0.0))
+        fallback_max = float(self._capability.get("temperatureMax", 60.0))
+
+        conversion_min = self._get_float_capability_value(
+            self._capability.get("temperatureMinCapabilityId"),
+            fallback_min,
+        )
+        conversion_max = self._get_float_capability_value(
+            self._capability.get("temperatureMaxCapabilityId"),
+            fallback_max,
+        )
+        if conversion_max <= conversion_min:
+            conversion_max = fallback_max
+        if conversion_max <= conversion_min:
+            conversion_max = conversion_min + 1.0
+
+        native_min = self._get_float_capability_value(
+            self._capability.get("lowestValueCapabilityId"),
+            fallback_min,
+        )
+        native_max = self._get_float_capability_value(
+            self._capability.get("highestValueCapabilityId"),
+            fallback_max,
+        )
+        if native_max < native_min:
+            native_min, native_max = native_max, native_min
+
+        step = self._get_float_capability_value(
+            self._capability.get("stepCapabilityId"),
+            float(self._attr_native_step or 0.5),
+        )
+        if step > 0:
+            self._attr_native_step = step
+
+        self._conversion_min_value = conversion_min
+        self._conversion_max_value = conversion_max
+        self._attr_native_min_value = native_min
+        self._attr_native_max_value = native_max
+
+        return conversion_min, conversion_max
+
+    def _round_to_native_step(self, value: float) -> float:
+        """Round a converted temperature to the native step."""
+        step = self._attr_native_step
+        if not step or step <= 0:
+            return value
+        return round(value / step) * step
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor from the hub."""
         # Get last seen value from controller
-        valuePercent = float(
-            self.coordinator.get_capability_value(self._capability["capabilityId"])
+        valuePercent = self._coerce_float(
+            self.coordinator.get_capability_value(
+                self._capability["capabilityId"], None
+            )
         )
+        if valuePercent is None:
+            self._native_value = None
+            self.async_write_ha_state()
+            return
 
-        value = self._attr_native_min_value + (valuePercent * self._range / 100.0)
+        conversion_min, conversion_max = self._refresh_temperature_bounds()
+        conversion_range = conversion_max - conversion_min
+        value = conversion_min + (valuePercent * conversion_range / 100.0)
+        value = self._round_to_native_step(value)
 
         if value < self._attr_native_min_value:
             value = self._attr_native_min_value
@@ -225,13 +332,15 @@ class TemperaturePercentAdjustmentNumber(NumberEntity, CozytouchSensor):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
+        conversion_min, conversion_max = self._refresh_temperature_bounds()
+        conversion_range = conversion_max - conversion_min
         new_value = value
         if new_value < self._attr_native_min_value:
             new_value = self._attr_native_min_value
         elif new_value > self._attr_native_max_value:
             new_value = self._attr_native_max_value
 
-        valuePercent = (new_value - self._attr_native_min_value) * 100 / self._range
+        valuePercent = (new_value - conversion_min) * 100 / conversion_range
 
         await self.coordinator.set_capability_value(
             self._capability["capabilityId"],
