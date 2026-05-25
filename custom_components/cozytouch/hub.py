@@ -39,6 +39,7 @@ EXPLORER_EVO_3_FALLBACK_V40_AVAILABLE_CAPABILITY = 900268
 EXPLORER_EVO_3_FALLBACK_V40_CAPACITY_CAPABILITY = 900270
 EXPLORER_EVO_3_FALLBACK_TANK_CAPACITY_L = 260.0
 EXPLORER_EVO_3_MIXED_WATER_TEMPERATURE_C = 40.0
+EXPLORER_EVO_3_FALLBACK_MIN_USABLE_TANK_TEMPERATURE_C = 33.0
 EXPLORER_EVO_3_OVERKIZ_STATE_TO_CAPABILITY = {
     "io:MiddleWaterTemperatureState": 265,
     "core:MiddleWaterTemperatureState": 265,
@@ -346,6 +347,11 @@ class Hub(DataUpdateCoordinator):
             252,
             default=water_limit,
         )
+        target_temperature = self._get_capability_float(merged_by_id, 22)
+        if target_temperature is None:
+            target_temperature = self._get_capability_float(merged_by_id, 40)
+        if target_temperature is None:
+            target_temperature = max_user_target
         water_limit = self._get_capability_float(
             merged_by_id, 105300, default=max_user_target
         )
@@ -362,9 +368,20 @@ class Hub(DataUpdateCoordinator):
             tank_capacity,
         )
 
-        # Capability 271 is the app water-drop state of charge. The app uses it
-        # as a level, not as a measured tank-temperature input.
         tank_middle_fallback = self._get_capability_float(merged_by_id, 265)
+        if (
+            tank_middle_fallback is None
+            and hot_water_available_percent is not None
+            and target_temperature is not None
+        ):
+            bounded_percent = max(0.0, min(100.0, hot_water_available_percent))
+            usable_floor = min(
+                EXPLORER_EVO_3_FALLBACK_MIN_USABLE_TANK_TEMPERATURE_C,
+                target_temperature,
+            )
+            tank_middle_fallback = usable_floor + (
+                (target_temperature - usable_floor) * bounded_percent / 100.0
+            )
         self._set_synthetic_capability(
             merged_by_id,
             EXPLORER_EVO_3_FALLBACK_TANK_MIDDLE_TEMPERATURE_CAPABILITY,
