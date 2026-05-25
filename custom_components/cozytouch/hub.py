@@ -362,20 +362,9 @@ class Hub(DataUpdateCoordinator):
             tank_capacity,
         )
 
-        real_tank_middle = self._get_capability_float(merged_by_id, 265)
-        tank_middle_fallback = real_tank_middle
-        if (
-            tank_middle_fallback is None
-            and hot_water_available_percent is not None
-            and cold_water_temperature is not None
-            and max_user_target is not None
-            and max_user_target > cold_water_temperature
-        ):
-            tank_middle_fallback = cold_water_temperature + (
-                hot_water_available_percent
-                * (max_user_target - cold_water_temperature)
-                / 100.0
-            )
+        # Capability 271 is the app water-drop state of charge. The app uses it
+        # as a level, not as a measured tank-temperature input.
+        tank_middle_fallback = self._get_capability_float(merged_by_id, 265)
         self._set_synthetic_capability(
             merged_by_id,
             EXPLORER_EVO_3_FALLBACK_TANK_MIDDLE_TEMPERATURE_CAPABILITY,
@@ -838,7 +827,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_magellan_probe_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Magellan read-only probe build 1.5.3 missing "
+            "Explorer EVO 3 Magellan read-only probe build 1.5.4 missing "
             "capabilities %s: %s",
             missing,
             "; ".join(results)[:9000],
@@ -1084,7 +1073,7 @@ class Hub(DataUpdateCoordinator):
             return
         self._explorer_overkiz_fallback_diagnostics_seen.add(diagnostic_key)
         _LOGGER.warning(
-            "Explorer EVO 3 Overkiz temperature fallback build 1.5.3 %s: %s",
+            "Explorer EVO 3 Overkiz temperature fallback build 1.5.4 %s: %s",
             status,
             ", ".join(details) if details else "no details",
         )
