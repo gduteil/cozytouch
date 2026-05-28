@@ -15,6 +15,12 @@ Optional :
     * swingModes : list of value/mode pairs
     * quietModeAvailable : enable quiet mode availability (default : False)
 
+Note on modelIds 557-561 :
+    These Cozytouch V2 ROOM modelIds are reused across device classes — they
+    can represent either an Air Conditioner (with `UI_*` child devices) or an
+    electric heater / underfloor thermostat (with `THZONE_*` child devices).
+    The integration discriminates via the `iothubChildrenIds` tag on the ROOM
+    device (passed in via the `tags` parameter). Approach taken from PR #116.
 """  # noqa: D205
 
 from enum import StrEnum
@@ -54,8 +60,34 @@ class CozytouchDeviceType(StrEnum):
     HUB = "hub"
 
 
-def get_model_infos(modelId: int, zoneName: str | None = None):
-    """Return infos from model ID."""
+def _get_iothub_children_ids(tags: list | None) -> list[str]:
+    """Extract child device names from the `iothubChildrenIds` device tag (V2 setups).
+
+    Returns an empty list when the tag is absent — callers should treat that as
+    "no children declared", not as an error.
+    """
+    if not tags:
+        return []
+    for tag in tags:
+        if isinstance(tag, dict) and tag.get("label") == "iothubChildrenIds":
+            value = tag.get("value") or ""
+            return [c for c in value.split(",") if c]
+    return []
+
+
+def get_model_infos(
+    modelId: int,
+    tags: list | None = None,
+    zoneName: str | None = None,
+):
+    """Return infos from model ID.
+
+    `tags` is the device's tag list from the Cozytouch API (each entry a
+    `{label, value}` dict). When provided, modelIds in the 557-561 range are
+    discriminated between Air Conditioner (UI_* children) and Thermostat
+    (THZONE_* children, used by underfloor heating and electric room heaters
+    like the Atlantic DIVALI Neo H).
+    """
     modelInfos = {"modelId": modelId, "HVACModesCapabilityId": {7, 8}}
 
     if modelId == 56:
@@ -185,39 +217,63 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
         }
 
+    elif modelId == 1457:
+        # New Cozytouch HUB (replaces Naviclim, supports more zones, used with
+        # Zigbee-connected Atlantic DIVALI heaters and other V2 devices).
+        modelInfos["name"] = "HUB Cozytouch"
+        modelInfos["type"] = CozytouchDeviceType.HUB
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+        }
+
     elif modelId >= 557 and modelId <= 561:
-        name = "Air Conditioner "
+        # ROOM device in the Cozytouch V2 protocol. The same modelId range is
+        # reused for ACs (with UI_* children) and electric-heater / underfloor
+        # thermostats (with THZONE_* children). Discriminate via iothubChildrenIds.
+        childrenIds = _get_iothub_children_ids(tags)
+        is_thermostat = any(c.startswith("THZONE_") for c in childrenIds)
+
+        if is_thermostat:
+            # Electric heater / underfloor thermostat — heat only, no fan/swing/cool.
+            name = "Thermostat "
+            modelInfos["type"] = CozytouchDeviceType.THERMOSTAT
+            modelInfos["currentTemperatureAvailable"] = True
+            modelInfos["overrideModeAvailable"] = True
+            modelInfos["HVACModes"] = {
+                0: HVACMode.OFF,
+                4: HVACMode.HEAT,
+            }
+        else:
+            # Default behaviour: AC (preserves backward compat for Naviclim setups).
+            name = "Air Conditioner "
+            modelInfos["type"] = CozytouchDeviceType.AC
+            modelInfos["currentTemperatureAvailable"] = False
+            modelInfos["quietModeAvailable"] = True
+            modelInfos["fanModes"] = {
+                1: FAN_LOW,
+                2: FAN_MEDIUM,
+                3: FAN_HIGH,
+                5: FAN_AUTO,
+            }
+            modelInfos["swingModes"] = {
+                1: SWING_MODE_UP,
+                2: SWING_MODE_MIDDLE_UP,
+                3: SWING_MODE_MIDDLE_DOWN,
+                4: SWING_MODE_DOWN,
+            }
+            modelInfos["HVACModes"] = {
+                0: HVACMode.OFF,
+                1: HVACMode.AUTO,
+                3: HVACMode.COOL,
+                4: HVACMode.HEAT,
+                7: HVACMode.FAN_ONLY,
+                8: HVACMode.DRY,
+            }
+
         if zoneName is not None:
             modelInfos["name"] = name + "(" + zoneName + ")"
         else:
             modelInfos["name"] = name + "(#" + str(modelId - 556) + ")"
-
-        modelInfos["type"] = CozytouchDeviceType.AC
-        modelInfos["currentTemperatureAvailable"] = False
-        modelInfos["quietModeAvailable"] = True
-
-        modelInfos["fanModes"] = {
-            1: FAN_LOW,
-            2: FAN_MEDIUM,
-            3: FAN_HIGH,
-            5: FAN_AUTO,
-        }
-
-        modelInfos["swingModes"] = {
-            1: SWING_MODE_UP,
-            2: SWING_MODE_MIDDLE_UP,
-            3: SWING_MODE_MIDDLE_DOWN,
-            4: SWING_MODE_DOWN,
-        }
-
-        modelInfos["HVACModes"] = {
-            0: HVACMode.OFF,
-            1: HVACMode.AUTO,
-            3: HVACMode.COOL,
-            4: HVACMode.HEAT,
-            7: HVACMode.FAN_ONLY,
-            8: HVACMode.DRY,
-        }
 
     elif modelId >= 562 and modelId <= 570:
         name = "Air Conditioner User Interface "

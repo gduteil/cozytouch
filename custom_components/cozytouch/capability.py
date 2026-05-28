@@ -68,6 +68,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability.pop("lowestValueCapabilityId")
             capability.pop("highestValueCapabilityId")
             capability["icon"] = "mdi:heat-pump"
+        elif modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            # V2 electric heater / underfloor thermostat (e.g. Atlantic DIVALI,
+            # Atlantic Thermostat PRE). Uses ROOM_CURRENT_HEATING_TARGET_TEMPERATURE
+            # (cap 40) as setpoint, no cooling.
+            capability["name"] = "heat"
+            capability["icon"] = "mdi:thermostat"
         else:
             capability["name"] = "heat"
 
@@ -369,7 +375,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["highestValueCapabilityId"] = 161
 
     elif capabilityId == 177:
-        if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER:
+        if modelInfos["type"] in (
+            CozytouchDeviceType.GAZ_BOILER,
+            CozytouchDeviceType.THERMOSTAT,
+        ):
+            # AC-only setpoint. Heating-only devices don't have a cool target.
             return {}
 
         capability["name"] = "target_cool_temperature"
@@ -623,12 +633,19 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:fire"
 
     elif capabilityId == 100505:
+        # APK: VENTILATION_CURRENT_POWERFUL_MODE — AC's "boost" mode.
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "powerful_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:wind-power"
 
     elif capabilityId == 100506:
+        # APK: VENTILATION_CURRENT_PRESENCE_DETECTION_MODE.
+        # Enum values: 0=COMFORT (presence detection off), 1=PRESENCE_DETECTION (auto).
+        # Hidden on TOWEL_RACK (upstream choice) but exposed for THERMOSTAT
+        # (electric heaters like the Atlantic DIVALI do support presence detection).
         if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
             capability = {}
         else:
@@ -638,6 +655,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability["icon"] = "mdi:account"
 
     elif capabilityId == 100507:
+        # APK: VENTILATION_CURRENT_ENERGY_SAVING_MODE — AC eco switch.
+        # On THERMOSTAT (electric heaters) the eco temperature is expressed via the
+        # PROG_ABSENCE / PROG_NIGHT presets (caps 100196 / 100197), not this switch.
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "eco_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
@@ -714,12 +736,18 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "diag"
 
     elif capabilityId == 100802:
+        # APK: VENTILATION_QUIET_MODE — AC quiet/silent fan setting.
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "quiet_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:fan-minus"
 
     elif capabilityId == 100804:
+        # APK: VENTILATION_SWING_MODE — AC louver swing on/off.
+        if modelInfos["type"] == CozytouchDeviceType.THERMOSTAT:
+            return {}
         capability["name"] = "swing_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
@@ -730,6 +758,15 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:heat-wave"
+
+    elif capabilityId == 104050:
+        # APK: VENTILATION_OPEN_WINDOW_DETECTION. Toggle (0/1) for the heater's
+        # built-in open-window detection (auto-shutoff on a sudden temp drop).
+        # Present on electric heaters in this V2 family (e.g. Atlantic DIVALI).
+        capability["name"] = "open_window_detection"
+        capability["type"] = "switch"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:window-open-variant"
 
     elif capabilityId == 104047:
         # Boost timeout max. in minutes
@@ -754,6 +791,131 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
         capability["temperatureMin"] = 15.0
         capability["temperatureMax"] = 65.0
+
+    # ---- Cap names decoded from the Cozytouch Android APK (v3.28.0, 2026-05-28) ----
+    # Class fr.modulotech.app.domain.model.devices.Capabilities. Caps below appear
+    # on V2 electric heaters (e.g. Atlantic DIVALI, Doris, Equateur, Galapagos)
+    # and other devices in the same V2 family. See docs/cozytouch.md for the full
+    # mapping and value-enum semantics.
+
+    elif capabilityId == 218:
+        # WIFI_CONNECTED — enum (0=UNKNOWN, 1=BLINKING, 2=NOT_BLINKING).
+        # NOT a boolean — value "0" means "LED state unknown", not "disconnected".
+        capability["name"] = "wifi_connected"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:wifi"
+
+    elif capabilityId == 100013:
+        # THERMOSTAT_MILESTONES_AVAILABLE_TYPES — bitmask of supported milestone
+        # types for the weekly schedule (Mon-Sun caps 100334-100341).
+        capability["name"] = "milestones_available_types"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:format-list-bulleted-type"
+
+    elif capabilityId == 100014:
+        # ROOM_TYPE — enum of room categories (bedroom, living, etc.).
+        capability["name"] = "room_type"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:home-search"
+
+    elif capabilityId == 100022:
+        # SYSTEM_OPERATING_SERVICE_SUPPORTED_CAPABILITIES — bitmask (companion to
+        # cap 166 which is the "_AVAILABLE_" form).
+        capability["name"] = "service_supported_capabilities"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100023:
+        # SYSTEM_SUPPORTED_MODES_CAPABILITIES — bitmask of supported HVAC modes
+        # (companion to cap 217, which is "_AVAILABLE_").
+        capability["name"] = "modes_supported_capabilities"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100024:
+        # VENTILATION_OPTIONS_AVAILABLE — bitmask:
+        # 1=TEMPERATURE, 2=OPEN_WINDOW_DETECTION, 4=PRESENCE_DETECTION, 32=ADAPTIVE_PLANNING.
+        capability["name"] = "options_available"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100196:
+        # PROG_ABSENCE — setpoint for the "Absence" lifestyle preset, used by the
+        # weekly schedule (state value 2 = UNOCCUPIED). Format: "[temp, mode]".
+        capability["name"] = "prog_absence_setpoint"
+        capability["type"] = "string"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:home-export-outline"
+
+    elif capabilityId == 100197:
+        # PROG_NIGHT — setpoint for the "Night" lifestyle preset (schedule state
+        # value 3 = FORCED_OCCUPIED). Format: "[temp, mode]".
+        capability["name"] = "prog_night_setpoint"
+        capability["type"] = "string"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:weather-night"
+
+    elif capabilityId == 100198:
+        # PROG_PRESENCE — setpoint for the "Presence" lifestyle preset (schedule
+        # state value 1 = OCCUPIED). Format: "[temp, mode]".
+        capability["name"] = "prog_presence_setpoint"
+        capability["type"] = "string"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:home-account"
+
+    elif capabilityId == 100334:
+        # THERMOSTAT_LIFESTYLE_HEATING_MONDAY — array of [minutesSinceMidnight,
+        # LifestyleMilestoneState] where state: 1=OCCUPIED (→ uses PROG_PRESENCE),
+        # 2=UNOCCUPIED (→ PROG_ABSENCE), 3=FORCED_OCCUPIED (→ PROG_NIGHT).
+        capability["name"] = "lifestyle_schedule_monday"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100335:
+        capability["name"] = "lifestyle_schedule_tuesday"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100336:
+        capability["name"] = "lifestyle_schedule_wednesday"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100337:
+        capability["name"] = "lifestyle_schedule_thursday"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100338:
+        capability["name"] = "lifestyle_schedule_friday"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100339:
+        capability["name"] = "lifestyle_schedule_saturday"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    # Note: capability 100340 is deliberately skipped — Atlantic doesn't use it
+    # on this device class. Sunday is on 100341.
+
+    elif capabilityId == 100341:
+        capability["name"] = "lifestyle_schedule_sunday"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 100503:
+        # WIFI_SOFTWARE_VERSION — companion firmware string on the HUB
+        # (the per-device "interface_fw" is cap 316).
+        capability["name"] = "wifi_software_version"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:tag"
+
+    # ---- end APK-decoded additions ----
 
     # For test
     elif capabilityId == 312:
