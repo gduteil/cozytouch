@@ -8,7 +8,7 @@ from datetime import UTC, datetime, time as t, timedelta, timezone
 import json
 import logging
 
-from aiohttp import ClientSession, ContentTypeError, FormData
+from aiohttp import ClientError, ClientSession, ClientTimeout, ContentTypeError, FormData
 
 from homeassistant import exceptions
 from homeassistant.core import HomeAssistant
@@ -21,6 +21,10 @@ from .const import COZYTOUCH_ATLANTIC_API, COZYTOUCH_CLIENT_ID
 from .model import get_model_infos
 
 _LOGGER = logging.getLogger(__name__)
+
+# Timeout for all HTTP requests. Without this, a hung Atlantic API server
+# will stall _async_update_data forever, blocking all subsequent polls.
+REQUEST_TIMEOUT = ClientTimeout(total=30)
 
 
 class Hub(DataUpdateCoordinator):
@@ -63,6 +67,7 @@ class Hub(DataUpdateCoordinator):
         self._devices = []
 
         self.online = False
+        self._token_expiry: float = 0  # Unix timestamp; 0 = unknown/expired
 
         modelInfos = self.get_model_infos()
         if "name" in modelInfos:
@@ -115,6 +120,7 @@ class Hub(DataUpdateCoordinator):
                         "Authorization": f"Basic {COZYTOUCH_CLIENT_ID}",
                         "Content-Type": "application/x-www-form-urlencoded",
                     },
+                    timeout=REQUEST_TIMEOUT,
                 ) as response:
                     token = await response.json()
 
@@ -128,6 +134,9 @@ class Hub(DataUpdateCoordinator):
                         raise CannotConnect
 
                     self._access_token = token["access_token"]
+                    # Track token expiry; fall back to 1 hour if not provided
+                    expires_in = token.get("expires_in", 3600)
+                    self._token_expiry = datetime.now(UTC).timestamp() + expires_in - 60
 
                 headers = {
                     "Authorization": f"Bearer {self._access_token}",
@@ -136,6 +145,7 @@ class Hub(DataUpdateCoordinator):
                 async with self._session.get(
                     COZYTOUCH_ATLANTIC_API + "/magellan/cozytouch/setupviewv2",
                     headers=headers,
+                    timeout=REQUEST_TIMEOUT,
                 ) as response:
                     json_data = await response.json()
 
@@ -175,6 +185,9 @@ class Hub(DataUpdateCoordinator):
                 self.online = True
 
             except CannotConnect:
+                self.online = False
+            except (ClientError, asyncio.TimeoutError) as err:
+                _LOGGER.warning("connect: network error: %s", err)
                 self.online = False
 
         return self.online
@@ -259,19 +272,44 @@ class Hub(DataUpdateCoordinator):
         if self._test_load:
             return
 
+        # Proactively re-authenticate if the token is about to expire
+        if self.online and datetime.now(UTC).timestamp() >= self._token_expiry:
+            _LOGGER.info("Token expired or about to expire, re-authenticating")
+            self.online = False
+
         if self.online:
-            headers = {
-                "Authorization": f"Bearer {self._access_token}",
-                "Content-Type": "application/json",
-            }
-            async with self._session.get(
-                COZYTOUCH_ATLANTIC_API
-                + "/magellan/capabilities/?deviceId="
-                + str(self._deviceId),
-                headers=headers,
-            ) as response:
-                try:
-                    json_data = await response.json()
+            try:
+                headers = {
+                    "Authorization": f"Bearer {self._access_token}",
+                    "Content-Type": "application/json",
+                }
+                async with self._session.get(
+                    COZYTOUCH_ATLANTIC_API
+                    + "/magellan/capabilities/?deviceId="
+                    + str(self._deviceId),
+                    headers=headers,
+                    timeout=REQUEST_TIMEOUT,
+                ) as response:
+                    # 401 means the token was rejected; force re-auth next poll
+                    if response.status == 401:
+                        _LOGGER.warning("Got 401, forcing re-authentication next poll")
+                        self.online = False
+                        return
+
+                    if response.status != 200:
+                        _LOGGER.warning(
+                            "Unexpected status %d from capabilities endpoint",
+                            response.status,
+                        )
+                        self.online = False
+                        return
+
+                    try:
+                        json_data = await response.json()
+                    except ContentTypeError:
+                        _LOGGER.warning("Non-JSON response from capabilities endpoint")
+                        self.online = False
+                        return
 
                     if isinstance(json_data, list):
                         for dev in self._devices:
@@ -295,10 +333,25 @@ class Hub(DataUpdateCoordinator):
                                     self._timestamp_away_mode_end,
                                 )
                     else:
+                        _LOGGER.warning(
+                            "Capabilities response is not a list (got %s), forcing reconnect",
+                            type(json_data).__name__,
+                        )
                         self.online = False
 
-                except ContentTypeError:
-                    self.online = False
+            except asyncio.TimeoutError:
+                _LOGGER.warning(
+                    "Timeout fetching capabilities for device %d, forcing reconnect",
+                    self._deviceId,
+                )
+                self.online = False
+            except ClientError as err:
+                _LOGGER.warning(
+                    "Network error fetching capabilities for device %d: %s, forcing reconnect",
+                    self._deviceId,
+                    err,
+                )
+                self.online = False
 
         else:
             await self.connect()
@@ -441,76 +494,85 @@ class Hub(DataUpdateCoordinator):
                             if self._test_load:
                                 capability["value"] = value
                             else:
-                                # Write capability value
-                                async with self._session.post(
-                                    COZYTOUCH_ATLANTIC_API
-                                    + "/magellan/executions/writecapability",
-                                    json={
-                                        "capabilityId": capabilityId,
-                                        "deviceId": self._deviceId,
-                                        "value": value,
-                                    },
-                                    headers={
-                                        "Authorization": f"Bearer {self._access_token}",
-                                        "Content-Type": "application/json",
-                                    },
-                                ) as response:
-                                    if response.status == 201:
-                                        # Check completion
-                                        executionId = await response.json()
-                                        completed = False
-                                        nbRetry = 0
-                                        while not completed:
-                                            async with self._session.get(
-                                                COZYTOUCH_ATLANTIC_API
-                                                + "/magellan/executions/"
-                                                + str(executionId),
-                                                headers={
-                                                    "Authorization": f"Bearer {self._access_token}",
-                                                    "Content-Type": "application/json",
-                                                },
-                                            ) as executionResponse:
-                                                try:
-                                                    execution_data = (
-                                                        await executionResponse.json()
-                                                    )
-                                                    execution_state = (
-                                                        execution_data.get(
-                                                            "state", False
+                                try:
+                                    # Write capability value
+                                    async with self._session.post(
+                                        COZYTOUCH_ATLANTIC_API
+                                        + "/magellan/executions/writecapability",
+                                        json={
+                                            "capabilityId": capabilityId,
+                                            "deviceId": self._deviceId,
+                                            "value": value,
+                                        },
+                                        headers={
+                                            "Authorization": f"Bearer {self._access_token}",
+                                            "Content-Type": "application/json",
+                                        },
+                                        timeout=REQUEST_TIMEOUT,
+                                    ) as response:
+                                        if response.status == 201:
+                                            # Check completion
+                                            executionId = await response.json()
+                                            completed = False
+                                            nbRetry = 0
+                                            while not completed:
+                                                async with self._session.get(
+                                                    COZYTOUCH_ATLANTIC_API
+                                                    + "/magellan/executions/"
+                                                    + str(executionId),
+                                                    headers={
+                                                        "Authorization": f"Bearer {self._access_token}",
+                                                        "Content-Type": "application/json",
+                                                    },
+                                                    timeout=REQUEST_TIMEOUT,
+                                                ) as executionResponse:
+                                                    try:
+                                                        execution_data = (
+                                                            await executionResponse.json()
                                                         )
-                                                    )
-                                                    if execution_state == 1:
-                                                        _LOGGER.info(
-                                                            "Execution_state waiting execution"
+                                                        execution_state = (
+                                                            execution_data.get(
+                                                                "state", False
+                                                            )
                                                         )
-                                                    if execution_state == 2:
-                                                        _LOGGER.info(
-                                                            "Execution_state in progress"
-                                                        )
-                                                    elif execution_state == 3:
-                                                        _LOGGER.info(
-                                                            "Execution_state completed"
-                                                        )
-                                                        completed = True
-                                                        break
-                                                    else:
-                                                        _LOGGER.info(
-                                                            "Execution_state error"
-                                                        )
+                                                        if execution_state == 1:
+                                                            _LOGGER.info(
+                                                                "Execution_state waiting execution"
+                                                            )
+                                                        if execution_state == 2:
+                                                            _LOGGER.info(
+                                                                "Execution_state in progress"
+                                                            )
+                                                        elif execution_state == 3:
+                                                            _LOGGER.info(
+                                                                "Execution_state completed"
+                                                            )
+                                                            completed = True
+                                                            break
+                                                        else:
+                                                            _LOGGER.info(
+                                                                "Execution_state error"
+                                                            )
+                                                            break
+
+                                                    except ContentTypeError:
+                                                        self.online = False
                                                         break
 
-                                                except ContentTypeError:
-                                                    self.online = False
+                                                nbRetry += 1
+                                                if nbRetry > 5:
                                                     break
 
-                                            nbRetry += 1
-                                            if nbRetry > 5:
-                                                break
+                                                await asyncio.sleep(1)
 
-                                            await asyncio.sleep(1)
-
-                                        if completed:
-                                            capability["value"] = value
+                                            if completed:
+                                                capability["value"] = value
+                                except (ClientError, asyncio.TimeoutError) as err:
+                                    _LOGGER.warning(
+                                        "Network error writing capability %d: %s",
+                                        capabilityId,
+                                        err,
+                                    )
                             break
 
     def away_mode_init(self, timestampStart, timestampEnd):
@@ -594,6 +656,7 @@ class Hub(DataUpdateCoordinator):
                     "Authorization": f"Bearer {self._access_token}",
                     "Content-Type": "application/json",
                 },
+                timeout=REQUEST_TIMEOUT,
             ) as response:
                 if response.status in (200, 204):
                     if timestampStart is not None and timestampEnd is not None:
@@ -630,20 +693,25 @@ class Hub(DataUpdateCoordinator):
                 "Authorization": f"Bearer {self._access_token}",
                 "Content-Type": "application/json",
             }
-            async with self._session.get(
-                COZYTOUCH_ATLANTIC_API + "/magellan/refs/countries",
-                headers=headers,
-            ) as response:
-                try:
-                    json_data = await response.json()
-                    if isinstance(json_data, list):
-                        for localization in json_data:
-                            if localization.get("countryCode", "") == country:
-                                self._localization = copy.deepcopy(localization)
-                                break
+            try:
+                async with self._session.get(
+                    COZYTOUCH_ATLANTIC_API + "/magellan/refs/countries",
+                    headers=headers,
+                    timeout=REQUEST_TIMEOUT,
+                ) as response:
+                    try:
+                        json_data = await response.json()
+                        if isinstance(json_data, list):
+                            for localization in json_data:
+                                if localization.get("countryCode", "") == country:
+                                    self._localization = copy.deepcopy(localization)
+                                    break
 
-                except ContentTypeError:
-                    self._localization = {}
+                    except ContentTypeError:
+                        self._localization = {}
+            except (ClientError, asyncio.TimeoutError) as err:
+                _LOGGER.warning("Could not fetch localization: %s", err)
+                self._localization = {}
 
 
 class CannotConnect(exceptions.HomeAssistantError):

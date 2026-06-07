@@ -183,7 +183,7 @@ class CozytouchAwayModeSwitch(SwitchEntity, CozytouchSensor):
         self._state = True
         await self.coordinator.set_away_mode_timestamps(
             self._capability["capabilityId"],
-            self._value_pending,
+            self._value_on,
             self._capability["timestampsCapabilityId"],
             int(timestampStart),
             int(timestampEnd),

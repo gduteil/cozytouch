@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
 from . import hub
@@ -42,6 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         theHub.set_dump_json(entry.data["dump_json"])
 
     await theHub.connect()
+    if not theHub.online:
+        # tells HA to retry setup with exponential backoff until the network is available
+        raise ConfigEntryNotReady("Cannot connect to Atlantic Cozytouch API")
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = theHub
 
