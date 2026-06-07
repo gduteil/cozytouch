@@ -175,12 +175,14 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
 
     elif capabilityId == 86:
+        # DHW_OPERATING_STATUS_CAPABILITY
         capability["name"] = "domestic_hot_water"
         capability["type"] = "switch"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:faucet"
 
     elif capabilityId == 87:
+        # DHW_CURRENT_MODE
         capability["name"] = "heating_mode"
         capability["type"] = "select"
         capability["category"] = "sensor"
@@ -204,6 +206,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability["name"] = "resistance"
             capability["icon"] = "mdi:radiator"
         else:
+            # DHW_HEATING_STATUS
             capability["name"] = "dhw_pump"
             capability["icon"] = "mdi:faucet"
 
@@ -346,6 +349,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["step"] = 0.5
 
     elif capabilityId == 165:
+        # DHW_BOOST_ON
         capability["name"] = "boost_mode"
         capability["type"] = "switch"
         capability["category"] = "sensor"
@@ -354,6 +358,24 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         if modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
             capability["value_off"] = "false"
             capability["value_on"] = "true"
+
+    elif capabilityId == 168:
+        # DHW_AVAILABLE_MODES_CAPABILITIES
+        # Based on DHWMode
+        # Bit Mask
+        # 1	MANUAL
+        # 4	AUTO
+        # 8	PROG
+        # 256	BOOST
+        # 512	BOOST_SCHEDULE
+        # 1024	ABSENCE
+        # 2048	ABSENCE_SCHEDULE
+        # 4096	ANTILEGIONELLA
+        # 8192	SMART_GRID
+        # Ex : 7941 => MANUAL, AUTO, BOOST, BOOST_SCHEDULE, ABSENCE, ABSENCE_SCHEDULE, ANTILEGIONELLA
+        capability["name"] = "available_modes"
+        capability["type"] = "string"
+        capability["category"] = "diag"
 
     elif capabilityId == 169:
         capability["name"] = "radio_signal"
@@ -463,7 +485,18 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["name"] = "prog_14_z2"
         capability["type"] = "prog"
         capability["category"] = "diag"
-
+        
+    elif capabilityId == 218:
+        # WIFI_CONNECTED
+        # Based on WifiState
+        # UNKNOWN: 0
+        # BLINKING: 1
+        # NOT_BLINKING: 2
+        capability["name"] = "wifi_connected"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:wifi"
+        
     elif capabilityId == 219:
         capability["name"] = "wifi_ssid"
         capability["type"] = "string"
@@ -471,6 +504,8 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:wifi"
 
     elif capabilityId in (222, 226):
+        # 222 : ABSENCE_HOME_DATE
+        # 226 : ABSENCE_DHW_DATE
         capability["name"] = "away_mode"
         capability["name_0"] = "away_mode_start"
         capability["name_1"] = "away_mode_stop"
@@ -484,7 +519,56 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         else:
             capability["capabilityDuplicate"] = 222
 
+    elif capabilityId == 223:
+        # DHW_AVAILABLE_HEATING_TYPE
+        # Based on DHWHeatingType
+        # Enum	Mask (id)	Value (String)
+        # HEAT_AVAILABLE	1	"0"
+        # HEAT_SCHEDULE	2	"1"
+        # HEAT_OFF_PEAK	4	"2"
+        # EAT_SELF_CONSUMPTION	8	"-1"
+        # UNKNOWN	-1	"-1"
+        capability["name"] = "available_heating_type"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
+    elif capabilityId == 224:
+        # DHW_ESTIMATION_SUPPORT
+        capability["name"] = "estimation_support"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 228:
+        # ABSENCE_DHW_STATE
+        # Based on GacomaAbsenceState
+		# DISABLED: "0"
+		# ENABLED: "1"
+		# SCHEDULED: "2"
+		# UNKNOWN: "-1"
+        capability["name"] = "absence_state"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 228:
+        # ABSENCE_DHW_TEMPERATURE
+        capability["name"] = "absence_temperature"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 230:
+        # DHW_CURRENT_HEATING_TYPE
+        # Based on DHWHeatingType
+        # 1 -> HEAT_AVAILABLE
+        # 2 -> HEAT_SCHEDULE
+        # 4 -> HEAT_OFF_PEAK
+        # 8 -> HEAT_SELF_CONSUMPTION
+        # -1 -> UNKNOWN
+        capability["name"] = "current_heating_type"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+
     elif capabilityId == 231:
+        # DHW_CURRENT_MANUAL_TARGET_SET_BY_USER
         capability["name"] = "target_temperature"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
@@ -492,6 +576,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["highestValueCapabilityId"] = 105304
 
     elif capabilityId == 232:
+        # DHW_BOOST_MINUTES
         capability["name"] = "boost_total_time"
         capability["type"] = "time"
         capability["category"] = "diagnostic"
@@ -536,6 +621,18 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
     elif capabilityId == 251:
         capability["name"] = "prog_07"
         capability["type"] = "progtime"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 252:
+        # DHW_MAX_USER_TARGET
+        capability["name"] = "max_user_target"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
+
+    elif capabilityId == 253:
+        # DHW_MIN_USER_TARGET
+        capability["name"] = "min_user_target"
+        capability["type"] = "temperature"
         capability["category"] = "diag"
 
     elif capabilityId == 258:
@@ -582,15 +679,40 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:water-thermometer"
 
     elif capabilityId == 271:
+        # DHW_STATE_OF_CHARGE
         capability["name"] = "hot_water_available"
         capability["type"] = "percentage"
         capability["category"] = "sensor"
+        
+    elif capabilityId == 280:
+        # DHW_COLD_WATER_TEMPERATURE
+        capability["name"] = "cold_water_temperature"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
 
     elif capabilityId == 283:
         capability["name"] = "off_peak_hours"
         capability["type"] = "binary"
         capability["category"] = "sensor"
         capability["icon"] = "mdi:clock-outline"
+        
+    elif capabilityId == 290:
+        # ERROR_CODE_DHW
+        capability["name"] = "error_code"
+        capability["type"] = "string"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 307:
+        # DHW_MIN_HEATING_DURATION_PERIOD_FOR_ONE_DAY - in minutes
+        capability["name"] = "min_heating_duration_period_for_one_day"
+        capability["type"] = "int"
+        capability["category"] = "diag"
+
+    elif capabilityId == 312:
+        # DHW_CURRENT_CONTROL_TARGET
+        capability["name"] = "current_control_target"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
 
     elif capabilityId == 315:
         capability["name"] = "timezone"
@@ -603,7 +725,31 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "string"
         capability["category"] = "diag"
         capability["icon"] = "mdi:tag"
+        
+    elif capabilityId == 329:
+        # DHW_MIN_NUMBER_PROGRAMMING_RANGE_PER_DAY
+        capability["name"] = "min_number_programming_range_per_day"
+        capability["type"] = "int"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 331:
+        # DHW_MAX_DURATION_PROG_RANGE
+        capability["name"] = "max_duration_prog_range"
+        capability["type"] = "int"
+        capability["category"] = "diag"
 
+    elif capabilityId == 332:
+        # DHW_MIN_DURATION_PROG_RANGE
+        capability["name"] = "min_duration_prog_range"
+        capability["type"] = "int"
+        capability["category"] = "diag"
+
+    elif capabilityId == 333:
+        # DHW_MAX_HEATING_DURATION_PERIOD_FOR_ONE_DAY
+        capability["name"] = "max_heating_duration_period_for_one_day"
+        capability["type"] = "int"
+        capability["category"] = "diag"
+        
     elif capabilityId == 335:
         capability["name"] = "serial_number"
         capability["type"] = "string"
@@ -740,8 +886,52 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["lowest_value"] = 5
         capability["highest_value"] = 60
         capability["step"] = 5
+        
+    elif capabilityId == 105011:
+        # DHW_SUPPORTED_MODES_CAPABILITIES
+        # Based on DHWMode
+        # Bit Mask
+        # 1	MANUAL
+        # 4	AUTO
+        # 8	PROG
+        # 256	BOOST
+        # 512	BOOST_SCHEDULE
+        # 1024	ABSENCE
+        # 2048	ABSENCE_SCHEDULE
+        # 4096	ANTILEGIONELLA
+        # 8192	SMART_GRID
+        # Ex : 16141 => MANUAL, AUTO, PROG, BOOST, BOOST_SCHEDULE, ABSENCE, ABSENCE_SCHEDULE, ANTILEGIONELLA, SMART_GRID
+        capability["name"] = "supported_modes"
+        capability["type"] = "int"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 105012:
+        # DHW_SUPPORTED_HEATING_TYPE
+        # Based on DHWHeatingType
+        # Bit Mask
+        # 1 -> HEAT_AVAILABLE
+        # 2 -> HEAT_SCHEDULE
+        # 4 -> HEAT_OFF_PEAK
+        # 8 -> HEAT_SELF_CONSUMPTION
+        # -1 -> UNKNOWN
+        capability["name"] = "supported_heating_type"
+        capability["type"] = "int"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 105122:
+        # DHW_BOOST_END_TIMESTAMP
+        capability["name"] = "boost_end_timestamp"
+        capability["type"] = "int"
+        capability["category"] = "diag"
+        
+    elif capabilityId == 105300:
+        # DHW_WATER_LIMIT
+        capability["name"] = "water_limit"
+        capability["type"] = "number"
+        capability["category"] = "diag"
 
     elif capabilityId == 105906:
+        # DHW_V40_APPLIED_SETPOINT
         capability["name"] = "Target 105906"
         capability["type"] = "temperature_percent_adjustment_number"
         capability["category"] = "sensor"
@@ -749,6 +939,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["temperatureMax"] = 65.0
 
     elif capabilityId == 105907:
+        # DHW_V40_MANUALLY_FILLED_BY_USER
         capability["name"] = "Target 105907"
         capability["type"] = "temperature_percent_adjustment_number"
         capability["category"] = "sensor"
