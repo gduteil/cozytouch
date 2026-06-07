@@ -1,7 +1,5 @@
 {
     "name": "Cozytouch",
     "content_in_root": false,
-    "domains": ["cozytouch"],
-    "homeassistant": "2024.1.0",
-    "iot_class": "cloud_polling"
+    "homeassistant": "2024.1.0"
 }
