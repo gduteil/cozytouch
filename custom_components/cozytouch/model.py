@@ -192,12 +192,14 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             0: HVACMode.OFF,
         }
         
-    elif (modelId >= 557 and modelId <= 561) or modelId in (1734):
+    elif (modelId >= 557 and modelId <= 561) or modelId == 1734:
         name = "Air Conditioner "
         if zoneName is not None:
             modelInfos["name"] = name + "(" + zoneName + ")"
-        else:
+        elif modelId <= 561:
             modelInfos["name"] = name + "(#" + str(modelId - 556) + ")"
+        else:
+            modelInfos["name"] = name + "(#" + str(modelId - 1733) + ")"
 
         modelInfos["type"] = CozytouchDeviceType.AC
         modelInfos["currentTemperatureAvailable"] = False
