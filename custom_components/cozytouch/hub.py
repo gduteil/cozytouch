@@ -224,6 +224,9 @@ class Hub(DataUpdateCoordinator):
         # Create new devices
         deviceIndex = -1
         for remote_device in json_data[0]["devices"]:
+            if remote_device.get("deviceUrl", "").startswith("io://"):
+                continue
+
             deviceIndex = -1
             for i, local_device in enumerate(self._devices):
                 if remote_device["deviceId"] == local_device["deviceId"]:
