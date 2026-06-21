@@ -9,6 +9,7 @@ This has been tested using on :
   - `Takao M3` air conditionning
   - `Kelud 1750W` towel rack
   - `Sauter Asama Connecté II Ventilo 1750W` towel rack
+  - `Thermor Malicio 3 65L` water heater
 
 A special mapping needs to be done for each model type, feel free to create an issue to help supporting your device.
 
