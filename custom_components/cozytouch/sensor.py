@@ -591,11 +591,11 @@ class CozytouchUnitSensor(CozytouchSensor):
     @property
     def native_value(self) -> float | None:
         """Value of the sensor."""
-        if self._last_value:
+        if self._last_value is not None:
             try:
                 return float(self._last_value)
-            except ValueError:
-                return 0.0
+            except (TypeError, ValueError):
+                return None
 
 
 class CozytouchTimeSensor(CozytouchSensor):
