@@ -543,8 +543,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "volume"
         capability["category"] = "sensor"
 
+    # Tank temperature numbering per Atlantic's official capability list
+    # (see #129): 264=bottom, 265=middle, 266=top, 267=average.
     elif capabilityId == 264:
-        capability["name"] = "condenser_temperature"
+        capability["name"] = "tank_bottom_temperature"
         capability["type"] = "temperature"
         capability["category"] = "sensor"
 
@@ -559,7 +561,7 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
 
     elif capabilityId == 267:
-        capability["name"] = "tank_bottom_temperature"
+        capability["name"] = "tank_average_temperature"
         capability["type"] = "temperature"
         capability["category"] = "sensor"
 
