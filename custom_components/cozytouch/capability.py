@@ -127,7 +127,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["icon"] = "mdi:water-pump"
 
     elif capabilityId == 40:
-        capability["name"] = "target_temperature"
+        if modelId == 1983:
+            capability["name"] = "target_temperature_manual"
+        else:
+            capability["name"] = "target_temperature"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
         capability["lowestValueCapabilityId"] = 160
@@ -485,7 +488,10 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
             capability["capabilityDuplicate"] = 222
 
     elif capabilityId == 231:
-        capability["name"] = "target_temperature"
+        if modelId == 1983:
+            capability["name"] = "target_temperature_eco_plus"
+        else:
+            capability["name"] = "target_temperature"
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
         capability["lowestValueCapabilityId"] = 105301
@@ -564,10 +570,13 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["category"] = "sensor"
 
     elif capabilityId == 268:
-        capability["name"] = "v40_water_available"
-        capability["type"] = "volume"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:water-thermometer"
+        if modelInfos.get("v40WaterAvailable", True):
+            capability["name"] = "v40_water_available"
+            capability["type"] = "volume"
+            capability["category"] = "sensor"
+            capability["icon"] = "mdi:water-thermometer"
+        else:
+            return {}
 
     elif capabilityId == 269:
         capability["name"] = "water_consumption"
@@ -742,22 +751,28 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["step"] = 5
 
     elif capabilityId == 105906:
-        capability["name"] = "Target 105906"
+        if modelId == 1983:
+            capability["name"] = "target_temperature_percentage"
+        else:
+            capability["name"] = "target_temperature"
         capability["type"] = "temperature_percent_adjustment_number"
         capability["category"] = "sensor"
         capability["temperatureMin"] = 15.0
-        capability["temperatureMax"] = 65.0
+        capability["temperatureMax"] = 70.0
 
     elif capabilityId == 105907:
-        capability["name"] = "Target 105907"
+        capability["name"] = "target_temperature_eco"
         capability["type"] = "temperature_percent_adjustment_number"
         capability["category"] = "sensor"
         capability["temperatureMin"] = 15.0
-        capability["temperatureMax"] = 65.0
+        capability["temperatureMax"] = 70.0
 
     # For test
     elif capabilityId == 312:
-        capability["name"] = "Temp_" + str(capabilityId)
+        if modelId == 1983:
+            capability["name"] = "target_temperature_auxiliary"
+        else:
+            capability["name"] = "Temp_" + str(capabilityId)
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
 
