@@ -430,6 +430,20 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             4: HEATING_MODE_PROG,
         }
 
+    elif modelId == 1658:
+        modelInfos["name"] = "Calypso connecté"
+        modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
+        modelInfos["HVACModes"] = {
+            0: HVACMode.OFF,
+            4: HVACMode.HEAT,
+        }
+
+        modelInfos["HeatingModes"] = {
+            0: HEATING_MODE_MANUAL,
+            3: HEATING_MODE_ECO_PLUS,
+            4: HEATING_MODE_PROG,
+        }
+
     elif modelId == 1966:
         modelInfos["name"] = "Thermor Malicio 3 120L"
         modelInfos["type"] = CozytouchDeviceType.WATER_HEATER
