@@ -164,6 +164,15 @@
             }
         },
         "sensor": {
+            "wifi_connected":           { "name": "Wifi connecté" },
+            "target_temperature_max":   { "name": "Consigne max" },
+            "target_temperature_min":   { "name": "Consigne min" },
+            "cold_water_temperature":   { "name": "Température eau froide" },
+            "hot_water_level_requested": { "name": "Niveau d'eau chaude demandé" },
+            "current_hot_water_level":  { "name": "Niveau d'eau chaude actuel" },
+            "water_temperature_limit":  { "name": "Limite température eau" },
+            "max_target_temperature_derogation": { "name": "Consigne max dérogation" },
+            "absence_dhw_temperature":  { "name": "Température absence ECS" },
             "air_conditioner":          { "name": "Climatisation" },
             "away_mode":                { "name": "Absence" },
             "away_mode_start":          { "name": "Absence Début" },

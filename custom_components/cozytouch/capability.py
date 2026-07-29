@@ -464,6 +464,12 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "prog"
         capability["category"] = "diag"
 
+    elif capabilityId == 218:
+        capability["name"] = "wifi_connected"
+        capability["type"] = "binary"
+        capability["category"] = "diag"
+        capability["icon"] = "mdi:wifi"
+
     elif capabilityId == 219:
         capability["name"] = "wifi_ssid"
         capability["type"] = "string"
@@ -538,6 +544,16 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["type"] = "progtime"
         capability["category"] = "diag"
 
+    elif capabilityId == 252:
+        capability["name"] = "target_temperature_max"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
+
+    elif capabilityId == 253:
+        capability["name"] = "target_temperature_min"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
+
     elif capabilityId == 258:
         capability["name"] = "tank_capacity"
         capability["type"] = "volume"
@@ -585,6 +601,24 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["name"] = "hot_water_available"
         capability["type"] = "percentage"
         capability["category"] = "sensor"
+
+    elif capabilityId == 280:
+        capability["name"] = "cold_water_temperature"
+        capability["type"] = "temperature"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:coolant-temperature"
+
+    elif capabilityId == 292:
+        capability["name"] = "hot_water_level_requested"
+        capability["type"] = "int"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-plus"
+
+    elif capabilityId == 293:
+        capability["name"] = "current_hot_water_level"
+        capability["type"] = "int"
+        capability["category"] = "sensor"
+        capability["icon"] = "mdi:water-check"
 
     elif capabilityId == 283:
         capability["name"] = "off_peak_hours"
@@ -741,6 +775,16 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["highest_value"] = 60
         capability["step"] = 5
 
+    elif capabilityId == 105300:
+        capability["name"] = "water_temperature_limit"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
+
+    elif capabilityId == 105304:
+        capability["name"] = "max_target_temperature_derogation"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
+
     elif capabilityId == 105906:
         capability["name"] = "Target 105906"
         capability["type"] = "temperature_percent_adjustment_number"
@@ -760,6 +804,11 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["name"] = "Temp_" + str(capabilityId)
         capability["type"] = "temperature_adjustment_number"
         capability["category"] = "sensor"
+
+    elif capabilityId == 228:
+        capability["name"] = "absence_dhw_temperature"
+        capability["type"] = "temperature"
+        capability["category"] = "diag"
 
     else:
         return None
