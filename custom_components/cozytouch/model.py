@@ -202,7 +202,6 @@ def get_model_infos(modelId: int, zoneName: str | None = None):
             modelInfos["name"] = name + "(#" + str(modelId - 1733) + ")"
 
         modelInfos["type"] = CozytouchDeviceType.AC
-        modelInfos["currentTemperatureAvailable"] = False
         modelInfos["quietModeAvailable"] = True
 
         modelInfos["fanModes"] = {
