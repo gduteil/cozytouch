@@ -539,7 +539,7 @@ class Hub(DataUpdateCoordinator):
                                                             _LOGGER.info(
                                                                 "Execution_state waiting execution"
                                                             )
-                                                        if execution_state == 2:
+                                                        elif execution_state == 2:
                                                             _LOGGER.info(
                                                                 "Execution_state in progress"
                                                             )
@@ -550,8 +550,11 @@ class Hub(DataUpdateCoordinator):
                                                             completed = True
                                                             break
                                                         else:
-                                                            _LOGGER.info(
-                                                                "Execution_state error"
+                                                            _LOGGER.warning(
+                                                                "Write of capability %d failed,"
+                                                                " execution state %s",
+                                                                capabilityId,
+                                                                execution_state,
                                                             )
                                                             break
 
@@ -561,12 +564,25 @@ class Hub(DataUpdateCoordinator):
 
                                                 nbRetry += 1
                                                 if nbRetry > 5:
+                                                    _LOGGER.warning(
+                                                        "Write of capability %d not confirmed"
+                                                        " after %d polls",
+                                                        capabilityId,
+                                                        nbRetry,
+                                                    )
                                                     break
 
                                                 await asyncio.sleep(1)
 
                                             if completed:
                                                 capability["value"] = value
+                                        else:
+                                            _LOGGER.error(
+                                                "Write of capability %d rejected"
+                                                " by the API (HTTP %d)",
+                                                capabilityId,
+                                                response.status,
+                                            )
                                 except (ClientError, asyncio.TimeoutError) as err:
                                     _LOGGER.warning(
                                         "Network error writing capability %d: %s",
@@ -574,6 +590,10 @@ class Hub(DataUpdateCoordinator):
                                         err,
                                     )
                             break
+        else:
+            _LOGGER.warning(
+                "Cannot write capability %d: hub is offline", capabilityId
+            )
 
     def away_mode_init(self, timestampStart, timestampEnd):
         """Init away mode timestamps."""
