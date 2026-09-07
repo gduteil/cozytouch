@@ -102,6 +102,16 @@ def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: s
         capability["lowestValueCapabilityId"] = 160
         capability["highestValueCapabilityId"] = 161
 
+        if modelId == 2346:
+            # Egeo VS 250L does not report capabilities 160/161, so number.py
+            # keeps its 0 / 60.0 / 0.5 defaults. Since _handle_coordinator_update
+            # clamps the value it reads as well as the one it writes, a tank set
+            # to 65 C in the Cozytouch app was displayed as 60.0 in HA. These are
+            # the bounds the app offers for this model.
+            capability["lowest_value"] = 50
+            capability["highest_value"] = 65
+            capability["step"] = 1
+
     elif capabilityId == 25:
         capability["name"] = "number_of_starts_ch_pump"
         capability["type"] = "int"
