@@ -1,0 +1,182 @@
+{
+ "_about": "Synthetic, not a capture. A Duralis ACI HYB (model 393) built from the capability values mmnlfrrr/cozytouch documents for one, and the consumption answer that fork published from it. For seeing the consumption sensors in the test Home Assistant ; nothing here was read from a real account in this repository.",
+ "data": {
+  "setup": {
+   "absence": {},
+   "area": 90,
+   "currency": "EUR",
+   "id": 3100,
+   "mainDHWEnergy": 1,
+   "mainHeatingEnergy": 1,
+   "name": "Maison",
+   "numberOfPersons": 2,
+   "numberOfRooms": 4,
+   "rateLimit": 30,
+   "setupBuildingDate": 4,
+   "type": 2
+  },
+  "zones": [
+   {
+    "id": 2100,
+    "name": "Zone 1",
+    "numberOfDevices": 1,
+    "zoneType": 29
+   }
+  ],
+  "devices": [
+   {
+    "deviceId": 1100,
+    "name": "WATER_HEATER",
+    "modelId": 393,
+    "productId": null,
+    "zoneId": 2100,
+    "tags": [],
+    "customName": "Chauffe-eau",
+    "longName": "DURALIS CONNECT ACI HYB VM 150L 2200M",
+    "modelFamily": "Water_Heater",
+    "productRange": null,
+    "masterDeviceId": null,
+    "isAvailable": true,
+    "capabilities": {
+     "values": {
+      "15": "2",
+      "22": "50",
+      "87": "4",
+      "99": "0",
+      "164": "1040",
+      "165": "0",
+      "168": "16141",
+      "188": "2",
+      "223": "3",
+      "224": "125",
+      "230": "1",
+      "232": "0",
+      "234": "65.0",
+      "236": "1",
+      "244": "3",
+      "252": "65",
+      "253": "50",
+      "258": "150",
+      "268": "118",
+      "270": "300",
+      "271": "35",
+      "278": "0",
+      "312": "58"
+     },
+     "modificationDates": {
+      "15": 1788998400,
+      "22": 1788998400,
+      "87": 1788998400,
+      "99": 1788998400,
+      "164": 1788998400,
+      "165": 1788998400,
+      "168": 1788998400,
+      "188": 1788998400,
+      "223": 1788998400,
+      "224": 1788998400,
+      "230": 1788998400,
+      "232": 1788998400,
+      "234": 1788998400,
+      "236": 1788998400,
+      "244": 1788998400,
+      "252": 1788998400,
+      "253": 1788998400,
+      "258": 1788998400,
+      "268": 1788998400,
+      "270": 1788998400,
+      "271": 1788998400,
+      "278": 1788998400,
+      "312": 1788998400
+     }
+    }
+   }
+  ],
+  "consumptions": {
+   "status": 200,
+   "answer": [
+    {
+     "serialNumber": "0000-0000-0000",
+     "deviceId": null,
+     "category": 2,
+     "type": 1,
+     "unit": 1,
+     "currency": 101,
+     "deviceUrl": null,
+     "zoneId": null,
+     "zoneLabel": null,
+     "consumptionPeriods": [
+      {
+       "consumedQuantity": 4,
+       "cost": 0.58,
+       "date": 1788825600,
+       "mode": 2,
+       "producedQuantity": null,
+       "profil": 0
+      },
+      {
+       "consumedQuantity": 3.31,
+       "cost": 0.47,
+       "date": 1788912000,
+       "mode": 2,
+       "producedQuantity": null,
+       "profil": 0
+      },
+      {
+       "consumedQuantity": 3.87,
+       "cost": 0.56,
+       "date": 1788998400,
+       "mode": 2,
+       "producedQuantity": null,
+       "profil": 0
+      },
+      {
+       "consumedQuantity": 1.16,
+       "cost": 0.25,
+       "date": 1788998400,
+       "mode": 1,
+       "producedQuantity": null,
+       "profil": 0
+      }
+     ]
+    },
+    {
+     "serialNumber": "0000-0000-0000",
+     "deviceId": null,
+     "category": 2,
+     "type": 4,
+     "unit": 2,
+     "currency": 101,
+     "deviceUrl": null,
+     "zoneId": null,
+     "zoneLabel": null,
+     "consumptionPeriods": [
+      {
+       "consumedQuantity": 99.99,
+       "cost": 0,
+       "date": 1788825600,
+       "mode": 0,
+       "producedQuantity": null,
+       "profil": 3
+      },
+      {
+       "consumedQuantity": 90.99,
+       "cost": 0,
+       "date": 1788912000,
+       "mode": 0,
+       "producedQuantity": null,
+       "profil": 3
+      },
+      {
+       "consumedQuantity": 109,
+       "cost": 0,
+       "date": 1788998400,
+       "mode": 0,
+       "producedQuantity": null,
+       "profil": 3
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

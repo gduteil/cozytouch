@@ -23,8 +23,10 @@ $R start          # fresh instance, owner onboarded, account added
 
 `start` takes a diagnostics dump as argument ; without one it serves
 `scripts/test_ha/navizone.json`, a HUB Navizone (1758) and its three rooms
-(557-559) with no absence set. A first start takes a few minutes while Home
-Assistant installs the frontend ; after that, seconds.
+(557-559) with no absence set. `scripts/test_ha/water_heater.json` is the
+other one : a synthetic Duralis ACI HYB (393) whose setup reports
+consumption, for the sensors on the `Maison` device. A first start takes a
+few minutes while Home Assistant installs the frontend ; after that, seconds.
 
 Then, as often as needed :
 
@@ -75,7 +77,9 @@ say which is which.
 
 It stores writes and serves them back. The only cloud behaviour it plays is
 what a capture showed : 102020 reaches every room, and a gateway's 152 and
-222 are mirrored onto its rooms as 100261 and 100260. Anything else -- a
+222 are mirrored onto its rooms as 100261 and 100260. The consumption
+endpoint serves the dump's `consumptions` moved so its latest day is today,
+and an empty list for a dump without one. Anything else -- a
 programmed absence turning itself on, a 429, a refused login -- does not
 happen here, so a screenshot proves how the integration reads the API, never
 how Atlantic answers. Say so when the question is about the cloud.

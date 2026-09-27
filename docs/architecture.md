@@ -48,6 +48,7 @@ config entry (the account) ──> CozytouchAccount
                                 │
                                 │  POST /users/token                      once, then on expiry
                                 │  GET  /magellan/cozytouch/setupviewv2   every 30s — the beat
+                                │  GET  /magellan/setups/{id}/consumptions  every 15 min, if any
                                 │
                                 ├─ setup     address, zones count, rateLimit…
                                 ├─ zones     zone id → name, refreshed on every setup view
@@ -78,7 +79,15 @@ Each platform's `async_setup_entry` loops over `entry.subentries` and adds its
 entities with `config_subentry_id=`, which is what puts them under the right
 device.
 
-Three entities are not capability-driven, and so are not in that fan-out.
+Four kinds of entity are not capability-driven, and so are not in that
+fan-out. The consumption sensors are the setup's rather than a device's :
+they read `GET /magellan/setups/{id}/consumptions` through the account, every
+15 minutes, are entities of `AccountCoordinator` rather than of a hub, and
+sit on a device of their own named after the setup -- asked for only when
+no device declares an empty 164, and built only when the first answer
+carries a series (`docs/decisions.md`, *Consumption*).
+The other three are per device.
+
 `binary_sensor` builds exactly one per subentry, a connectivity sensor
 reflecting `hub.online` — which is the *account's* connection, the same answer
 for every device on it. The sensor platform builds one more beside its

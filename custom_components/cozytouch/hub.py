@@ -165,6 +165,7 @@ class AccountCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("Cannot connect to Atlantic Cozytouch API")
 
             # connect() reads the setup view itself, so this round is done.
+            await self._account.refresh_consumptions()
             await self._publish()
             return
 
@@ -178,6 +179,9 @@ class AccountCoordinator(DataUpdateCoordinator):
             self._publish_error(UpdateFailed(str(err)))
             raise UpdateFailed(str(err)) from err
 
+        # On its own, slower clock ; a no-op on most polls. See
+        # docs/decisions.md.
+        await self._account.refresh_consumptions()
         await self._publish()
 
     async def _publish(self) -> None:

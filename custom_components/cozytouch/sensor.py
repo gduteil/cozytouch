@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+from dataclasses import dataclass
 import datetime
 import json
 import logging
@@ -26,9 +28,11 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import faults
+from . import consumption, faults
 from .capability import describe_capability_value, read_setpoint
 from .const import DOMAIN, CozytouchCapabilityVariableType
 from .hub import (
@@ -88,6 +92,10 @@ async def async_setup_entry(
 
         if dates:
             async_add_entities(dates, True, config_subentry_id=subentry_id)
+
+    # The setup's, not a device's, so under no subentry.
+    if consumed := consumption_sensors(config_entry):
+        async_add_entities(consumed, False)
 
 
 class CozytouchSensor(SensorEntity, CozytouchDeviceEntity):
@@ -592,6 +600,163 @@ class CozytouchLastPollSensor(_CozytouchDeviceTimestampSensor):
     def native_value(self) -> datetime.datetime | None:
         """When the account's setup view last answered, as an aware datetime."""
         return self.coordinator.get_last_poll()
+
+
+@dataclass(frozen=True, kw_only=True)
+class ConsumptionDescription(SensorEntityDescription):
+    """One reading of the consumption endpoint : which series, which field.
+
+    `mode` None is the whole day ; a tariff period otherwise.
+    """
+
+    series: int
+    field: str = "quantity"
+    mode: int | None = None
+
+
+CONSUMPTION_SENSORS = (
+    ConsumptionDescription(
+        key="energy_today",
+        translation_key="energy_today",
+        series=consumption.ELECTRICITY,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    ConsumptionDescription(
+        key="energy_peak_today",
+        translation_key="energy_peak_today",
+        series=consumption.ELECTRICITY,
+        mode=consumption.PEAK,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        icon="mdi:weather-sunny",
+    ),
+    ConsumptionDescription(
+        key="energy_offpeak_today",
+        translation_key="energy_offpeak_today",
+        series=consumption.ELECTRICITY,
+        mode=consumption.OFFPEAK,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        icon="mdi:weather-night",
+    ),
+    ConsumptionDescription(
+        key="energy_cost_today",
+        translation_key="energy_cost_today",
+        series=consumption.ELECTRICITY,
+        field="cost",
+        device_class=SensorDeviceClass.MONETARY,
+    ),
+    ConsumptionDescription(
+        key="water_today",
+        translation_key="water_today",
+        series=consumption.WATER,
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_display_precision=0,
+    ),
+)
+
+
+def consumption_sensors(config_entry: CozytouchConfigEntry) -> list:
+    """The daily readings the setup's first answer carries, and only those.
+
+    A tariff split only where the series has used one, and a cost only in a
+    currency somebody has seen. See docs/decisions.md.
+    """
+    runtime = config_entry.runtime_data
+    days = consumption.latest_days(runtime.account.consumptions)
+
+    sensors = []
+    for description in CONSUMPTION_SENSORS:
+        day = days.get(description.series)
+        if day is None:
+            continue
+        if description.mode is not None and not (
+            {consumption.PEAK, consumption.OFFPEAK} <= day.modes
+        ):
+            continue
+        if description.field == "cost":
+            if day.currency is None:
+                continue
+            description = dataclasses.replace(
+                description, native_unit_of_measurement=day.currency
+            )
+
+        sensors.append(
+            CozytouchConsumptionSensor(
+                runtime.coordinator, runtime.account, config_entry, description
+            )
+        )
+
+    return sensors
+
+
+class CozytouchConsumptionSensor(CoordinatorEntity, SensorEntity):
+    """The day so far on one consumption series, for the whole setup.
+
+    TOTAL with the day's start as `last_reset`, which is what a daily bucket
+    is ; the cost has no other state class it may take. See
+    docs/decisions.md.
+    """
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_state_class = SensorStateClass.TOTAL
+    entity_description: ConsumptionDescription
+
+    def __init__(
+        self,
+        coordinator,
+        account,
+        config_entry: CozytouchConfigEntry,
+        description: ConsumptionDescription,
+    ) -> None:
+        """Initialize the consumption sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._account = account
+        self._attr_unique_id = (
+            f"{DOMAIN}_{config_entry.entry_id}_consumption_{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="Atlantic",
+            name=account.setup.get("name") or "Cozytouch",
+            model="Installation",
+        )
+
+    def _day(self) -> consumption.Day | None:
+        return consumption.latest_days(self._account.consumptions).get(
+            self.entity_description.series
+        )
+
+    @property
+    def available(self) -> bool:
+        """Only while the latest answer still carries this series."""
+        return super().available and self._day() is not None
+
+    @property
+    def native_value(self) -> float | None:
+        """The day so far, whole or for one tariff period."""
+        day = self._day()
+        if day is None:
+            return None
+
+        description = self.entity_description
+        if description.mode is None:
+            return day.total(description.field)
+
+        return day.of_mode(description.field, description.mode)
+
+    @property
+    def last_reset(self) -> datetime.datetime | None:
+        """The start of the day the reading is for, as the API dates it."""
+        day = self._day()
+        if day is None:
+            return None
+
+        return datetime.datetime.fromtimestamp(day.date, tz=datetime.UTC)
 
 
 def _unit(device_class, state_class, unit):

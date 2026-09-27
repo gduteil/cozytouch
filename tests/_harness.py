@@ -23,7 +23,13 @@ TRANSLATIONS = (
 def entry_over(hub, deviceId=27906641):
     """An account entry holding one device, which is what a subentry is."""
     return SimpleNamespace(
-        runtime_data=SimpleNamespace(hubs={SUBENTRY_ID: hub}),
+        runtime_data=SimpleNamespace(
+            hubs={SUBENTRY_ID: hub},
+            # An account whose setup reports no consumption, which is most of
+            # them ; tests/test_consumption.py covers the ones that do.
+            account=SimpleNamespace(consumptions=None, setup={}),
+            coordinator=None,
+        ),
         subentries={
             SUBENTRY_ID: SimpleNamespace(data={"deviceId": deviceId}, title="Salon")
         },

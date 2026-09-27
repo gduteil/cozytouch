@@ -28,11 +28,16 @@ of that :
 - the weekly program the device runs on its own, read and written from Home
   Assistant, and shown as a calendar
 - sensors per device for energy, water, wifi signal and decoded error codes
+- what the home consumed today -- energy, split peak and off-peak, its cost,
+  and water -- where the installation reports it, the figures the Cozytouch
+  app shows on its consumption screen
 - device triggers for schedule changes and program overrides, on top of the ones
   Home Assistant builds itself
 - a diagnostics dump that an unmapped device points you at by itself
 - an interface in English, French, Spanish, German and Italian, following the
   language Home Assistant is set to
+
+![What the installation consumed today, on a device of its own.](docs/images/consumption.png)
 
 Everything runs over the cloud : one login, one poll for the whole account,
 every 60 seconds by default -- plus an immediate re-read whenever you change
@@ -197,6 +202,10 @@ here because they did it :
 | Explorer EVO 3 (270L) | 2374 | [@StefanWokusch](https://github.com/StefanWokusch) |
 | Calypso SPLIT VM 200L | 1368 | [@mplessis](https://github.com/mplessis) |
 | CV5 Aeromax Premium 100L | 1669 | [@Racailloux](https://github.com/Racailloux) |
+
+The consumption sensors come from [@mmnlfrrr](https://github.com/mmnlfrrr)'s
+fork, which worked out the endpoint and its tariff periods on a Duralis ACI
+HYB.
 
 Where only part of a pull request was taken, the commit that took it says which
 part and why the rest was left alone.

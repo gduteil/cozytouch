@@ -14,10 +14,11 @@ overturn one, edit the line here in the same pull request.
 - **The model catalogue exists.** `GET /magellan/productmodels/models/{modelId}`
   answers for any model id, owned or not. Query it before asking a reporter
   what a device is called.
-- **No second data plane.** `setupviewv2` is the whole functional payload.
-  One exception found by another fork :
-  `GET /magellan/setups/<setupId>/consumptions?periodicity=daily` exists, and
-  is not implemented because no device here reports consumption.
+- **No second data plane.** `setupviewv2` is the whole functional payload,
+  but for consumption : `GET /magellan/setups/<setupId>/consumptions?periodicity=daily`,
+  implemented from `mmnlfrrr/cozytouch`'s ACI HYB capture and never seen
+  answering here. Capability 164 gates it : the Navizone reads 0 and is never
+  asked, the fork's Duralis 1040. `docs/decisions.md`, *Consumption*.
 - **The Overkiz plane is empty for us.** The token mints an Overkiz JWT, but
   `enduserAPI/login` answers 401. `docs/api-surface.md`.
 - **`productId` classifies a device, not `modelId`** -- the vendor app resolves

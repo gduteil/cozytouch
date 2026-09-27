@@ -4068,3 +4068,134 @@ user set is the value shown until the cloud agrees or the grace runs out.
 Why a setpoint looked fine and a duration did not is not settled -- it may be
 no more than how long each takes to propagate. The hold is the mechanism that
 was supposed to cover both, and it was covering neither on this path.
+
+## Consumption : the day so far, from its own endpoint
+
+The setup view carries no consumption, and MEMORY.md recorded the one route
+that does -- `GET /magellan/setups/<setupId>/consumptions?periodicity=daily`
+-- as known and left alone, because no device on the account this project is
+checked against reports any. `mmnlfrrr/cozytouch`, a fork of the upstream
+project, implemented it from a Thermor Duralis ACI HYB (model 393), with a
+proxied capture of the iOS app and the app's own tariff screen to check
+against. What is here is read from that work, and from its sanitised
+fixture, now `tests/fixtures/consumptions_daily.json`. Nothing in this
+repository has seen the endpoint answer, which is the first thing to say
+about it.
+
+### What the answer is
+
+A list of series, each `type`, `unit`, `currency` and `consumptionPeriods`,
+each period `date`, `mode`, `consumedQuantity` and `cost` :
+
+| type | unit | what | mode |
+| ---: | ---: | --- | --- |
+| 1 | 1 | electricity, kWh | 1 = peak, 2 = off-peak |
+| 4 | 2 | water, litres | 0, always with a cost of 0 |
+
+The tariff periods were settled by price in the fork, not guessed : across
+four captures mode 2 divides out to 0.1436 EUR/kWh and mode 1 to 0.2157, and
+the app's tariff screen shows 0.1438 and 0.2159. `currency` 101 is euros, by
+the same screen, and is the only code anyone has seen. `date` is a midnight
+UTC. The series also carry `serialNumber`, `deviceId`, `deviceUrl`,
+`zoneId`, `category` and `profil` ; on the one account seen, `deviceId` and
+`zoneId` are null, so a series says nothing about which appliance it is for.
+
+### Why it hangs off the account, and off a device of its own
+
+The route is the setup's, and so is its answer. The request is made by
+`CozytouchAccount.refresh_consumptions`, on the account coordinator's beat,
+and the sensors are `CoordinatorEntity`s of that coordinator rather than of
+any hub. With `deviceId` null there is no subentry to put them under without
+picking one, and picking the first would put a household's water on a
+radiator. They go on one device named after the setup (`Maison`), identified
+by the entry id, with no subentry -- the one device here that is not one
+somebody added.
+
+Two series of one kind -- two metered appliances -- are added together, on
+the latest day either reports. The fork keyed on the kind alone, so the
+second overwrote the first. Adding is the reading that loses neither ; it has
+never been observed, and a setup that reports per-appliance series is the
+report that would say whether they should be split instead.
+
+### Capability 164 says whether to ask at all
+
+`HOME_EnergyConsumptionCapabilities`, which the catalogue describes as "the
+consumption available on the system", is a mask : bits 1 to 64 are gas,
+electricity and fuel for heating, cooling and hot water, and the two bits
+the table adds, 256 and 1024, are heat *produced* rather than a meter. Two
+readings line up with what the app shows :
+
+| device | 164 | consumption in the app |
+| --- | ---: | --- |
+| HUB Navizone (1758), this project's | 0 | none, per its owner |
+| Duralis ACI HYB (393), the fork's | 1040 = `elec_dhw` + `dhw_production` | yes |
+
+So a setup where every device reporting 164 sets none of bits 1-64 is not
+asked at all -- the Navizone costs no request. One where some device sets
+one is asked. One where no device reports 164 is left to the endpoint's
+first answer, as below, since two readings do not say that 164 is always
+there. The dump carries the reading as `declared`.
+
+What counts as a meter is read off 164's own row in `capability_table.py`,
+every member but the `_production` ones, the way `HVAC_MODE_MASKS` is read off
+the mode bits : a bit named there later is either a meter or not, and a test
+pins the mask so somebody has to say which.
+
+164 decides whether to ask, not what to build : water is in no bit of it
+and the fork's device reports water all the same.
+
+### What is built, and when
+
+The sensors are built from the first answer and only from it : energy, and
+its peak and off-peak halves only where the series has used both ; cost only
+in a currency in the table ; water. A series in a unit other than the one in
+the table is left out rather than shown under the wrong one. That first
+answer comes with setup's first refresh, which runs before the platforms
+load.
+
+A setup whose first answer is an empty list or a 4xx is not asked again until
+the entry reloads, since nothing was built to read it : one request per
+start rather than 96 a day, for a setup 164 did not already rule out. A
+setup that did report keeps being asked through an
+empty answer, and a sensor whose series disappears goes unavailable rather
+than reading zero.
+
+The endpoint is read every 15 minutes (`CONSUMPTION_INTERVAL`), the cadence
+the fork chose : the days are aggregated in the cloud and nobody has measured
+how often they move. A failure is logged at debug and changes nothing -- it
+does not clear `online`, fail the poll or mark a device unavailable. A 429
+arms the account's backoff like any other.
+
+### The state class is TOTAL, with the day as `last_reset`
+
+The fork declared the readings `total_increasing`. That is refused for the
+cost : Home Assistant admits only `total` on `monetary`, and logs the pair as
+an error. `total` with `last_reset` at the start of the day the reading is
+for is also what a daily bucket *is* -- the recorder starts a new cycle when
+`last_reset` moves, rather than reading any decrease as a meter swap, which a
+cloud revising a day downwards would otherwise be. The energy dashboard
+accepts both.
+
+### What the dump carries
+
+The whole answer, the status it came with and what 164 declared, under
+`consumptions`, with `serialNumber` and `deviceUrl` redacted. A setup 164
+rules out reads `declared: false` and no answer, since it was not asked ; one
+that was asked and reports nothing reads `status` 200 and an empty `answer`,
+or the 4xx -- the thing worth knowing if 164 ever turns out wrong. The fake
+cloud in
+`scripts/test_ha` serves a dump's `consumptions` back, moved so its latest day
+is today ; `scripts/test_ha/water_heater.json` is a synthetic dump built from
+the fork's documented capability values and its fixture, and says so.
+
+### Left alone
+
+- `periodicity=monthly|yearly` exist and answer the same shape. A daily
+  bucket is what the energy dashboard wants ; a monthly total is a
+  statistic, and Home Assistant makes its own.
+- `/magellan/gateways/<id>/consumptions` is what the iOS app also calls.
+  Nothing says what it adds over the setup's.
+- Capability 269 (`water_consumption`) reads null on the fork's device while
+  the endpoint reports the water. The fork stops building its entity when it
+  is null ; that is a change to the table with its own evidence, not part of
+  this one.

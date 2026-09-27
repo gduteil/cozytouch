@@ -14,6 +14,11 @@ a capture showed the effect :
   100260, which is how the 2026-09-25 Navizone dump reads : the same values,
   changed within the same second.
 
+The consumption endpoint answers with what the dump's `consumptions`
+carries, moved forward whole so its latest day is today : a dump taken last
+month would otherwise show last month's day as today's. A dump without it
+answers an empty list, which is what a setup with no meter is assumed to get.
+
 Anything else -- a programmed absence turning on at its start, a 429 --
 is not simulated. This tests the integration's reading of the API, not the
 cloud.
@@ -78,11 +83,36 @@ def setup_from_dump(dump: dict) -> dict:
     return setup
 
 
+def consumptions_from_dump(dump: dict) -> tuple[int, list]:
+    """The status and answer the dump says the consumption endpoint gave."""
+    carried = dump["data"].get("consumptions") or {}
+    return carried.get("status") or 200, carried.get("answer") or []
+
+
+def as_of_today(answer: list, now: float) -> list:
+    """The same days, shifted so the latest one starts today at 00:00 UTC."""
+    dates = [
+        period["date"]
+        for series in answer
+        for period in series.get("consumptionPeriods", [])
+    ]
+    if not dates:
+        return answer
+
+    shift = int(now) // 86400 * 86400 - max(dates)
+    moved = copy.deepcopy(answer)
+    for series in moved:
+        for period in series.get("consumptionPeriods", []):
+            period["date"] += shift
+    return moved
+
+
 class FakeAtlantic:
     """The account's state, and the handlers that read and write it."""
 
-    def __init__(self, setup: dict) -> None:
+    def __init__(self, setup: dict, consumptions: tuple[int, list] = (200, [])) -> None:
         self.setup = setup
+        self.consumptions = consumptions
         self.executions = itertools.count(1)
         self.log: list[str] = []
 
@@ -147,6 +177,13 @@ class FakeAtlantic:
         self.log.append(f"absence {self.setup['absence']}")
         return web.Response(status=204)
 
+    async def consumption(self, request: web.Request) -> web.Response:
+        status, answer = self.consumptions
+        self.log.append(f"consumptions {request.query.get('periodicity')} ({status})")
+        if status != 200:
+            return web.json_response({"error": "fake"}, status=status)
+        return web.json_response(as_of_today(answer, time.time()))
+
     async def fault_table(self, request: web.Request) -> web.Response:
         return web.json_response([])
 
@@ -160,8 +197,8 @@ class FakeAtlantic:
         return web.json_response(self.log)
 
 
-def application(setup: dict) -> web.Application:
-    fake = FakeAtlantic(setup)
+def application(setup: dict, consumptions=(200, [])) -> web.Application:
+    fake = FakeAtlantic(setup, consumptions)
     app = web.Application()
     app.add_routes(
         [
@@ -171,6 +208,7 @@ def application(setup: dict) -> web.Application:
             web.post("/magellan/executions/writecapability", fake.write_capability),
             web.get("/magellan/executions/{id}", fake.execution),
             web.put("/magellan/v2/setups/{id}", fake.put_setup),
+            web.get("/magellan/setups/{id}/consumptions", fake.consumption),
             web.get(
                 "/magellan/productmodels/models/{id}/detailederrors", fake.fault_table
             ),
@@ -187,8 +225,12 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8765)
     args = parser.parse_args()
 
-    setup = setup_from_dump(json.loads(args.dump.read_text()))
-    web.run_app(application(setup), host="127.0.0.1", port=args.port)
+    dump = json.loads(args.dump.read_text())
+    web.run_app(
+        application(setup_from_dump(dump), consumptions_from_dump(dump)),
+        host="127.0.0.1",
+        port=args.port,
+    )
 
 
 if __name__ == "__main__":

@@ -155,10 +155,14 @@ def connected(monkeypatch, answers=None):
         {
             "/users/token": FakeResponse(TOKEN_OK),
             "setupviewv2": FakeResponse(setup_view()),
+            # A setup with no meter, which is told once and never asked again:
+            # what a poll costs is counted from here on, not from the start.
+            "/consumptions": FakeResponse([]),
             **(answers or {}),
         },
     )
     assert asyncio.run(account.connect()) is True
+    asyncio.run(account.refresh_consumptions())
     session.requests.clear()
 
     return account, session
@@ -460,6 +464,176 @@ def test_a_write_is_still_attempted_while_throttled(monkeypatch):
 
     assert asyncio.run(account.write_capability(1, 100, "21")) is True
     assert any("writecapability" in url for url in session.requests)
+
+
+# --- the consumption endpoint ---------------------------------------------
+
+METERED = [{"type": 1, "unit": 1, "currency": 101, "consumptionPeriods": []}]
+
+
+def before_consumptions(monkeypatch, answer, declared=None):
+    """A connected account the consumption endpoint has not answered yet.
+
+    `declared` is what its first device reports in 164, if it reports it.
+    """
+    view = setup_view()
+    if declared is not None:
+        view[0]["devices"][0]["capabilities"].append(
+            {"capabilityId": 164, "value": declared}
+        )
+    account, session = make_account(
+        monkeypatch,
+        {
+            "/users/token": FakeResponse(TOKEN_OK),
+            "setupviewv2": FakeResponse(view),
+            "/consumptions": answer,
+        },
+    )
+    assert asyncio.run(account.connect()) is True
+    session.requests.clear()
+
+    return account, session
+
+
+def consumption_reads(session):
+    return [url for url in session.requests if "/consumptions" in url]
+
+
+def test_the_consumptions_are_read_with_the_first_poll(monkeypatch):
+    """The sensors are built from that answer, so it has to be in before the
+    platforms load -- which is what setup's first refresh is.
+    """
+    account, session = before_consumptions(monkeypatch, FakeResponse(METERED))
+
+    asyncio.run(coordinator_over(account, {"a": FakeHub()})._async_update_data())
+
+    assert consumption_reads(session) == [
+        "https://apis.groupe-atlantic.com/magellan/setups/1/consumptions"
+        "?periodicity=daily"
+    ]
+    assert account.consumptions == METERED
+
+
+def test_the_consumptions_are_read_once_a_quarter_of_an_hour(monkeypatch):
+    """Not once a poll : a day aggregated in the cloud does not move at the
+    setup view's pace, and one request every 60 seconds would double what an
+    account costs for nothing.
+    """
+    account, session = before_consumptions(monkeypatch, FakeResponse(METERED))
+    coordinator = coordinator_over(account, {"a": FakeHub()})
+
+    for _ in range(3):
+        asyncio.run(coordinator._async_update_data())
+    assert len(consumption_reads(session)) == 1
+
+    account._consumptions_due = 0
+    asyncio.run(coordinator._async_update_data())
+    assert len(consumption_reads(session)) == 2
+
+
+@pytest.mark.parametrize(
+    "answer", [FakeResponse([]), FakeResponse(None, status=404)], ids=["empty", "404"]
+)
+def test_a_setup_without_a_meter_is_asked_once(monkeypatch, answer):
+    """No sensor was built for it, so asking again only spends a request."""
+    account, session = before_consumptions(monkeypatch, answer)
+
+    asyncio.run(account.refresh_consumptions())
+    account._consumptions_due = 0
+    asyncio.run(account.refresh_consumptions())
+
+    assert len(consumption_reads(session)) == 1
+
+
+@pytest.mark.parametrize(
+    "declared", ["0", "1024"], ids=["nothing", "production-only"]
+)
+def test_a_setup_that_declares_no_consumption_is_never_asked(monkeypatch, declared):
+    """The Navizone's 164 reads 0, and its app shows no consumption. 1024 is
+    `dhw_production`, heat made rather than a meter read, so it declares
+    nothing either.
+    """
+    account, session = before_consumptions(
+        monkeypatch, FakeResponse(METERED), declared=declared
+    )
+
+    for _ in range(2):
+        account._consumptions_due = 0
+        asyncio.run(coordinator_over(account, {"a": FakeHub()})._async_update_data())
+
+    assert consumption_reads(session) == []
+    assert account.consumption_declared() is False
+
+
+def test_what_counts_as_a_meter_is_read_off_164s_own_row():
+    """The seven consumption members, and not the three that are heat made.
+
+    Pinned as a number so a bit added to the row shows up here, where
+    somebody has to say whether it is a meter.
+    """
+    assert account_module.CONSUMPTION_BITS == 1 | 2 | 4 | 8 | 16 | 32 | 64
+
+
+def test_a_setup_that_declares_a_consumption_is_asked(monkeypatch):
+    """1040 is what the fork's Duralis reports : elec_dhw and dhw_production."""
+    account, session = before_consumptions(
+        monkeypatch, FakeResponse(METERED), declared="1040"
+    )
+
+    asyncio.run(account.refresh_consumptions())
+
+    assert len(consumption_reads(session)) == 1
+    assert account.consumption_declared() is True
+
+
+def test_a_setup_that_says_nothing_in_164_is_left_to_the_endpoint(monkeypatch):
+    account, session = before_consumptions(monkeypatch, FakeResponse(METERED))
+
+    asyncio.run(account.refresh_consumptions())
+
+    assert account.consumption_declared() is None
+    assert len(consumption_reads(session)) == 1
+
+
+def test_a_metered_setup_is_still_asked_after_an_empty_answer(monkeypatch):
+    """A setup that reported once has sensors waiting on it ; an empty day is
+    an answer for them, not a reason to stop.
+    """
+    account, session = before_consumptions(monkeypatch, FakeResponse(METERED))
+    asyncio.run(account.refresh_consumptions())
+
+    session._answers["/consumptions"] = FakeResponse([])
+    for _ in range(2):
+        account._consumptions_due = 0
+        asyncio.run(account.refresh_consumptions())
+
+    assert len(consumption_reads(session)) == 3
+    assert account.consumptions == []
+
+
+def test_a_consumption_failure_costs_neither_the_poll_nor_the_session(monkeypatch):
+    """A meter reading is not worth a reconnect, nor an unavailable device."""
+    account, session = before_consumptions(monkeypatch, FakeTimeout())
+    hubs = {"a": FakeHub()}
+
+    asyncio.run(coordinator_over(account, hubs)._async_update_data())
+
+    assert account.online is True
+    assert hubs["a"].updates == 1
+    assert hubs["a"].errors == []
+    assert session.logins() == []
+
+
+def test_a_consumption_429_backs_the_whole_account_off(monkeypatch):
+    """Same budget, same backoff, and still no reconnect."""
+    account, _ = before_consumptions(
+        monkeypatch, FakeResponse(None, status=429, headers={"Retry-After": "120"})
+    )
+
+    asyncio.run(account.refresh_consumptions())
+
+    assert 115 < account.backoff_remaining <= 120
+    assert account.online is True
 
 
 # --- the interval ---------------------------------------------------------

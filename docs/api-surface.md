@@ -205,6 +205,7 @@ the project keeps is what was concluded from them. What that run established, on
 | `/magellan-admin/referentials/*` | **403**, `API Subscription validation failed` |
 | `/productmodels/productnames` | 400, wants `devicesUrls` |
 | `/devices/{id}/consumptions` | 400, wants `periodicity` |
+| `/magellan/setups/{id}/consumptions?periodicity=daily` | not probed here ; read by `refresh_consumptions` on the strength of another fork's capture -- `docs/decisions.md` |
 | `/productmodels/families/{id}` | 400 on a `modelFamily` string; the integer `familyId` comes from `/products` |
 
 What the catalogue does **not** do is say which capability a given device
@@ -324,7 +325,9 @@ Its top-level keys are `absence`, `address`, `area`, `currency`, `devices`,
 `zones`. That is the whole payload. There is no `programs`, `schedules` or
 `consumptions` hiding a second source of data, and the `/magellan/` collection
 routes above are all subsets of what is here. The functional data plane is
-this one response.
+this one response -- with one exception found since, by another fork : the
+setup's consumption history has a route of its own, which `docs/decisions.md`
+describes under *Consumption*.
 
 `rateLimit` is new to us: 30 on this account, the server declaring its own
 limit. The units are still unknown -- nothing decodes them, and no capture has
