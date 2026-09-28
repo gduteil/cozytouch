@@ -10,12 +10,14 @@ These drive the datetime platform the way `tests/test_sensor_metadata.py`
 drives the sensor one : a hub stand-in, a plain list for `async_add_entities`.
 """
 
+from functools import partial
 from types import SimpleNamespace
 
 from _harness import entry_over, set_up
 
 from custom_components.cozytouch import datetime as datetime_platform
 from custom_components.cozytouch.capability_table import CAPABILITIES
+from custom_components.cozytouch.hub import Hub
 from custom_components.cozytouch.infos import CapabilityInfos, CapabilityType
 
 ROOM_TIMESTAMPS = 100260
@@ -40,6 +42,7 @@ def build(capabilityId, reported):
         get_capabilities_for_device=lambda deviceId=None: [capability],
         get_capability_value=lambda cid, default="0": reported.get(cid, default),
     )
+    hub.away_mode_switches = partial(Hub.away_mode_switches, hub)
     return set_up(datetime_platform, entry_over(hub, deviceId=1))
 
 

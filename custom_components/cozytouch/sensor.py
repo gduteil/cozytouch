@@ -31,6 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import consumption, faults
 from .capability import describe_capability_value, read_setpoint
@@ -290,27 +291,11 @@ class CozytouchAwayModeTimestampSensor(CozytouchSensor):
             if len(timestamps) == 2:
                 if timestamps[0] != "0" and timestamps[1] != "0":
                     timestamp = int(timestamps[self._timestamp_index])
-                    timeOffset = int(
-                        self.coordinator.get_capability_value(
-                            self._capability.timezoneCapabilityId
-                        )
+                    # A plain unix timestamp : the setup's own absence reads
+                    # the same instant. See docs/decisions.md.
+                    ts = datetime.datetime.fromtimestamp(
+                        timestamp, tz=dt_util.DEFAULT_TIME_ZONE
                     )
-                    # DTZ006 is silenced on purpose: the device's offset is
-                    # already in the timestamp, so reading it naively applies
-                    # that offset twice for anyone off UTC. Fixing it changes
-                    # what the sensor displays and wants its own change, with
-                    # a capture to check against -- docs/architecture.md.
-                    ts = datetime.datetime.fromtimestamp(  # noqa: DTZ006
-                        timestamp + timeOffset
-                    )
-
-                    # Check if we need to init timestamps in coordinator
-                    timestampStart = self.coordinator.get_away_mode_start()
-                    timestampEnd = self.coordinator.get_away_mode_end()
-                    if timestampStart is None or timestampEnd is None:
-                        self.coordinator.away_mode_init(
-                            int(timestamps[0]), int(timestamps[1])
-                        )
 
                     return ts.strftime("%H:%M %d/%m/%Y")
 
@@ -341,18 +326,13 @@ class CozytouchAwayModeSensor(CozytouchSensor):
     def get_value(self) -> str:
         """Retrieve value from hub."""
         value = self.coordinator.get_capability_value(self._capability.capabilityId)
-        if value is not None:
-            strValue = "Unknown"
-            if value == self._capability.value_off:
-                strValue = "Off"
-            elif value == self._capability.value_pending:
-                strValue = "Pending"
-            elif value == self._capability.value_on:
-                strValue = "On"
-
-            return strValue
-
-        return None
+        # Keys, which the translations turn into words ; a value none of the
+        # three is unknown rather than a word of our own.
+        return {
+            self._capability.value_off: "off",
+            self._capability.value_pending: "pending",
+            self._capability.value_on: "on",
+        }.get(value)
 
 
 class CozytouchUnitSensor(CozytouchSensor):

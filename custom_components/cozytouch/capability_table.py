@@ -2621,10 +2621,13 @@ CAPABILITIES: dict[int, Entity] = {
         },
     ),
     100261: Entity(
+        # Three states like the gateway's switch, 2 being an absence still
+        # to come. See docs/decisions.md.
         name="away_mode",
-        type=CapabilityType.BINARY,
+        type=CapabilityType.STRING,
         enabled_by_default=True,
         icon="mdi:airplane",
+        reads_as={"0": "off", "1": "on", "2": "pending"},
     ),
     100300: Entity(
         name="schedule_start_day",

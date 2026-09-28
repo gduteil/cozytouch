@@ -449,7 +449,16 @@
             "available_fan_speeds":     { "name": "Velocità ventola disponibili" },
             "available_schedule_types": { "name": "Tipi di programmazione disponibili" },
             "available_thermostat_modes": { "name": "Modalità termostato disponibili" },
-            "away_mode":                { "name": "Modalità assenza" },
+            "away_mode":
+            {
+                "name": "Modalità assenza",
+                "state":
+                {
+                    "off": "Disattivata",
+                    "pending": "Programmata",
+                    "on": "In corso"
+                }
+            },
             "away_mode_cooling_temperature": { "name": "Temperatura di raffrescamento in modalità assenza" },
             "away_mode_start":          { "name": "Inizio modalità assenza" },
             "away_mode_stop":           { "name": "Fine modalità assenza" },
@@ -744,11 +753,24 @@
         }
     },
     "services": {
+        "clear_away_mode": {
+            "name": "Disattivare la modalità assenza",
+            "description": "Termina l'assenza su tutti i dispositivi dell'account, date comprese."
+        },
         "get_schedule": {
             "name": "Leggere il programma di una settimana",
             "description": "Restituisce i sette programmi giornalieri di un dispositivo, nella forma accettata da \"Impostare un programma giornaliero\".",
             "fields": {
                 "program":  { "name": "Programma", "description": "Riscaldamento o raffrescamento." }
+            }
+        },
+        "set_away_mode": {
+            "name": "Attivare la modalità assenza",
+            "description": "Imposta le date dell'assenza e la attiva, in un'unica azione, su tutti i dispositivi dell'account.",
+            "fields": {
+                "start":    { "name": "Inizio", "description": "Quando inizia l'assenza. Se lasciato vuoto, inizia tra un minuto." },
+                "end":      { "name": "Fine", "description": "Quando finisce l'assenza. Indicare una fine o una durata." },
+                "duration": { "name": "Durata", "description": "Quanto dura l'assenza dal suo inizio, al posto di una fine." }
             }
         },
         "set_schedule": {

@@ -84,3 +84,29 @@ get_schedule:
           options:
             - heating
             - cooling
+
+set_away_mode:
+  target:
+    entity:
+      integration: cozytouch
+      domain: switch
+  fields:
+    start:
+      example: "2026-10-01 08:00:00"
+      selector:
+        datetime:
+    end:
+      example: "2026-10-08 18:00:00"
+      selector:
+        datetime:
+    duration:
+      example: '{"days": 7}'
+      selector:
+        duration:
+          enable_day: true
+
+clear_away_mode:
+  target:
+    entity:
+      integration: cozytouch
+      domain: switch

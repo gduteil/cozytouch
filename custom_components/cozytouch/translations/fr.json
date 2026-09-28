@@ -449,7 +449,16 @@
             "available_fan_speeds":     { "name": "Vitesses de ventilation disponibles" },
             "available_schedule_types": { "name": "Types de programme disponibles" },
             "available_thermostat_modes": { "name": "Modes thermostat disponibles" },
-            "away_mode":                { "name": "Absence" },
+            "away_mode":
+            {
+                "name": "Absence",
+                "state":
+                {
+                    "off": "Désactivée",
+                    "pending": "Programmée",
+                    "on": "En cours"
+                }
+            },
             "away_mode_cooling_temperature": { "name": "Température Absence Froid" },
             "away_mode_start":          { "name": "Absence Début" },
             "away_mode_stop":           { "name": "Absence Fin" },
@@ -744,11 +753,24 @@
         }
     },
     "services": {
+        "clear_away_mode": {
+            "name": "Désactiver le mode absence",
+            "description": "Met fin à l'absence sur tous les appareils du compte, dates comprises."
+        },
         "get_schedule": {
             "name": "Lire la programmation d'une semaine",
             "description": "Renvoie les sept programmes journaliers d'un appareil, dans la forme qu'attend « Programmer une journée ».",
             "fields": {
                 "program":  { "name": "Programme", "description": "Chauffage ou refroidissement." }
+            }
+        },
+        "set_away_mode": {
+            "name": "Activer le mode absence",
+            "description": "Règle les dates de l'absence et l'active, en une seule action, sur tous les appareils du compte.",
+            "fields": {
+                "start":    { "name": "Début", "description": "Quand l'absence commence. Laissé vide, elle commence dans une minute." },
+                "end":      { "name": "Fin", "description": "Quand l'absence se termine. Donnez soit une fin, soit une durée." },
+                "duration": { "name": "Durée", "description": "Combien de temps dure l'absence à partir de son début, à la place d'une fin." }
             }
         },
         "set_schedule": {

@@ -449,7 +449,16 @@
             "available_fan_speeds":     { "name": "Available Fan Speeds" },
             "available_schedule_types": { "name": "Available Schedule Types" },
             "available_thermostat_modes": { "name": "Available Thermostat Modes" },
-            "away_mode":                { "name": "Away Mode" },
+            "away_mode":
+            {
+                "name": "Away Mode",
+                "state":
+                {
+                    "off": "Off",
+                    "pending": "Scheduled",
+                    "on": "On"
+                }
+            },
             "away_mode_cooling_temperature": { "name": "Away Mode Cooling Temperature" },
             "away_mode_start":          { "name": "Away Mode Start" },
             "away_mode_stop":           { "name": "Away Mode Stop" },
@@ -733,11 +742,24 @@
         }
     },
     "services": {
+        "clear_away_mode": {
+            "name": "Turn off away mode",
+            "description": "Ends the absence on every device of the account, window included."
+        },
         "get_schedule": {
             "name": "Read a week's program",
             "description": "Returns the seven day programs of a device, in the shape \"Set a day program\" takes.",
             "fields": {
                 "program":  { "name": "Program", "description": "Heating or cooling." }
+            }
+        },
+        "set_away_mode": {
+            "name": "Turn on away mode",
+            "description": "Sets the absence window and turns the absence on, in one action, on every device of the account.",
+            "fields": {
+                "start":    { "name": "Start", "description": "When the absence begins. Left empty, it begins in a minute." },
+                "end":      { "name": "End", "description": "When the absence ends. Give either an end or a duration." },
+                "duration": { "name": "Duration", "description": "How long the absence lasts from its start, instead of an end." }
             }
         },
         "set_schedule": {

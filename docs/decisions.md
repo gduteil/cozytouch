@@ -1160,6 +1160,12 @@ which is wrong about every other id on this page at least once.
 `HEATING_STATUS`, read as `HeatingStatus { OFF "0", HEAT_UP "1", COOL_DOWN
 "2" }`. Two things follow, and the second is the one that mattered.
 
+(2026-09-25) The Navizone rooms (557-559) never report the third one : 153
+reads 0 on all three, unchanged since 2026-09-07 on 557, through the
+cooling season, and its history in Home Assistant is `off` throughout. So on
+those rooms it says nothing about whether the unit runs, and cannot turn a
+cooling action into idle the way it does for a radiator's heating.
+
 **It was a binary sensor**, whose `is_on` is `value == "1"`. A device
 reporting 2 read as off, silently, and the product that reports 2 is an air
 conditioner while it is cooling -- including the room units this
@@ -2052,15 +2058,64 @@ same rejected password.
 The failure belongs to the account, and no entity listens to the account
 coordinator, so `_publish_error` marks every hub instead.
 
-### The away window is staged, then committed
+### The away window is sent with the switch, never without it
 
-Editing the start or the end of the window stamps the change, and the commit
-runs once that stamp is more than 20 seconds old, so both ends can be set
-before either is sent. It used to hang off the hub's own 60-second poll, which
-no longer exists — so it runs on every path that now stands in for it, the
-account's tick and a post-write refresh alike. Hanging it off one of them would
-have made the delay depend on which, and off neither would have left a staged
-window sitting there for good.
+Editing a date used to stage it and stamp the change, and the next refresh
+more than 20 seconds later sent it : the setup's absence was PUT and the pair
+(222/226) written, but the switch (152/227) never was. With the absence off,
+that left the setup away and the device not -- a state the vendor app never
+produces, and the one that "broke everything" when somebody set the dates
+before turning the absence on.
+
+So a window only ever goes out whole, through `Hub.set_away_mode` : the PUT
+once, then on every device of the account that reports a switch, the pair and
+then the switch. The switch, the `set_away_mode` / `clear_away_mode` services
+and a date moved while the absence is on all go through it ; a date moved
+while it is off stays on the hub for the switch to send, and a poll sends
+nothing. The 20-second delay goes with the staging : it existed so both ends
+could be set before either was sent, which is now what "off" means.
+
+Every device and not just the one targeted, because the window is the
+account's : a second device with its own switch would otherwise go on reading
+off under a setup that says away. What was not captured is whether the vendor
+app writes the second device's switch itself or leaves the cloud to ; writing
+it is the side that cannot leave the two disagreeing.
+
+A start still to come writes `2`, the rows' `value_pending`, and a start
+already reached writes `1`, which is what the vendor app does. Measured on
+the HUB Navizone (1758) and its three rooms, from a dump of 2026-09-28 : the
+owner programmed an absence from the app alone, at 11:18 for a start on
+30/09 at 11:28. The window (222) was written at 11:18:21, 152 went to 2 at
+11:18:26, and every room's 100260 and 100261 followed a second later, 100261
+at 2 too. A switch reading 2 counts as on for the pickers ; the away preset
+and the stopped action wait for 1, since the unit runs until the start.
+
+The same dump shows the rooms' 100261 at 2, so it is three states like the
+switch rather than a flag : it reads as `off`, `on` or `pending` instead of a
+binary sensor that said `off` for a programmed absence. The gateway's own
+sensor gives the same three keys rather than the English words it used to
+return untranslated, and both carry the `away_mode` state translations --
+"Programmée" in French. An automation comparing the old "On" or "Pending"
+has to compare the keys instead.
+
+What was not seen is the turn to 1 when the start comes. The 2026-09-25 dump
+fits it -- 152 and every 100261 changed eighteen seconds after its start --
+but that absence had been touched from Home Assistant first, so nothing
+here relies on the cloud doing it.
+
+While the absence is on, the pickers follow the window the device reports
+beside its switch, on every refresh. They used to be seeded once, from the
+first sensor read, and kept whatever they held after that : on the same
+dump, they showed a window that was not the one the device reported.
+
+While the absence is off, the pickers show the window the switch would
+send : a start that is not set or already past reads as now, to the minute,
+and an end already past as unknown. The switch sends exactly that -- the start
+bumped to the next minute, and two days after it when no end is later than it
+-- where it used to replace both ends as soon as either was missing, and send
+a window already over as it was. Clearing the absence empties the pickers
+again. The service refuses a window already over. While the absence is on,
+both read as they are stored, since an absence under way began when it began.
 
 ### `modificationDate` reads as None rather than as 1970
 
@@ -2112,6 +2167,51 @@ it was added as — so `get_via_device` returns None for a gateway, and for a
 child whose gateway nobody added. None rather than a guess matters : HA logs a
 warning when `via_device` names a device that is not in the registry. The
 registry-id spelling is covered under `__init__.py` above.
+
+### The absence timestamps are plain unix time
+
+The sensor used to add the offset the device reports (315) to the timestamp
+and read the sum in Home Assistant's zone, which counts the offset twice for
+anyone off UTC. A diagnostics dump of 2026-09-25 settles which reading is
+right : the setup's own `absence.startDate` and the gateway's 222 hold the
+same 1790238529 -- 10:28:49 in Paris, the morning it was set --
+and the gateway reports 315 at 7200. The gateway's sensor showed 12:28 and
+the room beside it, which reports no 315, showed 10:28. The timestamp is read
+as it is, in Home Assistant's zone ; 315 is no longer read by the sensor.
+
+### An absence stops an air conditioner, and the climate says so
+
+During an absence the rooms of an air-conditioning gateway keep their mode
+(7, 102020) and their effective mode (181) as they were -- measured on the
+Navizone, 2026-09-25, all three rooms at 3 since the day before -- so the
+action read from 181 said `cooling` for a unit the absence had stopped. When
+the absence is under way (100261 at 1 on a room, or a switch at 1) on a
+device that is air conditioning, or hangs off a gateway that is, the action
+reads `off`. The mode stays : it is what comes back on the return.
+
+Air conditioning is the `modelFamily` the API declares, on the device or on
+its `masterDeviceId`, because a room slot declares none and nothing it
+reports says what it holds. A heater is left alone : it runs its absence
+setpoint (172) rather than stopping, and nothing captured says otherwise.
+
+153 could not do this. It reads 0 on all three rooms and has not changed
+since 2026-09-07 on the first of them, through a fortnight of cooling --
+see the entry on 153.
+
+### An absence shows as the away preset, on every device that reports one
+
+What an absence does depends on the product -- an air conditioner stops, a
+heater runs its absence setpoint -- so the action can only say `off` where
+the stop is known. That it is away is true everywhere, and Home Assistant
+has a place for it : the `away` preset. Any climate entity whose device
+reports an away switch (152, 227) or a room's absence (100261) gets the
+preset feature, and `away` is listed and selected while the absence is under
+way, then withdrawn.
+
+It is shown, not chosen. The absence is the account's, so a preset that set
+it from one room would switch the whole house ; choosing `away` writes
+nothing, and the switch and `cozytouch.set_away_mode` stay what set it. A
+programmed absence (a switch at 2) does not show until it starts.
 
 ### An unset absence window reads as unknown, not as a word of our own
 
@@ -2643,10 +2743,10 @@ switched on. It is mapped now, with the same `AWAY_MODE_TIMESTAMPS` reading as
 
 What the room does not report is a switch: neither 152 nor 227, only 100261,
 which reads whether the absence is on and is a binary sensor. That matters
-because nothing in a datetime entity commits anything — `set_away_mode_start`
-and `set_away_mode_end` stage the value on the hub, and the write happens in
-`set_away_mode_timestamps`, which the away-mode *switch* calls when it is
-turned on. A room would therefore have got two date pickers that accept a date,
+because a datetime entity sends nothing while the absence is off — it keeps
+the date on the hub, and the write happens in `set_away_mode`, which the
+away-mode *switch* calls when it is turned on. A room would therefore have got
+two date pickers that accept a date,
 show it, and send nothing: a control that fails silently, which is worse than
 no control.
 
@@ -2846,6 +2946,20 @@ Nothing guards the import, and nothing needs to : an install without the
 its list, and `tests/test_llm_tools.py` skips itself where the platform is
 missing.
 
+
+### The absence tools hand the model's dates to the services as they are
+
+The program tools do their own merging because a day on the device has to
+be rewritten whole. An absence has nothing to merge into : it is a window and
+a switch, and `set_away_mode` already writes both, on every account, as
+programmed when the start is still to come. So the tools take a start and an
+end as the model says them, in the home's local time, and call the service ;
+what they answer with is read back from the devices, off, programmed or on,
+so the assistant reports what was set rather than what it asked for.
+
+They are offered where an away switch is exposed to Assist, found by its
+translation key, and not otherwise : a room reports the absence but has
+nothing to set it with, and a switch kept from Assist is not a tool either.
 
 ## `custom_components/cozytouch/www/cozytouch-schedule-card.js`
 

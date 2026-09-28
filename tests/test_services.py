@@ -477,7 +477,9 @@ def test_the_services_are_registered_once_for_every_config_entry(monkeypatch):
     services.async_register_services(hass)
 
     assert sorted(name for _, name in hass.services.registered) == [
+        "clear_away_mode",
         "get_schedule",
+        "set_away_mode",
         "set_schedule",
     ]
 

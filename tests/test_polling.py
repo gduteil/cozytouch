@@ -766,8 +766,6 @@ def hub_over(account, deviceId=1):
     hub._account = account
     hub._deviceId = deviceId
     hub._entry = None
-    hub._timestamp_away_mode_last_change = None
-    hub._timestamps_away_mode_capability_id = None
     hub._timestamp_away_mode_start = None
     hub._timestamp_away_mode_end = None
 
@@ -802,13 +800,12 @@ def test_a_throttled_targeted_refresh_keeps_the_device_available(monkeypatch):
     assert account.online is True
 
 
-def test_the_staged_away_window_still_goes_out(monkeypatch):
-    """It used to hang off the hub's own 60-second poll, which is gone.
+def test_a_window_the_pickers_hold_is_not_sent_by_a_poll(monkeypatch):
+    """A poll used to send a window edited more than 20 seconds before.
 
-    Editing the start or the end of the window stages it and stamps it; the
-    send happens once the stamp is more than 20 seconds old, so both ends can
-    be set first. With the hub off the clock, the account's tick is what has to
-    carry it -- otherwise a staged window would sit there for good.
+    With the absence off, that wrote the setup's window without the switch --
+    the setup away and the device not. The switch and the service send it
+    now, and a poll sends nothing.
     """
     account, _ = connected(monkeypatch)
     hub = hub_over(account)
@@ -817,35 +814,10 @@ def test_the_staged_away_window_still_goes_out(monkeypatch):
     async def record(*args):
         sent.append(args)
 
-    hub.set_away_mode_timestamps = record
+    hub.set_away_mode = record
     hub.async_set_updated_data = lambda data: None
-    hub._timestamps_away_mode_capability_id = 40
     hub._timestamp_away_mode_start = 1000
     hub._timestamp_away_mode_end = 2000
-    hub._timestamp_away_mode_last_change = 0  # 1970, so comfortably over 20s
-
-    asyncio.run(hub.async_account_updated())
-
-    assert sent == [(None, None, 40, 1000, 2000)]
-
-
-def test_a_window_still_being_edited_is_not_sent_yet(monkeypatch):
-    """The 20-second delay is the feature: it lets somebody set both ends."""
-    import time
-
-    account, _ = connected(monkeypatch)
-    hub = hub_over(account)
-    sent = []
-
-    async def record(*args):
-        sent.append(args)
-
-    hub.set_away_mode_timestamps = record
-    hub.async_set_updated_data = lambda data: None
-    hub._timestamps_away_mode_capability_id = 40
-    hub._timestamp_away_mode_start = 1000
-    hub._timestamp_away_mode_end = 2000
-    hub._timestamp_away_mode_last_change = time.time()
 
     asyncio.run(hub.async_account_updated())
 

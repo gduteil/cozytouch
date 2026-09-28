@@ -12,6 +12,8 @@ have to, since nothing imports the module there either.
 """
 
 import asyncio
+from datetime import UTC, datetime
+from functools import partial
 import json
 from types import SimpleNamespace
 
@@ -23,6 +25,7 @@ from test_services import FakeHub, make_hass
 import voluptuous as vol
 
 from custom_components.cozytouch import llm, services
+from custom_components.cozytouch.hub import Hub
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.llm import LLM_API_ASSIST, ToolInput
 
@@ -65,23 +68,27 @@ class WritingHub(FakeHub):
         self.values[capabilityId] = value
 
 
-def registries(monkeypatch, entity_id="climate.salon", platform="cozytouch"):
-    """The registries `_programmable` walks to list what Assist may reach."""
-    entry = SimpleNamespace(
-        entity_id=entity_id,
-        domain=entity_id.split(".")[0],
-        platform=platform,
-        name=None,
-        original_name="Climatisation",
-        area_id="salon",
-        device_id=None,
-    )
+def registries(
+    monkeypatch, entity_id="climate.salon", platform="cozytouch", extra=()
+):
+    """The registries the tools walk to list what Assist may reach."""
+    entries = {
+        eid: SimpleNamespace(
+            entity_id=eid,
+            domain=eid.split(".")[0],
+            platform=platform,
+            name=None,
+            original_name="Climatisation",
+            area_id="salon",
+            device_id=None,
+            translation_key=key,
+        )
+        for eid, key in ((entity_id, None), *extra)
+    }
     monkeypatch.setattr(
         llm,
         "er",
-        SimpleNamespace(
-            async_get=lambda hass: SimpleNamespace(entities={entity_id: entry})
-        ),
+        SimpleNamespace(async_get=lambda hass: SimpleNamespace(entities=entries)),
     )
     monkeypatch.setattr(
         llm,
@@ -206,3 +213,103 @@ def test_a_tool_call_that_cannot_be_filled_in_is_refused(hass, args):
              **{"entity_id": "climate.salon", "program": "cooling",
                 "days": ["monday"], "start": "09:00", "end": "17:00",
                 "temperature": 21, **args})
+
+
+# --- the absence -------------------------------------------------------------
+
+
+AWAY_SWITCH = "switch.hub_absence"
+START = int(datetime(2099, 10, 1, 8, 0, tzinfo=UTC).timestamp())
+END = int(datetime(2099, 10, 8, 18, 0, tzinfo=UTC).timestamp())
+
+
+class AwayHub(FakeHub):
+    """A gateway with an away switch, whose absence the services set."""
+
+    def __init__(self):
+        super().__init__({152: "0", 222: "[0,0]"})
+        self.account = object()
+        self.absences = []
+        self.away_mode_switches = partial(Hub.away_mode_switches, self)
+        self.reported_away_window = partial(Hub.reported_away_window, self)
+
+    async def set_away_mode(self, start, end):
+        self.absences.append((start, end))
+        away = start is not None
+        self.values[222] = f"[{start},{end}]" if away else "[0,0]"
+        self.values[152] = "2" if away else "0"
+        return True
+
+
+@pytest.fixture
+def away(monkeypatch):
+    hub = AwayHub()
+    registries(monkeypatch, extra=((AWAY_SWITCH, "away_mode"),))
+    return bus(make_hass(monkeypatch, hub)), hub
+
+
+def test_assist_is_offered_the_absence_tools_where_there_is_a_switch(away):
+    tools = llm.async_get_tools(away[0], CONTEXT, LLM_API_ASSIST)
+    assert [tool.name for tool in tools.tools] == [
+        "cozytouch_get_schedule",
+        "cozytouch_set_schedule_period",
+        "cozytouch_get_away_mode",
+        "cozytouch_set_away_mode",
+        "cozytouch_clear_away_mode",
+    ]
+    assert "whole home" in tools.prompt
+
+
+def test_a_home_without_an_away_switch_is_offered_no_absence_tool(hass):
+    tools = llm.async_get_tools(hass[0], CONTEXT, LLM_API_ASSIST)
+    assert "cozytouch_set_away_mode" not in [tool.name for tool in tools.tools]
+
+
+def test_setting_an_absence_goes_through_the_service_and_reads_it_back(away):
+    """The model hands two local dates ; the service does the rest."""
+    hass, hub = away
+
+    status = call(
+        llm.SetAway(),
+        hass,
+        start="2099-10-01 08:00+00:00",
+        end="2099-10-08 18:00+00:00",
+    )
+
+    assert hub.absences == [(START, END)]
+    assert status[AWAY_SWITCH]["absence"] == "programmed"
+    assert status[AWAY_SWITCH]["start"].startswith("2099-10-01")
+    assert status[AWAY_SWITCH]["end"].startswith("2099-10-08")
+
+
+def test_an_end_before_the_start_is_refused_before_anything_is_written(away):
+    hass, hub = away
+
+    with pytest.raises(ServiceValidationError):
+        call(llm.SetAway(), hass, start="2099-10-08 18:00", end="2099-10-01 08:00")
+
+    assert hub.absences == []
+
+
+def test_clearing_ends_it_and_says_so(away):
+    hass, hub = away
+    call(llm.SetAway(), hass, end="2099-10-08 18:00")
+
+    status = call(llm.ClearAway(), hass)
+
+    assert hub.absences[-1] == (None, None)
+    assert status == {AWAY_SWITCH: {"absence": "off", "start": None, "end": None}}
+
+
+def test_reading_says_off_when_there_is_none(away):
+    assert call(llm.ReadAway(), away[0]) == {
+        AWAY_SWITCH: {"absence": "off", "start": None, "end": None}
+    }
+
+
+def test_a_switch_kept_from_assist_is_not_offered(monkeypatch, away):
+    monkeypatch.setattr(
+        llm, "async_should_expose", lambda hass, a, eid: eid != AWAY_SWITCH
+    )
+    tools = llm.async_get_tools(away[0], CONTEXT, LLM_API_ASSIST)
+    assert "cozytouch_set_away_mode" not in [tool.name for tool in tools.tools]

@@ -191,7 +191,7 @@
     "icon": "mdi:airplane",
     "modelId": 1381,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -3430,7 +3430,7 @@
     "icon": "mdi:airplane",
     "modelId": 1457,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -6650,7 +6650,7 @@
     "icon": "mdi:airplane",
     "modelId": 1505,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -9884,7 +9884,7 @@
     "icon": "mdi:airplane",
     "modelId": 1641,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -13128,7 +13128,7 @@
     "icon": "mdi:airplane",
     "modelId": 1734,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -16388,7 +16388,7 @@
     "icon": "mdi:airplane",
     "modelId": 211,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -19606,7 +19606,7 @@
     "icon": "mdi:airplane",
     "modelId": 2374,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -22850,7 +22850,7 @@
     "icon": "mdi:airplane",
     "modelId": 418,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -26092,7 +26092,7 @@
     "icon": "mdi:airplane",
     "modelId": 557,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -29334,7 +29334,7 @@
     "icon": "mdi:airplane",
     "modelId": 56,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -32570,7 +32570,7 @@
     "icon": "mdi:airplane",
     "modelId": 562,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -35812,7 +35812,7 @@
     "icon": "mdi:airplane",
     "modelId": 76,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,
@@ -39048,7 +39048,7 @@
     "icon": "mdi:airplane",
     "modelId": 999999,
     "name": "away_mode",
-    "type": "binary"
+    "type": "string"
    },
    "100300": {
     "capabilityId": 100300,

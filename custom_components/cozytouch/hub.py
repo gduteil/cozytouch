@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -27,6 +27,7 @@ from .account import (
     CozytouchRateLimited,
 )
 from .capability import get_capability_infos
+from .capability_table import CAPABILITIES
 from .const import DOMAIN
 from .infos import CapabilityCategory, CapabilityInfos, CapabilityType
 from .model import get_device_model_infos, get_model_infos
@@ -46,6 +47,27 @@ POLL_INTERVAL_OPTION = "poll_interval"
 # first read is immediate : both planes carry the new value the moment the
 # execution completes, measured. See docs/decisions.md.
 WRITE_SETTLE_DELAY = 15
+
+
+# What each away switch writes, read off the table so that a switch mapped
+# later is written with the others.
+AWAY_MODE_SWITCHES: dict[int, Mapping[str, object]] = {
+    capabilityId: {
+        "value_off": "0",
+        "value_on": "1",
+        "value_pending": "2",
+        **(row.extra or {}),
+    }
+    for capabilityId, row in CAPABILITIES.items()
+    if row.type is CapabilityType.AWAY_MODE_SWITCH
+}
+
+
+# Whether a room's absence is under way. A room has no switch of its own.
+ROOM_ABSENCE_CAPABILITY_ID = 100261
+
+# The `modelFamily` the API declares for air conditioning.
+AIR_CONDITIONING_FAMILY = "Air_Conditioning"
 
 
 @dataclass
@@ -232,7 +254,7 @@ class Hub(DataUpdateCoordinator):
     The session, the token, the setup view and the poll are the account's and
     live in `account.py`. What is left here is per device : which capability
     ids it reports, what its model makes of them, and the away-mode window
-    staged before it is committed. A coordinator with `update_interval=None`,
+    its pickers show. A coordinator with `update_interval=None`,
     pushed to by `AccountCoordinator`. See docs/decisions.md.
     """
 
@@ -265,12 +287,10 @@ class Hub(DataUpdateCoordinator):
         # is what spends no request. See docs/decisions.md.
         self._faults: dict[int, list[dict]] = {}
 
-        # Staged rather than sent, so both ends can be set before either is
-        # committed. See docs/decisions.md.
-        self._timestamp_away_mode_last_change = None
+        # The window the pickers show, which is only sent while the absence
+        # is on. See docs/decisions.md.
         self._timestamp_away_mode_start = None
         self._timestamp_away_mode_end = None
-        self._timestamps_away_mode_capability_id = None
 
     @property
     def account(self) -> CozytouchAccount:
@@ -300,7 +320,7 @@ class Hub(DataUpdateCoordinator):
 
         Nothing left to fetch : the values are already on `account.devices`.
         """
-        await self._commit_staged_away_mode()
+        self._follow_reported_away_window()
         await self._refresh_faults()
         self.async_set_updated_data(None)
 
@@ -363,7 +383,6 @@ class Hub(DataUpdateCoordinator):
                 raise UpdateFailed("Cannot connect to Atlantic Cozytouch API")
 
             # A reconnect re-reads the setup view, so this round is done.
-            await self._commit_staged_away_mode()
             return
 
         try:
@@ -375,37 +394,13 @@ class Hub(DataUpdateCoordinator):
             raise UpdateFailed(str(err)) from err
 
         self._account.store_capabilities(self._deviceId, capabilities)
-        await self._commit_staged_away_mode()
+        self._follow_reported_away_window()
         await self._refresh_faults()
 
         # This ran because of a write, and a write can be the home's. See
         # docs/decisions.md.
         if (runtime := getattr(self._entry, "runtime_data", None)) is not None:
             await runtime.coordinator.async_after_write()
-
-    async def _commit_staged_away_mode(self) -> None:
-        """Send the away window once both ends have stopped moving.
-
-        Called from every path that can refresh this device, so the delay does
-        not depend on which. See docs/decisions.md.
-        """
-        if (
-            self._timestamp_away_mode_last_change is None
-            or self._timestamps_away_mode_capability_id is None
-            or self._timestamp_away_mode_start is None
-            or self._timestamp_away_mode_end is None
-        ):
-            return
-
-        now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
-        if now - self._timestamp_away_mode_last_change > 20:
-            await self.set_away_mode_timestamps(
-                None,
-                None,
-                self._timestamps_away_mode_capability_id,
-                self._timestamp_away_mode_start,
-                self._timestamp_away_mode_end,
-            )
 
     def get_zone_name(self, zoneId: int | None = None) -> str:
         """Get zone infos."""
@@ -723,21 +718,96 @@ class Hub(DataUpdateCoordinator):
         self._timestamp_away_mode_start = timestampStart
         self._timestamp_away_mode_end = timestampEnd
 
-    async def set_away_mode_bound(
-        self,
-        index: int,
-        capabilityIdTimestamps: int,
-        timestamp,
-    ):
-        """Set the away mode start (index 0) or end (index 1) timestamp."""
+    def away_mode_switches(self) -> dict[int, Mapping[str, object]]:
+        """The away switches this device reports, with what each one writes."""
+        return {
+            capabilityId: settings
+            for capabilityId, settings in AWAY_MODE_SWITCHES.items()
+            if self.get_capability_value(capabilityId, None) is not None
+        }
+
+    def reported_away_window(self) -> tuple[int, int] | None:
+        """The window the device reports beside its switch, if one is set."""
+        for settings in self.away_mode_switches().values():
+            value = self.get_capability_value(settings["timestampsCapabilityId"], None)
+            try:
+                start, end = (int(bound) for bound in value.strip("[]").split(","))
+            except (AttributeError, ValueError):
+                continue
+            if start and end:
+                return start, end
+        return None
+
+    def _follow_reported_away_window(self) -> None:
+        """While the absence is on, the pickers show the one under way.
+
+        Whoever set it -- the vendor app included. See docs/decisions.md.
+        """
+        if self.is_away() and (window := self.reported_away_window()):
+            self.away_mode_init(*window)
+
+    def reports_absence(self) -> bool:
+        """Whether this device says if the absence is on, one way or another."""
+        return bool(self.away_mode_switches()) or (
+            self.get_capability_value(ROOM_ABSENCE_CAPABILITY_ID, None) is not None
+        )
+
+    def absence_under_way(self) -> bool:
+        """Whether the absence has started, rather than being on or programmed.
+
+        A room reports it on its own (100261) ; a device with a switch reads
+        it there, where 2 is an absence still waiting for its start.
+        """
+        if self.get_capability_value(ROOM_ABSENCE_CAPABILITY_ID, None) == "1":
+            return True
+        return any(
+            self.get_capability_value(capabilityId, None) == settings["value_on"]
+            for capabilityId, settings in self.away_mode_switches().items()
+        )
+
+    def is_air_conditioning(self) -> bool:
+        """Whether this device, or the gateway it hangs off, is an air
+        conditioner, going by the family the API declares.
+
+        What an absence does depends on it : an air conditioner stops. See
+        docs/decisions.md.
+        """
+        dev = device_of(self)
+        if dev is None:
+            return False
+
+        master = (
+            device_of(self, dev["masterDeviceId"])
+            if dev.get("masterDeviceId")
+            else None
+        )
+        return any(
+            candidate is not None
+            and candidate.get("modelFamily") == AIR_CONDITIONING_FAMILY
+            for candidate in (dev, master)
+        )
+
+    def is_away(self) -> bool:
+        """Whether this device's absence is on, or programmed."""
+        return any(
+            self.get_capability_value(capabilityId, None) != settings["value_off"]
+            for capabilityId, settings in self.away_mode_switches().items()
+        )
+
+    async def set_away_mode_bound(self, index: int, timestamp: int) -> None:
+        """Move the start (index 0) or the end (index 1) of the window.
+
+        Kept on the hub while the absence is off, for the switch to send when
+        it is turned on ; sent at once while it is on. See docs/decisions.md.
+        """
         if index == 0:
             self._timestamp_away_mode_start = timestamp
         else:
             self._timestamp_away_mode_end = timestamp
-        self._timestamps_away_mode_capability_id = capabilityIdTimestamps
-        self._timestamp_away_mode_last_change = datetime.now(
-            tz=dt_util.DEFAULT_TIME_ZONE
-        ).timestamp()
+
+        start, end = self._timestamp_away_mode_start, self._timestamp_away_mode_end
+        if self.is_away() and away_window_is_valid(start, end):
+            await self.set_away_mode(start, end)
 
     def get_away_mode_start(self):
         """Get away mode start timestamp."""
@@ -747,35 +817,75 @@ class Hub(DataUpdateCoordinator):
         """Get away mode end timestamp."""
         return self._timestamp_away_mode_end
 
-    async def set_away_mode_timestamps(
-        self,
-        capabilityIdMode,
-        valueMode,
-        capabilityIdTimestamps: int,
-        timestampStart,
-        timestampEnd,
-    ):
-        """Set away mode timestamps."""
+    def _account_hubs(self) -> list[Hub]:
+        """Every hub of the account this one belongs to, itself included."""
+        runtime = getattr(self._entry, "runtime_data", None)
+        if runtime is None:
+            return [self]
+
+        hubs = list(runtime.hubs.values())
+        return hubs if self in hubs else [self, *hubs]
+
+    async def set_away_mode(self, timestampStart, timestampEnd) -> bool:
+        """Set the account's absence, or clear it with None, in one go.
+
+        The window is the setup's, so it is sent once ; every device of the
+        account that switches the absence then mirrors it and is switched with
+        it. See docs/decisions.md.
+        """
         if not self.online:
-            return
+            return False
 
-        # The window lives on the setup, not on the device, so it goes first
-        # and the capability write only mirrors what was accepted.
         if not await self._account.set_absence(timestampStart, timestampEnd):
-            return
+            return False
 
-        if timestampStart is not None and timestampEnd is not None:
-            valueTimestamps = "[" + str(timestampStart) + "," + str(timestampEnd) + "]"
-            await self.set_capability_value(capabilityIdTimestamps, valueTimestamps)
+        away = timestampStart is not None and timestampEnd is not None
+        pair = f"[{timestampStart},{timestampEnd}]" if away else "[0,0]"
+
+        # A start still to come is programmed, as the vendor app writes it.
+        # See docs/decisions.md.
+        state = "value_off"
+        if away:
+            now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
+            state = "value_pending" if timestampStart > now else "value_on"
+
+        for hub in self._account_hubs():
+            switches = hub.away_mode_switches()
+            if not switches:
+                continue
+
+            # Cleared, the pickers go back to what the switch would send.
+            hub.away_mode_init(timestampStart, timestampEnd)
+
+            for capabilityId, settings in switches.items():
+                await hub.set_capability_value(
+                    settings["timestampsCapabilityId"], pair
+                )
+                await hub.set_capability_value(capabilityId, settings[state])
+
+            await hub.async_request_refresh()
+
+        if away:
             _LOGGER.info("Away mode enabled %d -> %d", timestampStart, timestampEnd)
         else:
-            await self.set_capability_value(capabilityIdTimestamps, "[0,0]")
             _LOGGER.info("Away mode disabled")
 
-        if capabilityIdMode is not None and valueMode is not None:
-            await self.set_capability_value(capabilityIdMode, valueMode)
+        return True
 
-        self._timestamp_away_mode_last_change = None
+
+def away_window_is_valid(
+    timestampStart, timestampEnd, now: float | None = None
+) -> bool:
+    """Whether a window is one worth sending : both ends, in order, not over."""
+    if now is None:
+        now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
+
+    return (
+        bool(timestampStart)
+        and bool(timestampEnd)
+        and timestampStart < timestampEnd
+        and timestampEnd > now
+    )
 
 
 # see docs/decisions.md

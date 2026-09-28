@@ -96,8 +96,8 @@ The rules the docstrings do not repeat :
   Regenerate only in the commit whose diff shows why :
   `UPDATE_SNAPSHOTS=1 .venv/bin/pytest tests/test_snapshot.py`.
 - `tests/test_sensor_values.py` pins the strings a dashboard shows **as they
-  are, not as they should be** -- one case is wrong on purpose. Changing an
-  output means changing its test in the same commit.
+  are, not as they should be**. Changing an output means changing its test in
+  the same commit.
 - `tests/test_floor.py` is how the supported HA floor is found : run it, do not
   read a changelog.
 - `tests/test_capability.py` walks `range(1, 2500)` ; a model id outside it

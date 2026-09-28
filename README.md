@@ -170,6 +170,30 @@ Four ways to reach it, all documented in **[docs/scheduling.md](docs/scheduling.
 
 A day holds ten slots at most, the first has to start at `00:00`, and
 temperatures are whole degrees. Heating and cooling only.
+
+## ✈️ Away mode
+
+The absence belongs to the account, not to one device : turning it on sets
+the window on the account and switches every device that has an away mode.
+
+- **From the device page** : set the dates, then turn the *Away mode*
+  switch on. While it is off, the dates are only kept : the start reads as
+  now until you move it, and with no end the absence lasts two days.
+- **From an automation** : `cozytouch.set_away_mode` does both in one action,
+  and `cozytouch.clear_away_mode` ends it.
+- **By voice** : Assist can read, set and end the absence ("on part du 3 au
+  10 octobre"), if the away switch is exposed to it and your conversation
+  agent can use tools.
+
+```yaml
+action: cozytouch.set_away_mode
+target:
+  entity_id: switch.boiler_away_mode
+data:
+  start: "2026-10-01 08:00:00"   # optional, defaults to a minute from now
+  end: "2026-10-08 18:00:00"     # or duration: {days: 7}
+```
+
 ## 🏷️ Versioning
 
 Releases use CalVer : `YEAR.MONTH.PATCH` (ex : `2026.8.0`).

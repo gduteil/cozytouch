@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import time
+from datetime import datetime, time, timedelta
 import json
 import logging
 from typing import Any
@@ -17,8 +17,9 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .capability import read_setpoint
 from .const import (
@@ -33,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_GET_SCHEDULE = "get_schedule"
+SERVICE_SET_AWAY_MODE = "set_away_mode"
+SERVICE_CLEAR_AWAY_MODE = "clear_away_mode"
 
 # Shortcuts the day picker offers next to the seven days. Expanded here rather
 # than in the frontend, so a YAML automation gets them too.
@@ -99,6 +102,64 @@ GET_SCHEDULE_SCHEMA = vol.Schema(
         vol.Required("program"): vol.In(WRITABLE_PROGRAM_BLOCKS),
     }
 )
+
+
+SET_AWAY_MODE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_ids,
+            vol.Optional("start"): cv.datetime,
+            vol.Exclusive("end", "return"): cv.datetime,
+            vol.Exclusive("duration", "return"): cv.positive_time_period,
+        }
+    ),
+    cv.has_at_least_one_key("end", "duration"),
+)
+
+CLEAR_AWAY_MODE_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_ids})
+
+# Where a window with no start begins, as the switch does.
+AWAY_MODE_LEAD = timedelta(minutes=1)
+
+
+def away_window(data: dict, now: datetime) -> tuple[int, int]:
+    """The two timestamps a set_away_mode call stands for.
+
+    A naive date is the Home Assistant time zone's, which is what the date
+    picker and a template both mean by one.
+    """
+    start = data.get("start", now + AWAY_MODE_LEAD)
+    end = data["end"] if "end" in data else start + data["duration"]
+
+    timestampStart = int(dt_util.as_timestamp(start))
+    timestampEnd = int(dt_util.as_timestamp(end))
+
+    if timestampEnd <= timestampStart:
+        raise ServiceValidationError("The absence has to end after it starts")
+
+    if timestampEnd <= now.timestamp():
+        raise ServiceValidationError("That absence would already be over")
+
+    return timestampStart, timestampEnd
+
+
+def _away_hubs(hass: HomeAssistant, entity_ids: list[str]) -> list:
+    """One hub per account among the targets, refusing a device with no switch.
+
+    The window is the account's, so two targets on one account are one write.
+    """
+    hubs: dict[int, Any] = {}
+    for entity_id in entity_ids:
+        hub = _resolve_hub(hass, entity_id)
+        if not hub.away_mode_switches():
+            raise ServiceValidationError(
+                f"{entity_id} is on a device that does not switch the absence; "
+                "target the away mode switch of its gateway"
+            )
+
+        hubs.setdefault(id(hub.account), hub)
+
+    return list(hubs.values())
 
 
 def _as_time(value: time | str) -> time:
@@ -386,8 +447,43 @@ def async_register_services(hass: HomeAssistant) -> None:
 
         return response
 
+    async def async_set_away_mode(call: ServiceCall) -> None:
+        """Send the window and switch the absence on, as one action."""
+        timestampStart, timestampEnd = away_window(
+            call.data, dt_util.now()
+        )
+
+        for hub in _away_hubs(hass, call.data["entity_id"]):
+            if not await hub.set_away_mode(timestampStart, timestampEnd):
+                raise HomeAssistantError(
+                    "Atlantic did not accept the absence; the log says why"
+                )
+
+    async def async_clear_away_mode(call: ServiceCall) -> None:
+        """Switch the absence off, window included."""
+        for hub in _away_hubs(hass, call.data["entity_id"]):
+            if not await hub.set_away_mode(None, None):
+                raise HomeAssistantError(
+                    "Atlantic did not accept the end of the absence; the log "
+                    "says why"
+                )
+
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SCHEDULE, async_set_schedule, schema=SET_SCHEDULE_SCHEMA
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_AWAY_MODE,
+        async_set_away_mode,
+        schema=SET_AWAY_MODE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_AWAY_MODE,
+        async_clear_away_mode,
+        schema=CLEAR_AWAY_MODE_SCHEMA,
     )
 
     hass.services.async_register(

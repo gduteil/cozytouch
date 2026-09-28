@@ -449,7 +449,16 @@
             "available_fan_speeds":     { "name": "Verfügbare Lüfterstufen" },
             "available_schedule_types": { "name": "Verfügbare Zeitplantypen" },
             "available_thermostat_modes": { "name": "Verfügbare Thermostatmodi" },
-            "away_mode":                { "name": "Abwesenheitsmodus" },
+            "away_mode":
+            {
+                "name": "Abwesenheitsmodus",
+                "state":
+                {
+                    "off": "Aus",
+                    "pending": "Geplant",
+                    "on": "Aktiv"
+                }
+            },
             "away_mode_cooling_temperature": { "name": "Kühltemperatur im Abwesenheitsmodus" },
             "away_mode_start":          { "name": "Beginn Abwesenheitsmodus" },
             "away_mode_stop":           { "name": "Ende Abwesenheitsmodus" },
@@ -744,11 +753,24 @@
         }
     },
     "services": {
+        "clear_away_mode": {
+            "name": "Abwesenheitsmodus ausschalten",
+            "description": "Beendet die Abwesenheit auf allen Geräten des Kontos, samt Zeitraum."
+        },
         "get_schedule": {
             "name": "Wochenprogramm auslesen",
             "description": "Gibt die sieben Tagesprogramme eines Geräts zurück, in der Form, die \"Ein Tagesprogramm festlegen\" annimmt.",
             "fields": {
                 "program":  { "name": "Programm", "description": "Heizen oder Kühlen." }
+            }
+        },
+        "set_away_mode": {
+            "name": "Abwesenheitsmodus einschalten",
+            "description": "Legt den Abwesenheitszeitraum fest und schaltet die Abwesenheit ein, in einer Aktion, auf allen Geräten des Kontos.",
+            "fields": {
+                "start":    { "name": "Beginn", "description": "Wann die Abwesenheit beginnt. Leer gelassen beginnt sie in einer Minute." },
+                "end":      { "name": "Ende", "description": "Wann die Abwesenheit endet. Entweder ein Ende oder eine Dauer angeben." },
+                "duration": { "name": "Dauer", "description": "Wie lange die Abwesenheit ab ihrem Beginn dauert, anstelle eines Endes." }
             }
         },
         "set_schedule": {

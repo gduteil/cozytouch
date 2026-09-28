@@ -64,18 +64,16 @@ def test_the_account_state_is_not_shared_by_every_account(attribute):
 @pytest.mark.parametrize(
     "attribute",
     [
-        "_timestamp_away_mode_last_change",
         "_timestamp_away_mode_start",
         "_timestamp_away_mode_end",
-        "_timestamps_away_mode_capability_id",
     ],
 )
 def test_the_away_mode_staging_is_not_shared_by_every_hub(attribute):
     """Staged per device, and it used to sit on the class as well.
 
-    The window is committed a good twenty seconds after it is edited, so two
-    devices staging one each at the same time is an ordinary thing to do -- and
-    on the class it was one pair of timestamps for all of them.
+    The pickers hold a window until the switch sends it, so two devices
+    holding one each at the same time is an ordinary thing to do -- and on the
+    class it was one pair of timestamps for all of them.
     """
     assert not hasattr(Hub, attribute)
 

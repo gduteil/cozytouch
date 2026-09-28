@@ -7,7 +7,12 @@ That platform is newer than the Home Assistant version `hacs.json` declares,
 which is why this module is not in the floor test's list -- an install too
 old to have the platform never imports it. See docs/decisions.md.
 
-The two tools are deliberately not the two services. A service writes a whole
+The absence tools are the services, on the other hand : setting an absence
+is one window and a switch, with nothing on the device to merge into, so the
+model hands over two dates and `set_away_mode` does the rest -- the window
+is the account's, and a start still to come is written as programmed.
+
+The two program tools are deliberately not the two services. A service writes a whole
 day, because that is what the device stores; a person asks for a stretch of
 one. Handing the raw write to an assistant means asking a language model to
 copy nine slots back unchanged, and the day that gets written is the day it
@@ -16,6 +21,7 @@ remembered. `apply_period` does the merge instead.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 import json
 from typing import Any
 
@@ -32,13 +38,17 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN, PROGRAM_DAYS, WRITABLE_PROGRAM_BLOCKS
 from .services import (
     DAY_GROUPS,
+    SERVICE_CLEAR_AWAY_MODE,
     SERVICE_GET_SCHEDULE,
+    SERVICE_SET_AWAY_MODE,
     SERVICE_SET_SCHEDULE,
+    _resolve_hub,
     apply_period,
     expand_days,
 )
@@ -50,6 +60,16 @@ PROMPT = (
     "the next one starts. Read the program before answering questions about it, "
     "and change it with the period tool rather than describing the change."
 )
+
+AWAY_PROMPT = (
+    "The Cozytouch absence (away mode) belongs to the whole home, not to one "
+    "device : setting it sets it everywhere. An absence whose start is still "
+    "to come is programmed, and starts on its own. Dates are the home's local "
+    "time. Read the absence before answering questions about it."
+)
+
+# What an away switch's value means, in the words the tools answer with.
+AWAY_STATES = {"value_off": "off", "value_pending": "programmed", "value_on": "on"}
 
 _ENTITY = vol.Required(
     "entity_id",
@@ -116,6 +136,127 @@ def _checked(hass: HomeAssistant, llm_context: LLMContext, entity_id: str) -> st
         f"There is no Cozytouch device called {entity_id}. "
         + (f"The ones there are: {listed}" if listed else "This account has none.")
     )
+
+
+def _away_switches(hass: HomeAssistant, llm_context: LLMContext) -> list[str]:
+    """The away switches Assist may reach, one per account or more.
+
+    The services keep one write per account, so handing them every switch is
+    how an absence reaches every account the assistant can see.
+    """
+    return [
+        entry.entity_id
+        for entry in er.async_get(hass).entities.values()
+        if entry.platform == DOMAIN
+        and entry.domain == "switch"
+        and entry.translation_key == "away_mode"
+        and not (
+            llm_context.assistant
+            and not async_should_expose(hass, llm_context.assistant, entry.entity_id)
+        )
+    ]
+
+
+def _local(timestamp: int) -> str:
+    return dt_util.as_local(datetime.fromtimestamp(timestamp, UTC)).isoformat(
+        timespec="minutes"
+    )
+
+
+def _away_status(hass: HomeAssistant, llm_context: LLMContext) -> JsonObjectType:
+    """What each reachable switch says : off, programmed or on, and when."""
+    status: dict[str, Any] = {}
+    for entity_id in _away_switches(hass, llm_context):
+        hub = _resolve_hub(hass, entity_id)
+        for capabilityId, settings in hub.away_mode_switches().items():
+            value = hub.get_capability_value(capabilityId, None)
+            state = next(
+                (word for key, word in AWAY_STATES.items() if settings[key] == value),
+                "unknown",
+            )
+            window = hub.reported_away_window() if state != "off" else None
+            status[entity_id] = {
+                "absence": state,
+                "start": _local(window[0]) if window else None,
+                "end": _local(window[1]) if window else None,
+            }
+    return status
+
+
+class ReadAway(Tool):
+    """Say whether the home is away, and from when to when."""
+
+    name = "cozytouch_get_away_mode"
+    description = (
+        "Read the Cozytouch absence of the home : off, programmed (its start "
+        "is still to come) or on, with when it starts and ends."
+    )
+    parameters = vol.Schema({})
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Answer with the absence as the devices report it."""
+        return _away_status(hass, llm_context)
+
+
+class SetAway(Tool):
+    """Set the home's absence, from a start to an end."""
+
+    name = "cozytouch_set_away_mode"
+    description = (
+        "Put the home in absence on Cozytouch, from a start to an end, in the "
+        "home's local time. Without a start it begins in a minute. The heating "
+        "or air conditioning follows the absence for the whole home."
+    )
+    parameters = vol.Schema(
+        {
+            vol.Optional(
+                "start",
+                description="When the absence starts, as YYYY-MM-DD HH:MM",
+            ): cv.string,
+            vol.Required(
+                "end", description="When the absence ends, as YYYY-MM-DD HH:MM"
+            ): cv.string,
+        }
+    )
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Hand the window to the service, then answer with what it set."""
+        args = self.parameters(tool_input.tool_args)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_AWAY_MODE,
+            {"entity_id": _away_switches(hass, llm_context), **args},
+            blocking=True,
+            context=llm_context.context,
+        )
+        return _away_status(hass, llm_context)
+
+
+class ClearAway(Tool):
+    """End the home's absence."""
+
+    name = "cozytouch_clear_away_mode"
+    description = (
+        "End the Cozytouch absence of the home, or cancel a programmed one."
+    )
+    parameters = vol.Schema({})
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Switch the absence off everywhere, then answer with the result."""
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_AWAY_MODE,
+            {"entity_id": _away_switches(hass, llm_context)},
+            blocking=True,
+            context=llm_context.context,
+        )
+        return _away_status(hass, llm_context)
 
 
 class ReadSchedule(Tool):
@@ -240,16 +381,26 @@ async def _read(
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
-    """Offer the program tools to Assist, and only where there is a device."""
+    """Offer Assist the tools for what the home has, and nothing otherwise."""
     if api_id != LLM_API_ASSIST:
         return None
 
+    tools: list[Tool] = []
+    prompts: list[str] = []
+
     known = _programmable(hass, llm_context)
-    if not known:
+    if known:
+        listed = "\n".join(f"- {eid}: {what}" for eid, what in known.items())
+        tools += [ReadSchedule(), SetPeriod()]
+        prompts.append(
+            f"{PROMPT}\nThe devices with a program, by entity id:\n{listed}"
+        )
+
+    if _away_switches(hass, llm_context):
+        tools += [ReadAway(), SetAway(), ClearAway()]
+        prompts.append(AWAY_PROMPT)
+
+    if not tools:
         return None
 
-    listed = "\n".join(f"- {eid}: {what}" for eid, what in known.items())
-    return LLMTools(
-        tools=[ReadSchedule(), SetPeriod()],
-        prompt=f"{PROMPT}\nThe devices with a program, by entity id:\n{listed}",
-    )
+    return LLMTools(tools=tools, prompt="\n\n".join(prompts))

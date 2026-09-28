@@ -239,8 +239,6 @@ def hub_over(account):
     hub = object.__new__(Hub)
     hub._account = account
     hub._deviceId = 1
-    hub._timestamp_away_mode_last_change = None
-    hub._timestamps_away_mode_capability_id = None
     hub._timestamp_away_mode_start = None
     hub._timestamp_away_mode_end = None
 

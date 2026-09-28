@@ -9,22 +9,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .capability_table import CAPABILITIES
 from .const import CozytouchCapabilityVariableType
 from .hub import CozytouchConfigEntry, Hub, add_capability_entities
 from .infos import CapabilityType
 from .sensor import CozytouchSensor
 
 _LOGGER = logging.getLogger(__name__)
-
-# What actually commits a window: the switch writes the setup's absence and
-# only then mirrors it onto the timestamps. A device reporting the pair
-# without one of these can be read, not set -- see docs/decisions.md.
-_AWAY_MODE_SWITCH_IDS = frozenset(
-    capabilityId
-    for capabilityId, row in CAPABILITIES.items()
-    if row.type is CapabilityType.AWAY_MODE_SWITCH
-)
 
 
 # config flow setup
@@ -45,10 +35,9 @@ def _away_mode_datetimes(
     coordinator: Hub, capability, config_title: str, config_uniq_id: str
 ) -> list[CozytouchAwayModeDateTime]:
     """The two ends of the away window, which are one capability."""
-    if all(
-        coordinator.get_capability_value(capabilityId, None) is None
-        for capabilityId in _AWAY_MODE_SWITCH_IDS
-    ):
+    # The switch is what sends a window : a device reporting the pair without
+    # one can be read, not set. See docs/decisions.md.
+    if not coordinator.away_mode_switches():
         return []
 
     return [
@@ -98,19 +87,32 @@ class CozytouchAwayModeDateTime(DateTimeEntity, CozytouchSensor):
         timestamp = value.timestamp()
         if timestamp is not None and self._timestamp_index in (0, 1):
             await self.coordinator.set_away_mode_bound(
-                self._timestamp_index,
-                self._capability.capabilityId,
-                int(timestamp),
+                self._timestamp_index, int(timestamp)
             )
+            self.async_write_ha_state()
 
     @property
     def native_value(self) -> datetime | None:
-        """Retrieve value from hub."""
+        """Retrieve value from hub.
+
+        While the absence is off, a start that is not set or already past
+        reads as now, and an end already past as unknown : that is the window
+        the switch would send. See docs/decisions.md.
+        """
         value = None
         if self._timestamp_index == 0:
             value = self.coordinator.get_away_mode_start()
         elif self._timestamp_index == 1:
             value = self.coordinator.get_away_mode_end()
+
+        if not self.coordinator.is_away():
+            now = dt_util.now().replace(second=0, microsecond=0)
+            if self._timestamp_index == 0 and (
+                not value or value < now.timestamp()
+            ):
+                return now
+            if self._timestamp_index == 1 and value and value <= now.timestamp():
+                return None
 
         if value is not None and value > 0:
             return datetime.fromtimestamp(value, tz=dt_util.DEFAULT_TIME_ZONE)
