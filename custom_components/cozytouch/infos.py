@@ -46,6 +46,7 @@ class CapabilityType(StrEnum):
     SIGNAL = "signal"
     STRING = "string"
     SWITCH = "switch"
+    SYSTEM_SERVICE = "system_service"
     TEMPERATURE = "temperature"
     TEMPERATURE_ADJUSTMENT_NUMBER = "temperature_adjustment_number"
     TEMPERATURE_PERCENT_ADJUSTMENT_NUMBER = "temperature_percent_adjustment_number"

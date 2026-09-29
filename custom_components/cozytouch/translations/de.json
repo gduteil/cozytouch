@@ -252,6 +252,19 @@
                     "eco_plus": "Eco+",
                     "prog": "Prog"
                 }
+            },
+            "system_service":
+            {
+                "name": "Systemdienst",
+                "state":
+                {
+                    "off": "Anlage aus",
+                    "heat": "Heizen",
+                    "cool": "Kühlen",
+                    "auto": "Auto",
+                    "dry": "Entfeuchten",
+                    "fan": "Lüften"
+                }
             }
         },
         "sensor": {

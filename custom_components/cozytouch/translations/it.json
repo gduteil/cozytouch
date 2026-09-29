@@ -252,6 +252,19 @@
                     "eco_plus": "Eco+",
                     "prog": "Prog"
                 }
+            },
+            "system_service":
+            {
+                "name": "Servizio del sistema",
+                "state":
+                {
+                    "off": "Arresto generale",
+                    "heat": "Riscaldamento",
+                    "cool": "Raffreddamento",
+                    "auto": "Auto",
+                    "dry": "Deumidificazione",
+                    "fan": "Ventilazione"
+                }
             }
         },
         "sensor": {

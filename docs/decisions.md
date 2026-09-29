@@ -3150,9 +3150,10 @@ genuinely the room's is `0`. Switching a room back on writes the service the
 house is already running, never one of its own, which is why turning a room on
 *into* a different mode is two gestures there and one write pair here.
 
-So `async_set_hvac_mode` writes 102020 when the device reports it, 7 when the
-mode is off, and both when a room that was off is asked for a mode. A device
-with no 102020 -- a boiler, a towel rail -- keeps the write it always had.
+So the system's service is written to 102020, and a room's own on and off to
+7. Which entity does which settled later -- see the entry on the room's
+climate below. A device with no 102020 -- a boiler, a towel rail -- keeps the
+write it always had.
 
 ### What it is not, which took the whole investigation
 
@@ -3185,6 +3186,83 @@ still a guess about meaning.
 The row is `system_service` now, in all six translation files. The vendor's
 own name is kept in a comment above it, because a report quoting
 `AIR_MIXING_ACTUAL_MODE` still has to lead here.
+
+### The general stop is 102020 at 0, and every room follows it to off
+
+The app's service dropdown on a Navizone offers five entries, and the first is
+*arrêt général* : the whole system off, every room with it. Home Assistant had
+no way to send it. Off on a room's climate entity writes 7, the room's own
+state, and that is right for the gesture it copies -- switching one room off.
+
+The 2026-09-21 capture saw the dropdown write 102020 at 8, not at the stop.
+The stop itself was read off a diagnostics dump of the three-room Navizone
+account taken right after pressing it in the app, 2026-09-28 :
+
+| When | On each of 557, 558, 559 |
+| ---- | ------------------------ |
+| 11:47:00 | 102020 `0`, the same second on all three |
+| 11:47:05 | 7 `0`, 181 `0`, 166 `1`, 341 `1` |
+
+One write, carried to every room, which is how 102020 already behaved at 8 ;
+then the rooms themselves go off, and 166 -- the modes currently permitted --
+shrinks to bit 0 alone, off. A dump shows state, not the write that caused
+it, but a single value landing on three rooms in one second leaves nothing
+else it could have been. What starting again does to the rooms is not in the
+dump ; it has not been seen.
+
+So the climate entities read off on their own after a stop, with nothing to
+add.
+
+### A room's climate is on or off ; the system's service is a select beside it
+
+The app's room page (screenshots from the maintainer, 2026-09-28) has two
+controls, and their reach is plain from their shape : a dropdown -- *"Choose
+the service for your system"* : System off, Heat, Cool, Auto, Dehumidify --
+that moves every room, and a toggle that moves only its own.
+
+Home Assistant has both shapes, and each gets one reach :
+
+- **The select** (`CozytouchSystemServiceSelect`) is the dropdown : 102020,
+  its options the room's modes narrowed by 100022 (the same five on 557-559,
+  fan removed), in the app's order. "System off" is the general stop ;
+  picking a service starts the house again.
+- **The climate** is the toggle. For a room reporting 102020 its mode list is
+  off and the one mode the house runs -- `[off, cool]` while it cools,
+  `[off]` while it is stopped -- rebuilt at each poll. Off writes the room's
+  7 at 0 ; on writes into 7 the service the house runs, which is what the
+  2026-09-21 capture saw the app write. Asked to turn on while the house is
+  stopped, it refuses : 166 permits only off then. Presets (basic, prog,
+  override) are the room's own and untouched.
+
+This is the moving mode list the entry on narrowing by 100022 refused for the
+season, and the cost it named is paid here on purpose : an automation asking a
+room for `heat` fails while the house cools, because the house's mode is the
+select's to change. Home Assistant's own turn_on works for free -- with two
+modes, one of them off, it picks the other. A device with no 102020 keeps the
+whole table.
+
+Five shapes came before it the same day, each dropped by the maintainer :
+
+- **A button** for the stop. No state and no `turn_off`, so no automation or
+  voice assistant could switch the house off.
+- **A system switch per room**, remembering the last service to turn back on.
+  A third control with a third reach, beside a climate whose modes were the
+  house's and whose off was the room's.
+- **That switch renamed "whole house", plus a `system_stopped` attribute** on
+  each climate. The attribute showed only under Details.
+- **The same select, the climate keeping every mode.** Its menu mixed two
+  reaches : Heat, Cool, Auto, Dehumidify moved the house, Off the room.
+- **Every climate mode the house's, off included, and a room switch.** The
+  climate's turn_on then fell back on HA's default -- the first of heat_cool,
+  heat, cool it has -- and put the whole house in heat.
+
+The capability gets its own type, `system_service`, so the sensor platform
+keeps reading it and the select platform can find it : a row names one type,
+and `string` is every unnamed capability in the table.
+
+The fake cloud under `scripts/test_ha/` plays the stop the way the dump reads,
+rooms included, and a new service reaching the rooms that run ; it plays
+nothing else on the way back.
 
 ### Capability 91 is which circuit is active, named for that rather than the valve
 

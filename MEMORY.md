@@ -27,6 +27,9 @@ overturn one, edit the line here in the same pull request.
   it but moves with the season, so it picks modes, never a device type.
 - **102020 is the system's service** and propagates to every room ; 7 is the
   room's own state. Settled by capturing the iOS app. `docs/decisions.md`.
+- **The general stop is 102020 at 0**, and every room follows : 7 and 181 to
+  0, 166 to 1. Read off a dump taken after the app's stop (2026-09-28) ; what
+  starting again does to the rooms is unseen. `docs/decisions.md`.
 - **Air circulation is household-wide, but the app shows it per room**, so the
   per-room entities are correct. Do not move them onto the gateway.
 - **The Android dex is spent** for naming : it names 188 ids, all but five
@@ -49,6 +52,12 @@ overturn one, edit the line here in the same pull request.
 - Rewiring `_room_entity` on capability 103026 : one observation, on air
   conditioners only. A room behind a *radiator* gateway reading 16/32/64 there
   is what would settle it.
+- A "house" climate entity on the HUB carrying the system's modes, with the
+  rooms cut down to off and the current mode : declined by the maintainer
+  (2026-09-28), with five other shapes the same day. The answer, as the app
+  draws it : a select per room for the system's service (102020, general
+  stop included), and each room's climate reduced to off and the house's
+  current mode (7). `docs/decisions.md`.
 
 ## Parked — each needs one specific piece of evidence
 

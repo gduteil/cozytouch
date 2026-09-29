@@ -508,8 +508,10 @@ def test_the_consumptions_are_read_with_the_first_poll(monkeypatch):
     asyncio.run(coordinator_over(account, {"a": FakeHub()})._async_update_data())
 
     assert consumption_reads(session) == [
-        "https://apis.groupe-atlantic.com/magellan/setups/1/consumptions"
-        "?periodicity=daily"
+        (
+            "https://apis.groupe-atlantic.com/magellan/setups/1/consumptions"
+            "?periodicity=daily"
+        )
     ]
     assert account.consumptions == METERED
 

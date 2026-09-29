@@ -805,6 +805,7 @@ def _away_mode_timestamps(coordinator, capability, config_title, config_uniq_id)
 # -- see docs/decisions.md.
 SENSOR_BUILDERS = {
     CapabilityType.STRING: CozytouchSensor,
+    CapabilityType.SYSTEM_SERVICE: CozytouchSensor,
     CapabilityType.INT: CozytouchSensor,
     CapabilityType.CLIMATE: CozytouchSensor,
     CapabilityType.SWITCH: CozytouchBinarySensor,

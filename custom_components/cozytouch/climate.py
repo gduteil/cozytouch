@@ -20,6 +20,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SERVICE_OFF, narrowed_modes
@@ -138,14 +139,13 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             | ClimateEntityFeature.TURN_ON
         )
 
-        self._attr_hvac_modes = list(
-            narrowed_modes(
-                self._modelInfos.HVACModes,
-                self.coordinator.get_capability_value(
-                    SUPPORTED_HVAC_MODES_CAPABILITY_ID, None
-                ),
-            ).values()
+        self._modes = narrowed_modes(
+            self._modelInfos.HVACModes,
+            self.coordinator.get_capability_value(
+                SUPPORTED_HVAC_MODES_CAPABILITY_ID, None
+            ),
         )
+        self._attr_hvac_modes = self._offered_modes()
         self._attr_hvac_mode = HVACMode.OFF
 
         # Fan modes
@@ -175,6 +175,31 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
 
         # Presets
         self._configure_presets()
+
+    def _house_service(self) -> str | None:
+        """What 102020 says the whole system runs, None where there is none."""
+        system = self._capability.get("systemServiceCapabilityId")
+        if system is None:
+            return None
+        value = self.coordinator.get_capability_value(system, None)
+        return None if value is None else str(value)
+
+    def _offered_modes(self) -> list[HVACMode]:
+        """The whole table, or for a room of a system : off, and what it runs.
+
+        The house's mode is the system select's ; the room only goes on or
+        off, so its list follows 102020. See docs/decisions.md.
+        """
+        if "systemServiceCapabilityId" not in self._capability:
+            return list(self._modes.values())
+
+        modes = [HVACMode.OFF]
+        house = self._house_service()
+        if house is not None and house != SERVICE_OFF:
+            running = self._modes.get(int(house))
+            if running is not None and running != HVACMode.OFF:
+                modes.append(running)
+        return modes
 
     def _configure_modes(self, feature, table, extraKey, extra) -> list[str]:
         self._attr_supported_features |= feature
@@ -240,6 +265,8 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         the id behind it.
         """
         # HVAC Mode
+        if "systemServiceCapabilityId" in self._capability:
+            self._attr_hvac_modes = self._offered_modes()
         HVACModes = self._modelInfos.HVACModes
         currentMode = int(
             self.coordinator.get_capability_value(self._capability.capabilityId)
@@ -485,29 +512,33 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set hvac mode, on the room or on the system as the app does.
+        """Set hvac mode ; for a room of a system, only switch the room.
 
-        A mode is the whole system's -- one outdoor unit runs one service --
-        and off is the room's own. So a mode goes to 102020, which every room
-        of the system then follows, and off goes to the room's own service.
-        A room that was off is switched back on beside the mode, which the app
-        needs two gestures for. See docs/decisions.md.
+        The system's service is the select beside it. Here off writes the
+        room's 7 at 0, and on writes into 7 the service the house runs, as the
+        app's toggle does. See docs/decisions.md.
         """
+        room = self._capability.capabilityId
+
+        if "systemServiceCapabilityId" in self._capability:
+            if hvac_mode == HVACMode.OFF:
+                value = SERVICE_OFF
+            else:
+                value = self._house_service()
+                if value is None or value == SERVICE_OFF:
+                    raise HomeAssistantError(
+                        "The whole system is stopped: pick its service first"
+                    )
+            await self.coordinator.set_capability_value(room, value)
+            await self.coordinator.async_request_refresh()
+            return
+
         HVACModes = self._modelInfos.HVACModes
         for mode in HVACModes:
             if HVACModes[mode] != hvac_mode:
                 continue
 
-            room = self._capability.capabilityId
-            system = self._capability.get("systemServiceCapabilityId")
-
-            if system is None or hvac_mode == HVACMode.OFF:
-                await self.coordinator.set_capability_value(room, str(mode))
-            else:
-                await self.coordinator.set_capability_value(system, str(mode))
-                if self.coordinator.get_capability_value(room) == SERVICE_OFF:
-                    await self.coordinator.set_capability_value(room, str(mode))
-
+            await self.coordinator.set_capability_value(room, str(mode))
             await self.coordinator.async_request_refresh()
             break
 

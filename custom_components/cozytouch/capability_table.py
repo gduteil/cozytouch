@@ -2980,10 +2980,11 @@ CAPABILITIES: dict[int, Entity] = {
     102020: Entity(
         # Named `AIR_MIXING_ACTUAL_MODE` by the vendor and read as air
         # circulation here for a year : it is the service the whole system
-        # runs, and writing it is what moves every room. See
+        # runs, and writing it is what moves every room -- 0 is the app's
+        # general stop. See
         # docs/decisions.md.
         name="system_service",
-        type=CapabilityType.STRING,
+        type=CapabilityType.SYSTEM_SERVICE,
         reads_as={
             "0": "off",
             "1": "auto_temperature",

@@ -8,8 +8,13 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .hub import CozytouchConfigEntry, Hub, add_capability_entities
+from .const import DOMAIN, SERVICE_VALUES, narrowed_modes
+from .hub import (
+    CozytouchConfigEntry,
+    CozytouchDeviceEntity,
+    Hub,
+    add_capability_entities,
+)
 from .infos import CapabilityType
 from .sensor import CozytouchSensor
 
@@ -25,6 +30,12 @@ def parse_duration(option: str) -> int:
     """The minutes an option label stands for."""
     hours, minutes = option.split(":")
     return int(hours) * 60 + int(minutes)
+
+
+# The order the app lists the system's services in.
+SYSTEM_SERVICE_ORDER = ("off", "heat", "cool", "auto", "dry", "fan")
+
+SUPPORTED_MODES_CAPABILITY_ID = 100022
 
 
 def duration_options(lowest: int, highest: int, step: int) -> list[str]:
@@ -47,6 +58,7 @@ async def async_setup_entry(
         {
             CapabilityType.SELECT: CozytouchSelect,
             CapabilityType.DURATION_SELECT: CozytouchDurationSelect,
+            CapabilityType.SYSTEM_SERVICE: CozytouchSystemServiceSelect,
         },
     )
 
@@ -175,3 +187,68 @@ class CozytouchDurationSelect(SelectEntity, CozytouchSensor):
             str(parse_duration(option)),
         )
         await self.coordinator.async_request_refresh()
+
+
+class CozytouchSystemServiceSelect(CozytouchDeviceEntity, SelectEntity):
+    """The service the whole system runs, general stop included.
+
+    The app's own dropdown, shown on every room and moving all of them ; the
+    room's climate entity switching off stays the room's alone. See
+    docs/decisions.md.
+    """
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    _attr_icon = "mdi:home-thermometer"
+
+    def __init__(
+        self,
+        coordinator: Hub,
+        capability,
+        config_title: str,
+        config_uniq_id: str,
+    ) -> None:
+        """Initialize a Select entity."""
+        super().__init__(coordinator)
+
+        capabilityId = capability.capabilityId
+        self._capability = capability
+        self._device_uniq_id = config_uniq_id
+        self._attr_translation_key = capability.name
+        self._attr_unique_id = f"{DOMAIN}_{config_uniq_id}_select_{capabilityId!s}"
+
+        modes = narrowed_modes(
+            coordinator.get_model_infos().get("HVACModes", {}),
+            coordinator.get_capability_value(SUPPORTED_MODES_CAPABILITY_ID, None),
+        )
+        offered = {
+            SERVICE_VALUES[str(value)]: str(value)
+            for value in modes
+            if str(value) in SERVICE_VALUES
+        }
+        self._values = {
+            option: offered[option] for option in sorted(offered, key=_app_order)
+        }
+        self._attr_options = list(self._values)
+
+    @property
+    def current_option(self) -> str | None:
+        """The service running, or unknown for one the list does not offer."""
+        value = self.coordinator.get_capability_value(
+            self._capability.capabilityId, None
+        )
+        option = SERVICE_VALUES.get(str(value))
+        return option if option in self._values else None
+
+    async def async_select_option(self, option: str) -> None:
+        """Write the service ; every room of the system follows."""
+        await self.coordinator.set_capability_value(
+            self._capability.capabilityId, self._values[option]
+        )
+        await self.coordinator.async_request_refresh()
+
+
+def _app_order(option: str) -> int:
+    if option in SYSTEM_SERVICE_ORDER:
+        return SYSTEM_SERVICE_ORDER.index(option)
+    return len(SYSTEM_SERVICE_ORDER)

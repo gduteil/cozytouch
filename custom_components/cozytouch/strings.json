@@ -252,6 +252,19 @@
                     "eco_plus": "Eco+",
                     "prog": "Prog"
                 }
+            },
+            "system_service":
+            {
+                "name": "System service",
+                "state":
+                {
+                    "off": "System off",
+                    "heat": "Heat",
+                    "cool": "Cool",
+                    "auto": "Auto",
+                    "dry": "Dehumidify",
+                    "fan": "Fan"
+                }
             }
         },
         "sensor": {
