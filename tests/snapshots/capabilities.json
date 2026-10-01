@@ -2691,6 +2691,14 @@
     "name": "external_input_2",
     "type": "string"
    },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1381,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -5922,6 +5930,14 @@
     "name": "external_input_2",
     "type": "string"
    },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1457,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -9148,6 +9164,14 @@
     "modelId": 1505,
     "name": "external_input_2",
     "type": "string"
+   },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1505,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
    },
    "38": {
     "capabilityId": 38,
@@ -12393,6 +12417,14 @@
     "name": "external_input_2",
     "type": "string"
    },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1641,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -15612,6 +15644,14 @@
     "modelId": 1734,
     "name": "external_input_2",
     "type": "string"
+   },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1734,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
    },
    "38": {
     "capabilityId": 38,
@@ -18909,6 +18949,14 @@
     "name": "external_input_2",
     "type": "string"
    },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 211,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -22114,6 +22162,14 @@
     "modelId": 2374,
     "name": "external_input_2",
     "type": "string"
+   },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 2374,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
    },
    "38": {
     "capabilityId": 38,
@@ -25357,6 +25413,14 @@
     "name": "external_input_2",
     "type": "string"
    },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 418,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -28576,6 +28640,14 @@
     "modelId": 557,
     "name": "external_input_2",
     "type": "string"
+   },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 557,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
    },
    "38": {
     "capabilityId": 38,
@@ -31833,6 +31905,14 @@
     "name": "external_input_2",
     "type": "string"
    },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 56,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -35077,6 +35157,14 @@
     "name": "external_input_2",
     "type": "string"
    },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 562,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -38314,6 +38402,14 @@
     "modelId": 76,
     "name": "external_input_2",
     "type": "string"
+   },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 76,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
    },
    "38": {
     "capabilityId": 38,
@@ -41554,6 +41650,14 @@
     "modelId": 999999,
     "name": "external_input_2",
     "type": "string"
+   },
+   "370": {
+    "capabilityId": 370,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 999999,
+    "name": "hub_movable_subproducts",
+    "type": "binary"
    },
    "38": {
     "capabilityId": 38,

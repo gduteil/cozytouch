@@ -520,6 +520,7 @@
             "hot_water_available":      { "name": "Agua caliente disponible" },
             "hot_water_showers_expected": { "name": "Duchas de agua caliente previstas" },
             "hot_water_showers_remaining": { "name": "Duchas de agua caliente restantes" },
+            "hub_movable_subproducts":  { "name": "Subproductos movibles por el hub" },
             "identify_request":         { "name": "Solicitud de identificación" },
             "interface_fw":             { "name": "Firmware de la interfaz" },
             "last_device_update":       { "name": "Último cambio declarado" },
