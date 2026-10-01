@@ -187,7 +187,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 1381,
     "name": "away_mode",
@@ -614,7 +614,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 1381,
     "name": "air_circulation_remaining_time",
@@ -1052,7 +1052,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 1381,
@@ -1077,8 +1077,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 1381,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -3434,7 +3433,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 1457,
     "name": "away_mode",
@@ -3868,7 +3867,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 1457,
     "name": "air_circulation_remaining_time",
@@ -4306,7 +4305,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 1457,
@@ -4331,8 +4330,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 1457,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -6662,7 +6660,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 1505,
     "name": "away_mode",
@@ -7096,7 +7094,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 1505,
     "name": "air_circulation_remaining_time",
@@ -7534,7 +7532,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 1505,
@@ -7559,8 +7557,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 1505,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -9904,7 +9901,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 1641,
     "name": "away_mode",
@@ -10338,7 +10335,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 1641,
     "name": "air_circulation_remaining_time",
@@ -10776,7 +10773,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 1641,
@@ -10801,8 +10798,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 1641,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -13156,7 +13152,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 1734,
     "name": "away_mode",
@@ -13583,7 +13579,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 1734,
     "name": "air_circulation_remaining_time",
@@ -14021,7 +14017,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 1734,
@@ -14046,8 +14042,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 1734,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -16424,7 +16419,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 211,
     "name": "away_mode",
@@ -16858,7 +16853,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 211,
     "name": "air_circulation_remaining_time",
@@ -17290,7 +17285,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 211,
@@ -17315,8 +17310,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 211,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -19650,7 +19644,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 2374,
     "name": "away_mode",
@@ -20084,7 +20078,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 2374,
     "name": "air_circulation_remaining_time",
@@ -20522,7 +20516,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 2374,
@@ -20547,8 +20541,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 2374,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -22902,7 +22895,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 418,
     "name": "away_mode",
@@ -23336,7 +23329,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 418,
     "name": "air_circulation_remaining_time",
@@ -23774,7 +23767,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 418,
@@ -23799,8 +23792,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 418,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -26152,7 +26144,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 557,
     "name": "away_mode",
@@ -26579,7 +26571,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 557,
     "name": "air_circulation_remaining_time",
@@ -27017,7 +27009,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 557,
@@ -27042,8 +27034,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 557,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -29402,7 +29393,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 56,
     "name": "away_mode",
@@ -29836,7 +29827,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 56,
     "name": "air_circulation_remaining_time",
@@ -30274,7 +30265,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 56,
@@ -30299,8 +30290,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 56,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -32646,7 +32636,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 562,
     "name": "away_mode",
@@ -33080,7 +33070,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 562,
     "name": "air_circulation_remaining_time",
@@ -33518,7 +33508,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 562,
@@ -33543,8 +33533,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 562,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -35896,7 +35885,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 76,
     "name": "away_mode",
@@ -36330,7 +36319,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 76,
     "name": "air_circulation_remaining_time",
@@ -36762,7 +36751,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 76,
@@ -36787,8 +36776,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 76,
     "name": "override_setpoint_activation",
     "type": "binary"
@@ -39140,7 +39128,7 @@
    },
    "100261": {
     "capabilityId": 100261,
-    "category": "sensor",
+    "category": "diag",
     "icon": "mdi:airplane",
     "modelId": 999999,
     "name": "away_mode",
@@ -39574,7 +39562,7 @@
    },
    "102023": {
     "capabilityId": 102023,
-    "category": "diag",
+    "category": "sensor",
     "icon": "mdi:fan-clock",
     "modelId": 999999,
     "name": "air_circulation_remaining_time",
@@ -40012,7 +40000,7 @@
    },
    "153": {
     "capabilityId": 153,
-    "category": "sensor",
+    "category": "diag",
     "enabled_by_default": false,
     "icon": "mdi:heat-wave",
     "modelId": 999999,
@@ -40037,8 +40025,7 @@
    },
    "157": {
     "capabilityId": 157,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
     "modelId": 999999,
     "name": "override_setpoint_activation",
     "type": "binary"

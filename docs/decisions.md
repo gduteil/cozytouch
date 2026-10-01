@@ -4391,3 +4391,22 @@ the fork's documented capability values and its fixture, and says so.
   the endpoint reports the water. The fork stops building its entity when it
   is null ; that is a change to the table with its own evidence, not part of
   this one.
+
+## Which room readings sit in the main section, and which in Diagnostic
+
+Decided by the maintainer on 2026-10-01, from the room page of the HUB
+Navizone's air conditioners (557-559) and the dump attached to #157 :
+
+- **102023, air circulation's remaining time, moves out of Diagnostic.** The
+  override's remaining time (159) already sat in the main section, and the
+  two are the same kind of reading about a control beside them.
+- **157, whether an override is running, moves out of Diagnostic and is on
+  by default.** It is the state of the override the room page lets you set.
+- **100261, a room's absence, moves into Diagnostic.** The rooms follow the
+  hub's absence (152), whose switch is the control ; the per-room copy only
+  repeats it.
+- **153, the heating status, moves into Diagnostic.** It stays off by
+  default : it never moves on these rooms.
+
+All four rows are shared, so every device reporting the id moves with them.
+Only the Navizone's rooms were looked at.

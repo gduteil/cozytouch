@@ -1089,6 +1089,7 @@ CAPABILITIES: dict[int, Entity] = {
         # docs/decisions.md.
         name="heating_status",
         type=CapabilityType.STRING,
+        category=CapabilityCategory.DIAG,
         enabled_by_default=False,
         icon="mdi:heat-wave",
         reads_as={"0": "off", "1": "heating", "2": "cooling"},
@@ -1110,8 +1111,7 @@ CAPABILITIES: dict[int, Entity] = {
     157: Entity(
         name="override_setpoint_activation",
         type=CapabilityType.BINARY,
-        category=CapabilityCategory.DIAG,
-        enabled_by_default=False,
+        enabled_by_default=True,
     ),
     158: Entity(
         # An hour at a time, from one to twenty-four, which is the grid the
@@ -2631,6 +2631,7 @@ CAPABILITIES: dict[int, Entity] = {
         # to come. See docs/decisions.md.
         name="away_mode",
         type=CapabilityType.STRING,
+        category=CapabilityCategory.DIAG,
         enabled_by_default=True,
         icon="mdi:airplane",
         reads_as={"0": "off", "1": "on", "2": "pending"},
@@ -3028,7 +3029,6 @@ CAPABILITIES: dict[int, Entity] = {
         name="air_circulation_remaining_time",
         type=CapabilityType.TIME,
         enabled_by_default=True,
-        category=CapabilityCategory.DIAG,
         icon="mdi:fan-clock",
     ),
     102024: Entity(
