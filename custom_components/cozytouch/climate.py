@@ -486,12 +486,13 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         temperature = kwargs.get("temperature")
         if temperature is not None:
             # If we are in "Prog mode", we need to switch to override before
-            # changing the temperature
+            # changing the temperature. Read back once, after both writes :
+            # see docs/decisions.md.
             if (
                 hasattr(self, "_attr_preset_mode")
                 and self._attr_preset_mode == PRESET_PROG
             ):
-                await self.async_set_preset_mode(PRESET_OVERRIDE)
+                await self._write_preset(PRESET_OVERRIDE)
 
             if (
                 self._attr_hvac_mode in (
@@ -567,6 +568,11 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         if preset_mode == PRESET_AWAY:
             return
 
+        await self._write_preset(preset_mode)
+        await self.coordinator.async_request_refresh()
+
+    async def _write_preset(self, preset_mode):
+        """Write a preset, leaving the read-back to the caller."""
         activityCapabilityId = self._capability.get("activityCapabilityId", None)
         ecoCapabilityId = self._capability.get("ecoCapabilityId", None)
         boostCapabilityId = self._capability.get("boostCapabilityId", None)
@@ -636,4 +642,3 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                         progOverrideCapabilityId, "0"
                     )
         self._attr_preset_mode = preset_mode
-        await self.coordinator.async_request_refresh()

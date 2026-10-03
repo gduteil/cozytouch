@@ -985,6 +985,26 @@ climate entity with no mode at all is broken in Home Assistant, which is
 worse than one offering a mode that does nothing. A mode value no bit names
 (5 emergency heat, 6 pre-cooling, 9 sleep) is kept for the same reason.
 
+### A setpoint under the programme reads back once, after both writes
+
+Typing a setpoint while a room follows its programme takes two writes : the
+override (51, and 53 rewritten to itself), then the setpoint. The setpoint
+path used to reach the override through `async_set_preset_mode`, which ends
+with its own `async_request_refresh()` -- so the hub read the cloud between
+the two writes, while it still held the programme's setpoint.
+
+Seen on a Navizone room on 2026-10-03, programme at 24, setpoint typed at 23.
+The dial showed 23 (the frontend's own guess), then the state came back as
+override at 24 (21:50:51), then override at 23 (21:51:03). Twelve seconds is
+Home Assistant's debouncer : the first refresh runs at once, and the second,
+asked for right after the setpoint write, waits out the ten-second cooldown.
+Nothing was wrong on the cloud side ; the read was early.
+
+So the preset writes are `_write_preset`, which leaves the read-back to its
+caller, and the setpoint asks for one refresh once both writes are done.
+Choosing a preset on its own still refreshes as before.
+`tests/test_setpoint_writes.py` pins the order.
+
 ## `custom_components/cozytouch/select.py`
 
 ### The air-circulation duration is a select on the device's own grid
