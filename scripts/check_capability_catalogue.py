@@ -10,9 +10,11 @@ through the diagnostics dump, but only once somebody owns that hardware.
 `GET /magellan/productmodels/models` is the same for model ids : the name
 and `productId` that `model_catalogue.py` and `model_product_ids.py` were
 generated from. A model added there is hardware that will arrive unnamed.
+`GET /magellan/productmodels/products` lists the `productId`s themselves, and
+one added there is a kind of device `model.py` has never classified.
 
 So each answer is kept in the repository, one item per line, and this
-re-fetches both with one token and leaves the files rewritten. `git diff` is
+re-fetches all three with one token and leaves the files rewritten. `git diff` is
 the report. Run from the repository root :
 
     umask 077
@@ -50,10 +52,11 @@ from _atlantic import (
 
 ROOT = _atlantic.ROOT
 # route under /magellan/productmodels : (file, the fewest items an answer
-# that was not truncated holds -- 405 and 2299 when each was first read)
+# that was not truncated holds -- 405, 2299 and 123 when each was first read)
 CATALOGUES = {
     "capabilities": (ROOT / "scripts" / "capability_catalogue.jsonl", 300),
     "models": (ROOT / "scripts" / "model_catalogue.jsonl", 2000),
+    "products": (ROOT / "scripts" / "product_catalogue.jsonl", 100),
 }
 
 CHANGED = 10
@@ -102,8 +105,8 @@ def main() -> int:
         return UNREACHABLE
 
     # A truncated answer would otherwise land as "Atlantic deleted 300
-    # capabilities", which is the one diff nobody should ever be shown. Both
-    # are checked before either is written, so a run is all or nothing.
+    # capabilities", which is the one diff nobody should ever be shown. All
+    # are checked before any is written, so a run is all or nothing.
     for route, items in answers.items():
         if len(items) < CATALOGUES[route][1]:
             print(

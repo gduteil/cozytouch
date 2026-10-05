@@ -1,9 +1,10 @@
 name: Catalogue
 
-# Atlantic's capability and model catalogues are where capability_table.py
-# and model_catalogue.py came from, and nothing announces an edit to either.
-# scripts/*_catalogue.jsonl is what they said last time ; this re-reads both
-# and opens an issue for each that differs.
+# Atlantic's capability, model and product catalogues are where
+# capability_table.py, model_catalogue.py and model.py's productId ranges came
+# from, and nothing announces an edit to any of them.
+# scripts/*_catalogue.jsonl is what they said last time ; this re-reads all
+# three and opens an issue for each that differs.
 #
 # Twice a month. The catalogue moves at the speed of firmware families, so
 # this is already generous -- and each run is one login against a personal
@@ -79,9 +80,14 @@ jobs:
               echo
               echo "$todo"
               echo
+              git diff -U0 -- "$file" > change.diff
               echo '```diff'
-              git diff -U0 -- "$file" | head -c 40000
+              head -c 40000 change.diff
               echo '```'
+              if [ "$(wc -c < change.diff)" -gt 40000 ]; then
+                echo
+                echo "**Truncated** : the diff is over 40000 characters and will not apply."
+              fi
               echo
               echo "Reproduce locally with \`python3 scripts/check_capability_catalogue.py\`."
               echo "Run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -93,6 +99,9 @@ jobs:
             "A new id needs a row in \`capability_table.py\` and a name in every translation file. A changed enum or unit may mean a row that is now wrong."
           report scripts/model_catalogue.jsonl \
             "Atlantic changed the model catalogue" \
-            "A new model needs its name in \`model_catalogue.py\` and its productId in \`model_product_ids.py\`. A new productId may need a range in \`model.py\`."
+            "A new model needs its name in \`model_catalogue.py\` and its productId in \`model_product_ids.py\` ; \`tests/test_model_catalogue_sync.py\` says which, once this file is committed."
+          report scripts/product_catalogue.jsonl \
+            "Atlantic changed the product catalogue" \
+            "A new productId is a kind of device \`model.py\` has never classified : find its family before giving it a range."
         env:
           GH_TOKEN: ${{ github.token }}
