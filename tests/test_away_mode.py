@@ -149,11 +149,12 @@ def test_every_device_of_the_account_is_switched_with_it():
     assert heater.get_away_mode_start() == START
 
 
-def test_a_device_that_refuses_does_not_keep_the_others_from_following():
-    """A write that fails raises now, so the loop has to outlive it.
+def test_a_device_that_refuses_to_mirror_the_window_is_not_an_error():
+    """The setup took the window, and the cloud carries it to the devices.
 
-    Every device is still asked and refreshed, and the refusal reaches whoever
-    pressed once they all have been.
+    A HUB Navizone answers 403 on 152 and still turns programmed (2026-10-05),
+    so the error said the opposite of what happened. Every device is still
+    asked and refreshed.
     """
     account = FakeAccount()
     log = []
@@ -165,9 +166,9 @@ def test_a_device_that_refuses_does_not_keep_the_others_from_following():
 
     boiler.set_capability_value = offline
 
-    with pytest.raises(HomeAssistantError, match="offline"):
-        asyncio.run(boiler.set_away_mode(START, END))
+    assert asyncio.run(boiler.set_away_mode(START, END)) is True
 
+    assert account.absences == [(START, END)]
     assert log == [
         (id(heater), 226, f"[{START},{END}]"),
         (id(heater), 227, "2"),

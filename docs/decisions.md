@@ -2603,6 +2603,15 @@ Away mode is the one feature that is not a capability write alone : the window
 lives on the setup, a resource of the account rather than of a device, which is
 why it is on the account and not on the hub.
 
+Once the setup has taken the window, a device refusing the 152/222 (or
+226/227) writes that mirror it is logged, not raised. On 2026-10-05 the HUB
+Navizone (1758) answered 403 on 152 and "state 4" on 222, three presses in a
+row, and each press showed an error -- yet the setup had the window, and the
+next poll read the absence as programmed. Turning it off went the same way.
+The refusals still land in the diagnostics dump. Only the Navizone was seen
+doing this ; a device that only switches through its own capability would
+now fail silently, and the next refresh is what shows it.
+
 ### Zones are not offered when adding devices
 
 A THZONE is one zone of a ducted heat pump, not hardware : it reports no climate

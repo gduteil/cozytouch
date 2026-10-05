@@ -863,8 +863,8 @@ class Hub(DataUpdateCoordinator):
             now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
             state = "value_pending" if timestampStart > now else "value_on"
 
-        # One device that refuses does not keep the others from following.
-        refused: HomeAssistantError | None = None
+        # The setup took the window, so a device refusing to mirror it is
+        # not a failure. See docs/decisions.md.
         for hub in self._account_hubs():
             switches = hub.away_mode_switches()
             if not switches:
@@ -880,12 +880,9 @@ class Hub(DataUpdateCoordinator):
                     )
                     await hub.set_capability_value(capabilityId, settings[state])
             except HomeAssistantError as err:
-                refused = refused or err
+                _LOGGER.warning("Device did not mirror the absence: %s", err)
 
             await hub.async_request_refresh()
-
-        if refused is not None:
-            raise refused
 
         if away:
             _LOGGER.info("Away mode enabled %d -> %d", timestampStart, timestampEnd)

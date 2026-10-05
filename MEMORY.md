@@ -37,6 +37,9 @@ overturn one, edit the line here in the same pull request.
   (`docs/decisions.md`).
 - **A programmed absence is 2** : the app writes 152 = 2 for a start still to
   come, and the rooms' 100261 follow at 2. 2026-09-28 dump, Navizone.
+- **The setup PUT is what sets an absence** ; the Navizone refuses the
+  152/222 mirror writes (403, state 4) and still turns programmed.
+  2026-10-05 HA history, `docs/decisions.md`.
 - **153 stays 0 on the Navizone rooms while cooling**, so it is no running
   signal there. **Absence timestamps are plain unix time** ; 315 is not
   added. Both from the 2026-09-25 dump, `docs/decisions.md`.
