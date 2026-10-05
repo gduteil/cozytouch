@@ -38,14 +38,14 @@ install_gh() {
       && [ "$(printf '%s\n2.99.0\n' "$current" | sort -V | head -1)" = "2.99.0" ]; then
     return 0
   fi
-  local arch version dir
+  local arch dir version
   case "$(uname -m)" in
     x86_64) arch=amd64 ;;
     aarch64 | arm64) arch=arm64 ;;
     *) return 1 ;;
   esac
-  version=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
-    https://github.com/cli/cli/releases/latest | sed 's#.*/tag/v##')
+  # Pinned : the session's proxy answers 404 on the releases/latest redirect.
+  version=2.102.0
   dir="$HOME/.local/gh"
   mkdir -p "$dir"
   curl -fsSL "https://github.com/cli/cli/releases/download/v$version/gh_${version}_linux_$arch.tar.gz" \
