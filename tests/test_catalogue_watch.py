@@ -22,11 +22,13 @@ SCRIPT = (
 
 @pytest.fixture
 def watcher(tmp_path):
-    """The script, with its catalogue file pointed at a temporary one."""
+    """The script, with its catalogue files pointed at temporary ones."""
     spec = importlib.util.spec_from_file_location("catalogue_watch", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    module.CATALOGUE = tmp_path / "capability_catalogue.jsonl"
+    module.CATALOGUES = {
+        route: (tmp_path / f"{route}.jsonl", 300) for route in module.CATALOGUES
+    }
     module.token = lambda: "token"
     return module
 
@@ -42,22 +44,22 @@ def items(count: int = 400, **edits) -> list[dict]:
 
 
 def test_an_unchanged_catalogue_says_so(watcher):
-    watcher.catalogue = lambda token: items()
+    watcher.catalogue = lambda token, route: items()
     assert watcher.main() == watcher.CHANGED  # first run, the file did not exist
     assert watcher.main() == 0
 
 
 def test_the_api_reordering_its_answer_is_not_a_change(watcher):
-    watcher.catalogue = lambda token: items()
+    watcher.catalogue = lambda token, route: items()
     watcher.main()
-    watcher.catalogue = lambda token: list(reversed(items()))
+    watcher.catalogue = lambda token, route: list(reversed(items()))
     assert watcher.main() == 0
 
 
 def test_a_new_id_is_a_change(watcher):
-    watcher.catalogue = lambda token: items()
+    watcher.catalogue = lambda token, route: items()
     watcher.main()
-    watcher.catalogue = lambda token: [
+    watcher.catalogue = lambda token, route: [
         *items(),
         {"id": 999999, "name": "BRAND_NEW", "type": 5, "unit": None, "enum": None},
     ]
@@ -65,19 +67,38 @@ def test_a_new_id_is_a_change(watcher):
 
 
 def test_a_renamed_id_is_a_change(watcher):
-    watcher.catalogue = lambda token: items()
+    watcher.catalogue = lambda token, route: items()
     watcher.main()
-    watcher.catalogue = lambda token: items(**{"3": {"name": "RENAMED"}})
+    watcher.catalogue = lambda token, route: items(**{"3": {"name": "RENAMED"}})
     assert watcher.main() == watcher.CHANGED
 
 
 def test_a_truncated_answer_is_refused_rather_than_written(watcher):
-    watcher.catalogue = lambda token: items()
+    watcher.catalogue = lambda token, route: items()
     watcher.main()
-    before = watcher.CATALOGUE.read_text()
-    watcher.catalogue = lambda token: items(count=10)
+    before = watcher.CATALOGUES["capabilities"][0].read_text()
+    watcher.catalogue = lambda token, route: items(count=10)
     assert watcher.main() == watcher.UNREACHABLE
-    assert watcher.CATALOGUE.read_text() == before
+    assert watcher.CATALOGUES["capabilities"][0].read_text() == before
+
+
+def test_one_truncated_catalogue_writes_neither(watcher):
+    watcher.catalogue = lambda token, route: items()
+    watcher.main()
+    watcher.catalogue = lambda token, route: (
+        items(count=10) if route == "models" else items(**{"3": {"name": "NEW"}})
+    )
+    assert watcher.main() == watcher.UNREACHABLE
+    assert "NEW" not in watcher.CATALOGUES["capabilities"][0].read_text()
+
+
+def test_a_new_model_alone_is_a_change(watcher):
+    watcher.catalogue = lambda token, route: items()
+    watcher.main()
+    watcher.catalogue = lambda token, route: (
+        items(count=401) if route == "models" else items()
+    )
+    assert watcher.main() == watcher.CHANGED
 
 
 def test_it_loads_without_home_assistant():

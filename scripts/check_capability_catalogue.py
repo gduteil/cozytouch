@@ -1,4 +1,4 @@
-r"""Re-read Atlantic's capability catalogue and say what moved since last time.
+r"""Re-read Atlantic's catalogues and say what moved since last time.
 
 `GET /magellan/productmodels/capabilities` is the vendor's own list : every
 capability id with its name, description, type, unit, bounds, enum members and
@@ -7,9 +7,13 @@ nothing tells us when Atlantic edits it -- a new id, a renamed one, an enum
 that gained a value. A device reporting an unmapped id eventually says so
 through the diagnostics dump, but only once somebody owns that hardware.
 
-So the answer is kept in the repository, one capability per line, and this
-re-fetches it and leaves the file rewritten. `git diff` is the report. Run
-from the repository root :
+`GET /magellan/productmodels/models` is the same for model ids : the name
+and `productId` that `model_catalogue.py` and `model_product_ids.py` were
+generated from. A model added there is hardware that will arrive unnamed.
+
+So each answer is kept in the repository, one item per line, and this
+re-fetches both with one token and leaves the files rewritten. `git diff` is
+the report. Run from the repository root :
 
     umask 077
     pbpaste > ~/.cozytouch-pass
@@ -18,7 +22,7 @@ from the repository root :
       python3 scripts/check_capability_catalogue.py
     rm -f ~/.cozytouch-pass
 
-Exit code 0 when nothing moved, CHANGED when the file changed, UNREACHABLE
+Exit code 0 when nothing moved, CHANGED when a file changed, UNREACHABLE
 when the fetch itself failed -- which is what `.github/workflows/catalogue.yaml`
 branches on. Neither is 1: Python exits 1 on an uncaught traceback, so a
 crashed run would otherwise read as "Atlantic changed the catalogue" and open
@@ -45,7 +49,12 @@ from _atlantic import (
 )
 
 ROOT = _atlantic.ROOT
-CATALOGUE = ROOT / "scripts" / "capability_catalogue.jsonl"
+# route under /magellan/productmodels : (file, the fewest items an answer
+# that was not truncated holds -- 405 and 2299 when each was first read)
+CATALOGUES = {
+    "capabilities": (ROOT / "scripts" / "capability_catalogue.jsonl", 300),
+    "models": (ROOT / "scripts" / "model_catalogue.jsonl", 2000),
+}
 
 CHANGED = 10
 UNREACHABLE = 2
@@ -59,9 +68,9 @@ def token() -> str:
     return _atlantic.token(secret, timeout=30)
 
 
-def catalogue(access_token: str) -> list[dict]:
+def catalogue(access_token: str, route: str) -> list[dict]:
     req = urllib.request.Request(
-        COZYTOUCH_ATLANTIC_API + "/magellan/productmodels/capabilities",
+        COZYTOUCH_ATLANTIC_API + "/magellan/productmodels/" + route,
         headers={"Authorization": f"Bearer {access_token}"},
     )
     with urllib.request.urlopen(req, timeout=60) as response:
@@ -69,10 +78,10 @@ def catalogue(access_token: str) -> list[dict]:
 
 
 def rendered(items: list[dict]) -> str:
-    """One capability per line, sorted, so a diff points at what changed.
+    """One item per line, sorted, so a diff points at what changed.
 
     Sorted by id and with sorted keys, because the API's own ordering is not
-    promised and a reshuffle would read as 405 changes.
+    promised and a reshuffle would read as every item changing.
     """
     lines = [
         json.dumps(item, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
@@ -83,7 +92,8 @@ def rendered(items: list[dict]) -> str:
 
 def main() -> int:
     try:
-        items = catalogue(token())
+        access_token = token()
+        answers = {route: catalogue(access_token, route) for route in CATALOGUES}
     except urllib.error.HTTPError as err:
         print(f"{err.code} from Atlantic: {err.read().decode()[:200]}", file=sys.stderr)
         return UNREACHABLE
@@ -92,23 +102,29 @@ def main() -> int:
         return UNREACHABLE
 
     # A truncated answer would otherwise land as "Atlantic deleted 300
-    # capabilities", which is the one diff nobody should ever be shown.
-    if len(items) < 300:
-        print(
-            f"only {len(items)} capabilities came back; refusing to write.",
-            file=sys.stderr,
-        )
-        return UNREACHABLE
+    # capabilities", which is the one diff nobody should ever be shown. Both
+    # are checked before either is written, so a run is all or nothing.
+    for route, items in answers.items():
+        if len(items) < CATALOGUES[route][1]:
+            print(
+                f"only {len(items)} {route} came back; refusing to write.",
+                file=sys.stderr,
+            )
+            return UNREACHABLE
 
-    new = rendered(items)
-    old = CATALOGUE.read_text() if CATALOGUE.exists() else ""
-    if new == old:
-        print(f"{len(items)} capabilities, unchanged.")
-        return 0
+    status = 0
+    for route, items in answers.items():
+        path = CATALOGUES[route][0]
+        new = rendered(items)
+        old = path.read_text() if path.exists() else ""
+        if new == old:
+            print(f"{len(items)} {route}, unchanged.")
+            continue
 
-    CATALOGUE.write_text(new)
-    print(f"{len(items)} capabilities, and the catalogue changed.")
-    return CHANGED
+        path.write_text(new)
+        print(f"{len(items)} {route}, and the catalogue changed.")
+        status = CHANGED
+    return status
 
 
 if __name__ == "__main__":

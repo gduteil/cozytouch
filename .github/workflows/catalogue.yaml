@@ -1,8 +1,9 @@
 name: Catalogue
 
-# Atlantic's capability catalogue is where capability_table.py came from, and
-# nothing announces an edit to it. scripts/capability_catalogue.jsonl is what
-# it said last time ; this re-reads it and opens an issue when the two differ.
+# Atlantic's capability and model catalogues are where capability_table.py
+# and model_catalogue.py came from, and nothing announces an edit to either.
+# scripts/*_catalogue.jsonl is what they said last time ; this re-reads both
+# and opens an issue for each that differs.
 #
 # Twice a month. The catalogue moves at the speed of firmware families, so
 # this is already generous -- and each run is one login against a personal
@@ -62,28 +63,36 @@ jobs:
           echo "check_capability_catalogue.py exited ${{ steps.check.outputs.status }}."
           exit 1
 
-      - name: Open an issue with the diff
+      # One issue per catalogue that moved, so each is closed by its own
+      # work. The capability title is what the implementing routine keys on,
+      # so it is kept as it was. A file not yet committed has no diff, and
+      # opens nothing rather than an issue listing every model as new.
+      - name: Open an issue per catalogue that changed
         if: steps.check.outputs.status == '10'
         run: |
-          git diff --stat -- scripts/capability_catalogue.jsonl | tail -1
-          {
-            echo "Atlantic's capability catalogue is not what"
-            echo "\`scripts/capability_catalogue.jsonl\` last recorded."
-            echo
-            echo "A new id needs a row in \`capability_table.py\` and a name in"
-            echo "every translation file. A changed enum or unit may mean a"
-            echo "row that is now wrong."
-            echo
-            echo '```diff'
-            git diff -U0 -- scripts/capability_catalogue.jsonl | head -c 40000
-            echo '```'
-            echo
-            echo "Reproduce locally with \`python3 scripts/check_capability_catalogue.py\`."
-            echo "Run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          } > body.md
-          gh issue create \
-            --title "Atlantic changed the capability catalogue" \
-            --assignee mathieuletyrant \
-            --body-file body.md
+          report() {
+            file=$1 title=$2 todo=$3
+            git diff --quiet -- "$file" && return
+            git diff --stat -- "$file" | tail -1
+            {
+              echo "Atlantic's catalogue is not what \`$file\` last recorded."
+              echo
+              echo "$todo"
+              echo
+              echo '```diff'
+              git diff -U0 -- "$file" | head -c 40000
+              echo '```'
+              echo
+              echo "Reproduce locally with \`python3 scripts/check_capability_catalogue.py\`."
+              echo "Run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            } > body.md
+            gh issue create --title "$title" --assignee mathieuletyrant --body-file body.md
+          }
+          report scripts/capability_catalogue.jsonl \
+            "Atlantic changed the capability catalogue" \
+            "A new id needs a row in \`capability_table.py\` and a name in every translation file. A changed enum or unit may mean a row that is now wrong."
+          report scripts/model_catalogue.jsonl \
+            "Atlantic changed the model catalogue" \
+            "A new model needs its name in \`model_catalogue.py\` and its productId in \`model_product_ids.py\`. A new productId may need a range in \`model.py\`."
         env:
           GH_TOKEN: ${{ github.token }}

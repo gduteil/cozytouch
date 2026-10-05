@@ -194,16 +194,19 @@ what was left alone for lack of a report. Wrap at 76 columns.
 from, and nothing announces an edit to it. `scripts/capability_catalogue.jsonl`
 is what it said last time, one capability per line, sorted ; the `Catalogue`
 workflow re-reads it on the 1st and the 15th and opens an issue with the diff
-when the two differ. It needs `COZYTOUCH_USER` and `COZYTOUCH_PASS` as
-repository secrets.
+when the two differ. `GET /magellan/productmodels/models` is watched the same
+way, in `scripts/model_catalogue.jsonl`, with the same token and an issue of
+its own. It needs `COZYTOUCH_USER` and `COZYTOUCH_PASS` as repository secrets.
 
 One login per run and no retry, deliberately -- repeated failed logins are
 what could lock the account, and an unattended job that retries is how that
-would happen. A run that reads fewer than 300 capabilities refuses to write
-rather than record a truncated answer as a mass deletion.
+would happen. A run that reads fewer than 300 capabilities or 2000 models
+writes neither file, rather than record a truncated answer as a mass deletion.
 
-The diff is a worklist, not a change : a new id still needs its row and its
-translations, decided the way the section above describes.
+The diff is a worklist, not a change : a new capability id still needs its
+row and its translations, decided the way the section above describes ; a new
+model its name in `model_catalogue.py` and its `productId` in
+`model_product_ids.py`.
 
 ## House style
 
