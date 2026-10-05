@@ -144,6 +144,9 @@ async def async_get_config_entry_diagnostics(
                 },
             },
             "online": runtime.account.online,
+            # Oldest first, so a report carries what the log would have said.
+            # See docs/decisions.md.
+            "writeRefusals": list(runtime.account.write_refusals),
             # As the endpoint answered, so a report shows what a meter sends
             # -- or that this setup has none. See docs/decisions.md.
             "consumptions": {

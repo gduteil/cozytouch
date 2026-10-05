@@ -466,6 +466,51 @@ def test_a_write_is_still_attempted_while_throttled(monkeypatch):
     assert any("writecapability" in url for url in session.requests)
 
 
+@pytest.mark.parametrize(
+    ("answers", "reason"),
+    [
+        ({"writecapability": FakeResponse(None, status=500)}, "HTTP 500"),
+        (
+            {
+                "writecapability": FakeResponse(42, status=201),
+                "/magellan/executions/": FakeResponse({"state": 4}),
+            },
+            "execution ended in state 4",
+        ),
+    ],
+)
+def test_a_refused_write_is_logged_and_kept_for_the_dump(
+    monkeypatch, caplog, answers, reason
+):
+    """The dump is what a reporter sends ; their log is often not attached."""
+    account, session = connected(monkeypatch)
+    session._answers.update(answers)
+
+    assert asyncio.run(account.write_capability(1, 100, "21")) is False
+
+    [refusal] = account.write_refusals
+    assert {key: refusal[key] for key in ("deviceId", "capabilityId", "value")} == {
+        "deviceId": 1,
+        "capabilityId": 100,
+        "value": "21",
+    }
+    assert refusal["reason"] == reason
+    assert reason in caplog.text
+
+
+def test_only_the_last_refusals_are_kept(monkeypatch):
+    account, session = connected(monkeypatch)
+    session._answers["writecapability"] = FakeResponse(None, status=500)
+
+    for value in range(account_module.WRITE_REFUSALS_KEPT + 5):
+        asyncio.run(account.write_capability(1, 100, str(value)))
+
+    assert len(account.write_refusals) == account_module.WRITE_REFUSALS_KEPT
+    assert account.write_refusals[-1]["value"] == str(
+        account_module.WRITE_REFUSALS_KEPT + 4
+    )
+
+
 # --- the consumption endpoint ---------------------------------------------
 
 METERED = [{"type": 1, "unit": 1, "currency": 101, "consumptionPeriods": []}]

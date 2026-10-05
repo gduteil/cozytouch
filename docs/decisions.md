@@ -2194,6 +2194,20 @@ What the cloud answers for a write to an offline device -- a refused POST, an
 execution in error, or one left waiting -- has not been captured ; all three
 end in the same refusal here.
 
+### The dump carries the last refused writes
+
+The warnings above go to Home Assistant's log, and a report rarely brings
+one : the issue template asks for the diagnostics dump, recent versions of
+Home Assistant keep no log file on disk, and the log a reporter does copy is
+cut to whatever they thought relevant. So the account also keeps the last
+20 refusals -- when, which device and capability, the value sent and why :
+the HTTP status, the execution's final state, or the polls it ran out of --
+and the dump lists them as `writeRefusals`, oldest first.
+
+Twenty is a session's worth of pressing a button that does nothing, not a
+history ; it is in memory and starts empty at every restart. The warning is
+still logged for each one.
+
 ### The diagnostics dump describes the account, not the hub that was asked
 
 Every device the setup returns is listed, whether or not somebody added it,

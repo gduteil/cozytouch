@@ -8,6 +8,7 @@ See docs/decisions.md.
 from __future__ import annotations
 
 import asyncio
+from collections import deque
 import copy
 from datetime import UTC, datetime
 import json
@@ -37,6 +38,9 @@ PENDING_WRITE_GRACE = 60.0
 # How long to stop asking after a 429 that does not say. A guess, deliberately
 # long -- see docs/decisions.md.
 RATE_LIMIT_BACKOFF = 300.0
+
+# How many refused writes the diagnostics dump carries. See docs/decisions.md.
+WRITE_REFUSALS_KEPT = 20
 
 # What a throttling proxy puts in front of its answer, logged rather than
 # parsed. See docs/decisions.md.
@@ -148,6 +152,8 @@ class CozytouchAccount:
         # as (deviceId, capabilityId) -> (value, expiry). See
         # docs/decisions.md.
         self._pending_writes: dict[tuple[int, int], tuple[str, float]] = {}
+        # The last writes that did not land, newest last, for the dump.
+        self.write_refusals: deque[dict] = deque(maxlen=WRITE_REFUSALS_KEPT)
         # The vendor's fault table per model id, read once and kept. An empty
         # list is an answer -- most models have no table. See
         # docs/decisions.md.
@@ -735,31 +741,21 @@ class CozytouchAccount:
             ) as response:
                 if response.status == 429:
                     self._note_rate_limited(response, "a capability write")
-                    return False
+                    return self._refused(deviceId, capabilityId, value, "HTTP 429")
 
                 if response.status != 201:
-                    _LOGGER.warning(
-                        "Writing capability %d of device %d refused: HTTP %d",
-                        capabilityId,
-                        deviceId,
-                        response.status,
+                    return self._refused(
+                        deviceId, capabilityId, value, f"HTTP {response.status}"
                     )
-                    return False
 
                 executionId = await response.json()
         except (TimeoutError, ClientError) as err:
-            _LOGGER.warning(
-                "Network error writing capability %d: %s", capabilityId, err
+            return self._refused(
+                deviceId, capabilityId, value, f"network error: {why(err)}"
             )
-            return False
 
-        if not await self._await_execution(executionId):
-            _LOGGER.warning(
-                "Writing capability %d of device %d was not carried out",
-                capabilityId,
-                deviceId,
-            )
-            return False
+        if reason := await self._await_execution(executionId):
+            return self._refused(deviceId, capabilityId, value, reason)
 
         self._pending_writes[(deviceId, capabilityId)] = (
             value,
@@ -767,8 +763,29 @@ class CozytouchAccount:
         )
         return True
 
-    async def _await_execution(self, executionId) -> bool:
-        """Poll one execution until it reports completion, or give up."""
+    def _refused(
+        self, deviceId: int, capabilityId: int, value: str, reason: str
+    ) -> bool:
+        """Log a write that did not land and keep it for the dump ; False."""
+        _LOGGER.warning(
+            "Writing capability %d of device %d failed: %s",
+            capabilityId,
+            deviceId,
+            reason,
+        )
+        self.write_refusals.append(
+            {
+                "at": int(datetime.now(UTC).timestamp()),
+                "deviceId": deviceId,
+                "capabilityId": capabilityId,
+                "value": value,
+                "reason": reason,
+            }
+        )
+        return False
+
+    async def _await_execution(self, executionId) -> str | None:
+        """Poll one execution until it completes : None, or why it did not."""
         nbRetry = 0
         while True:
             try:
@@ -781,13 +798,13 @@ class CozytouchAccount:
                     # hammering after a 429. See docs/decisions.md.
                     if response.status == 429:
                         self._note_rate_limited(response, "an execution poll")
-                        return False
+                        return "HTTP 429 polling the execution"
 
                     try:
                         execution_data = await response.json()
                     except ContentTypeError:
                         self.online = False
-                        return False
+                        return "unreadable execution answer"
 
                     execution_state = execution_data.get("state", False)
                     if execution_state == 1:
@@ -796,26 +813,15 @@ class CozytouchAccount:
                         _LOGGER.info("Execution_state in progress")
                     elif execution_state == 3:
                         _LOGGER.info("Execution_state completed")
-                        return True
+                        return None
                     else:
-                        _LOGGER.warning(
-                            "Execution %s ended in state %s",
-                            executionId,
-                            execution_state,
-                        )
-                        return False
+                        return f"execution ended in state {execution_state}"
             except (TimeoutError, ClientError) as err:
-                _LOGGER.warning("Network error polling execution: %s", why(err))
-                return False
+                return f"network error polling the execution: {why(err)}"
 
             nbRetry += 1
             if nbRetry > 5:
-                _LOGGER.warning(
-                    "Execution %s still not completed after %d polls",
-                    executionId,
-                    nbRetry,
-                )
-                return False
+                return f"execution not completed after {nbRetry} polls"
 
             await asyncio.sleep(1)
 

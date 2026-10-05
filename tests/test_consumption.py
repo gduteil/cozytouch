@@ -246,6 +246,7 @@ def test_a_series_that_stops_coming_makes_its_sensor_unavailable():
 def test_the_dump_carries_the_answer_without_the_serial_numbers():
     account = SimpleNamespace(
         online=True,
+        write_refusals=[],
         consumptions=answer(),
         consumptions_status=200,
         consumption_declared=lambda: True,
