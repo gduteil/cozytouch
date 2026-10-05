@@ -13,13 +13,15 @@
 // The frontend reads its session from localStorage, so the owner's tokens
 // (written by run.py into TEST_HA_DIR) are put there before the page loads.
 
-const { readFileSync } = require("node:fs");
+const { existsSync, readFileSync } = require("node:fs");
 const path = require("node:path");
 const { chromium } = require("playwright");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const WORK = process.env.TEST_HA_DIR || path.join(ROOT, ".test-ha");
-const BASE = "http://127.0.0.1:8123";
+const INSTANCE = path.join(WORK, "instance.json");
+const SAVED = existsSync(INSTANCE) ? JSON.parse(readFileSync(INSTANCE, "utf8")) : {};
+const BASE = `http://127.0.0.1:${process.env.TEST_HA_PORT || SAVED.ha_port || 8123}`;
 
 function parse(argv) {
   const options = { clicks: [], width: 430, height: 1100, full: false };

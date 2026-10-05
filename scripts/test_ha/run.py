@@ -4,8 +4,8 @@
 starts it, starts Home Assistant with the integration copied from the working
 tree -- its API address pointed at the fake -- onboards an owner and adds the
 account, so the result is a running instance with every device of the dump
-on it. Nobody's credentials are involved. `.claude/skills/test-ha` is the
-walk-through.
+on it. Nobody's credentials are involved. `.claude/skills/verify-cozytouch`
+is the walk-through.
 
     python scripts/test_ha/run.py setup            # once : the HA venv
     python scripts/test_ha/run.py start [DUMP]     # fresh instance
@@ -15,6 +15,10 @@ walk-through.
     python scripts/test_ha/run.py call DOMAIN.SERVICE [JSON]
     python scripts/test_ha/run.py device ENTITY_ID # its device page path
     python scripts/test_ha/run.py journal          # what the fake received
+    python scripts/test_ha/run.py doctor           # is this instance ours, up
+
+`start` keeps the ports (TEST_HA_PORT, TEST_FAKE_PORT) and the interpreter
+(HA_PYTHON) in TEST_HA_DIR/instance.json for every later command.
     python scripts/test_ha/run.py token            # a fresh access token
 
 DUMP defaults to `navizone.json` beside this file : a HUB Navizone and its
@@ -43,11 +47,19 @@ ROOT = HERE.parent.parent
 WORK = pathlib.Path(os.environ.get("TEST_HA_DIR", ROOT / ".test-ha")).resolve()
 CONFIG = WORK / "config"
 VENV = ROOT / ".venv-ha"
-PYTHON = os.environ.get("HA_PYTHON", str(VENV / "bin" / "python"))
 DEFAULT_DUMP = HERE / "navizone.json"
 
-HA_URL = "http://127.0.0.1:8123"
-FAKE_PORT = 8765
+# Another test HA on the machine may already hold the defaults, so the ports
+# and the interpreter are chosen at `start` and kept in WORK for every later
+# command.
+INSTANCE = WORK / "instance.json"
+SAVED = json.loads(INSTANCE.read_text()) if INSTANCE.exists() else {}
+PYTHON = os.environ.get("HA_PYTHON") or SAVED.get(
+    "python", str(VENV / "bin" / "python")
+)
+HA_PORT = int(os.environ.get("TEST_HA_PORT") or SAVED.get("ha_port", 8123))
+HA_URL = f"http://127.0.0.1:{HA_PORT}"
+FAKE_PORT = int(os.environ.get("TEST_FAKE_PORT") or SAVED.get("fake_port", 8765))
 FAKE_URL = f"http://127.0.0.1:{FAKE_PORT}"
 CLIENT_ID = HA_URL + "/"
 
@@ -69,6 +81,29 @@ logger:
   logs:
     custom_components.cozytouch: debug
 """
+
+
+def http_store(port):
+    return {
+        "version": 2,
+        "minor_version": 2,
+        "key": "http",
+        "data": {
+            "stable": {
+                "server_port": port,
+                "cors_allowed_origins": ["https://cast.home-assistant.io"],
+                "login_attempts_threshold": -1,
+                "ip_ban_enabled": True,
+                "ssl_profile": "modern",
+                "use_x_frame_options": True,
+                "created_at": "2026-01-01T00:00:00+00:00",
+                "error": None,
+                "error_message": None,
+            },
+            "pending": None,
+            "yaml_migration_done": True,
+        },
+    }
 
 
 def request(method, path, body=None, form=None, token=None, base=HA_URL):
@@ -141,6 +176,10 @@ def kill(name):
             time.sleep(1)
         os.killpg(pid, signal.SIGKILL)
     except ProcessLookupError:
+        pass
+    except PermissionError:
+        # macOS refuses a signal to a group whose leader is a zombie waiting
+        # for a parent that has not reaped it : the process is already gone.
         pass
     pidfile.unlink()
 
@@ -264,7 +303,23 @@ def start(dump):
     kill("fake")
     shutil.rmtree(WORK, ignore_errors=True)
     CONFIG.mkdir(parents=True)
-    (CONFIG / "configuration.yaml").write_text(CONFIGURATION)
+    INSTANCE.write_text(
+        json.dumps(
+            {
+                "ha_port": HA_PORT,
+                "fake_port": FAKE_PORT,
+                "dump": str(pathlib.Path(dump).resolve()),
+                "python": PYTHON,
+            }
+        )
+    )
+    (CONFIG / "configuration.yaml").write_text(
+        CONFIGURATION + f"\nhttp:\n  server_port: {HA_PORT}\n"
+    )
+    # From 2026.9 the YAML port is only a trial, reverted unless confirmed ;
+    # the same port already stable in storage leaves nothing to try.
+    (CONFIG / ".storage").mkdir()
+    (CONFIG / ".storage" / "http").write_text(json.dumps(http_store(HA_PORT)))
 
     spawn(
         "fake",
@@ -326,6 +381,30 @@ def device(entity):
     print(f"/config/devices/device/{deviceId}")
 
 
+def doctor():
+    """Whether this instance is ours, up, and serving the integration."""
+    if not INSTANCE.exists():
+        raise SystemExit(f"No instance in {WORK} ; run start")
+    for name in ("hass", "fake"):
+        pidfile = WORK / f"{name}.pid"
+        pid = int(pidfile.read_text()) if pidfile.exists() else None
+        try:
+            os.kill(pid, 0) if pid else None
+        except ProcessLookupError:
+            pid = None
+        print(f"{name}: {'pid ' + str(pid) if pid else 'NOT RUNNING'}")
+    token = access_token()
+    version = request("GET", "/api/config", token=token)["version"]
+    print("home assistant:", version, HA_URL)
+    entries = request(
+        "GET", "/api/config/config_entries/entry?domain=cozytouch", token=token
+    )
+    print("cozytouch entry:", ", ".join(e["state"] for e in entries) or "NONE")
+    print("dump:", SAVED["dump"])
+    served = request("GET", "/fake/journal", base=FAKE_URL)
+    print("fake:", FAKE_URL, len(served), "requests")
+
+
 def journal():
     for line in request("GET", "/fake/journal", base=FAKE_URL):
         print(line)
@@ -342,6 +421,7 @@ def main():
         "call": (call, 1, 2),
         "device": (device, 1, 1),
         "journal": (journal, 0, 0),
+        "doctor": (doctor, 0, 0),
         "token": (lambda: print(access_token()), 0, 0),
     }
     if not args or args[0] not in commands:

@@ -89,8 +89,8 @@ overturn one, edit the line here in the same pull request.
   token request byte for byte before pointing a script at it.
 - `research/` is git-excluded, so a finding made there is lost unless it is
   written into `docs/`.
-- To see a change in Home Assistant, use the `test-ha` skill : a local HA
-  against a fake cloud, with screenshots. Never the real account.
+- To see a change in Home Assistant, use the `verify-cozytouch` skill : a
+  local HA against a fake cloud, with screenshots. Never the real account.
 - Python changes on a running Home Assistant need a full restart ; reloading
   the entry keeps the cached module.
 - Only the HUB Navizone (1758), its rooms (557-561) and THZONE (1505-1507) can

@@ -111,8 +111,10 @@ The tests say a mapping did not move ; they do not say what a page looks
 like. `scripts/test_ha/run.py` starts a Home Assistant in the session with
 the working tree's integration, served by a fake Cozytouch cloud built from
 a diagnostics dump -- no account involved -- and
-`scripts/test_ha/screenshot.cjs` photographs its pages. The `test-ha` skill
-is the walk-through, and says what the fake does not simulate.
+`scripts/test_ha/screenshot.cjs` photographs its pages. The
+`verify-cozytouch` skill is the walk-through : launch, doctor, a map of the
+features to drive, before/after screenshots on a pull request, and what the
+fake does not simulate.
 
 ## Entries, subentries, identity
 
