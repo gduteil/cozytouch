@@ -2128,12 +2128,13 @@ beside its switch, on every refresh. They used to be seeded once, from the
 first sensor read, and kept whatever they held after that : on the same
 dump, they showed a window that was not the one the device reported.
 
-While the absence is off, the pickers show the window the switch would
-send : a start that is not set or already past reads as now, to the minute,
-and an end already past as unknown. The switch sends exactly that -- the start
-bumped to the next minute, and two days after it when no end is later than it
--- where it used to replace both ends as soon as either was missing, and send
-a window already over as it was. Clearing the absence empties the pickers
+While the absence is off, a picker shows only what somebody picked : a date
+not set or already past reads as unknown. It used to show a start of now, to
+the minute, which on a dashboard read as an absence nobody had asked for
+(2026-10-05). Turning the switch on still fills the gaps -- the start bumped
+to the next minute, and two days after it when no end is later than it --
+where it used to replace both ends as soon as either was missing, and send a
+window already over as it was. Clearing the absence empties the pickers
 again. The service refuses a window already over. While the absence is on,
 both read as they are stored, since an absence under way began when it began.
 

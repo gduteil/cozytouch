@@ -8,7 +8,7 @@ the way test_hvac_action.py drives the update.
 """
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from functools import partial
 from types import SimpleNamespace
 
@@ -184,25 +184,19 @@ def read(hub, index):
     return CozytouchAwayModeDateTime.native_value.fget(away_date(hub, index))
 
 
-def reads_as_now(value):
-    """Now to the minute, allowing for the minute turning mid-test."""
-    minute = dt_util.now().replace(second=0, microsecond=0)
-    return value in (minute, minute - timedelta(minutes=1))
-
-
-def test_with_no_window_the_start_reads_as_now_and_the_end_as_unknown():
-    """What the switch would send : from now, to an end still to pick."""
+def test_with_no_window_both_ends_read_as_unknown():
+    """Nothing is shown that nobody picked."""
     hub = away_hub()
 
-    assert reads_as_now(read(hub, 0))
+    assert read(hub, 0) is None
     assert read(hub, 1) is None
 
 
-def test_a_window_already_over_reads_as_a_fresh_one_while_off():
+def test_a_window_already_over_reads_as_unknown_while_off():
     hub = away_hub()
     hub.away_mode_init(1000, 2000)
 
-    assert reads_as_now(read(hub, 0))
+    assert read(hub, 0) is None
     assert read(hub, 1) is None
 
 
