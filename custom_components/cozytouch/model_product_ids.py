@@ -5,8 +5,8 @@ The setup view sends a device's `productId` with the device, and that is what
 with no device beside it -- a diagnostics dump, a repair, a test -- and for a
 device whose payload leaves the field out.
 
-Generated from `research/data/model_catalogue.tsv`, the sweep of
-`GET /magellan/productmodels/models/{id}`, as contiguous runs : 1231 ids, 104
+Generated from the vendor's model catalogue (`scripts/model_catalogue.jsonl`,
+`GET /magellan/productmodels/models`), as contiguous runs : 1231 ids, 104
 distinct product ids, 168 runs. Ids the vendor assigns no product id are
 absent rather than carried as 0. Regenerate, never edit by hand.
 """

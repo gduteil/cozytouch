@@ -17,8 +17,8 @@ from types import SimpleNamespace
 from custom_components.cozytouch.binary_sensor import DeviceAvailability
 from custom_components.cozytouch.hub import Hub
 
-DEVICE_ID = 27906641
-OTHER_DEVICE_ID = 27906642
+DEVICE_ID = 1001
+OTHER_DEVICE_ID = 1002
 
 
 def make_hub(isAvailable, deviceId=DEVICE_ID, other=False):

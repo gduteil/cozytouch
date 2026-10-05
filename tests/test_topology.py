@@ -22,8 +22,8 @@ from custom_components.cozytouch.const import DOMAIN
 from custom_components.cozytouch.hub import Hub, device_info_for, via_device_info
 from custom_components.cozytouch.model import CozytouchDeviceType
 
-GATEWAY_ID = 27906640
-ROOM_ID = 27906641
+GATEWAY_ID = 1000
+ROOM_ID = 1001
 
 
 def make_hub(devices, deviceId, added=()):
@@ -158,7 +158,7 @@ def registering_hub(via_device, hass=None):
     return SimpleNamespace(
         hass=hass,
         get_model_infos=lambda: SimpleNamespace(name="Air Conditioner"),
-        get_serial_number=lambda: "3022-2624-0400",
+        get_serial_number=lambda: "1234-5678-0000",
         get_software_version=lambda: None,
         get_via_device=lambda: via_device,
     )
@@ -245,7 +245,7 @@ def test_the_floor_still_gets_the_only_key_it_knows(monkeypatch):
 def zone_hub():
     """A hub over the two halves of one capture.
 
-    The device is the THZONE the API reports at deviceId 27906644 with
+    The device is the THZONE the API reports at deviceId 1004 with
     `zoneId: 1030104`; the setup view's `zones` array is what turns that id into
     a room. Both come from the same install, ids and names included, so this is
     the wiring as it really arrives rather than a shape invented for a test.
@@ -262,7 +262,7 @@ def zone_hub():
     account = SimpleNamespace(
         devices=[
             {
-                "deviceId": 27906644,
+                "deviceId": 1004,
                 "modelId": 1505,
                 "name": "THZONE_0",
                 "zoneId": 1030104,
@@ -278,7 +278,7 @@ def zone_hub():
 
     hub = object.__new__(Hub)
     hub._account = account
-    hub._deviceId = 27906644
+    hub._deviceId = 1004
     hub._zoneId = 1030104
 
     return hub

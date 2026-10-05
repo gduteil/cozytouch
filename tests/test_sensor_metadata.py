@@ -39,7 +39,7 @@ from homeassistant.components.sensor.const import (
 )
 from homeassistant.const import UnitOfTime
 
-DEVICE_ID = 27906641
+DEVICE_ID = 1001
 
 
 

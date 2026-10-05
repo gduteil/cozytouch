@@ -104,7 +104,7 @@ def device(
         "modelId": modelId,
         "productId": productId,
         "zoneId": zoneId,
-        "gatewaySerialNumber": "3022-6760-8541",
+        "gatewaySerialNumber": "1234-5678-0000",
         "tags": [],
         "capabilities": capabilities or [],
     }
@@ -223,7 +223,7 @@ def test_what_the_api_itself_calls_the_device_is_carried_through():
         [
             device(1, 9999)
             | {
-                "customName": "HUB SHOGUN",
+                "customName": "Living room hub",
                 "longName": "HUB Navizone",
                 "modelFamily": "Air_Conditioning",
                 "productRange": None,
@@ -236,7 +236,7 @@ def test_what_the_api_itself_calls_the_device_is_carried_through():
 
     reported = Hub.get_diagnostics(hub)["devices"][0]
 
-    assert reported["customName"] == "HUB SHOGUN"
+    assert reported["customName"] == "Living room hub"
     assert reported["longName"] == "HUB Navizone"
     assert reported["modelFamily"] == "Air_Conditioning"
     assert reported["isAvailable"] is True

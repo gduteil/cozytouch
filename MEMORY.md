@@ -87,8 +87,10 @@ overturn one, edit the line here in the same pull request.
 - Anything that logs into the real account is run by the maintainer, not by an
   agent. A refused login is what can lock the account ; match `account.py`'s
   token request byte for byte before pointing a script at it.
-- `research/` is git-excluded, so a finding made there is lost unless it is
-  written into `docs/`.
+- Research findings live under `docs/research/` (how the apps were read,
+  the corpus) ; the local `research/` folder is gone. Never commit the APK,
+  decompiled code or vendor UI text : `docs/research/methods.md`.
+- The README contact address is a deliberate public alias ; never change it.
 - To see a change in Home Assistant, use the `verify-cozytouch` skill : a
   local HA against a fake cloud, with screenshots. Never the real account.
 - Python changes on a running Home Assistant need a full restart ; reloading

@@ -15,6 +15,7 @@ and are worth reading before a change rather than after :
 | `docs/architecture.md` | How a capability id becomes an entity, what the account owns and what the Hub owns, which invariants hold, and the rough edges that are real and inherited. |
 | `docs/api-surface.md` | What the API does and does not expose. Read it before probing anything : ~90 paths are already ruled out, and there is no capability catalogue to fetch. |
 | `docs/decisions.md` | Why a setting is the value it is — which run was measured, what was tried and dropped. This is where the reasoning lives that used to sit in comment blocks above the setting. |
+| `docs/research/` | How the vendor apps were read and may be read again (`methods.md`), and how to rebuild the capture corpus (`corpus.md`). |
 | `MEMORY.md` | What past sessions settled, rejected or parked — one line each. Imported below, so it is always loaded ; update it when a finding is overturned. |
 
 @MEMORY.md

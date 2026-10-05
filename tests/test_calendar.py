@@ -76,7 +76,7 @@ def make_hub(values):
             capabilityId, default
         ),
         get_model_infos=lambda: ModelInfos(name="Air Conditioner (Salon)"),
-        get_serial_number=lambda: "3022-6760-8541",
+        get_serial_number=lambda: "1234-5678-0000",
         get_software_version=lambda: "1.2.3",
         get_via_device=lambda: None,
     )

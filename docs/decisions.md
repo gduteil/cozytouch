@@ -285,7 +285,7 @@ anticipating") appears on no captured hardware and stays self-describing.
 
 171 sits next to 172 `awayHeating`, which has been the writable
 `away_mode_temperature` since long before this entry. The name comes from the
-decompiled app (`research/Capability-Reference.md`), and the capture corpus
+decompiled app (`docs/research/methods.md`), and the capture corpus
 agrees on the unit without exception : 35.0 on all eight models that report it
 (211, 422, 1444, 1693, 1715, 1758, 1941, 2145), against 17.0 for the heating
 side on the boiler the mapping was read from.
@@ -404,12 +404,12 @@ capture. Naming them would mean guessing which zones they report, which is
 the one thing this table must not do.
 
 The sweep itself stopped at model id 56 when this was written
-(`research/fetch_model_catalogue.py` is resumable); it has since been finished,
+(the per-id sweep was resumable); it has since been finished,
 and what that changed is the entry below.
 
 ### The whole catalogue ships, as a name and nothing more
 
-`research/fetch_model_catalogue.py` finished the sweep the boilers entry above
+A per-id sweep finished what the boilers entry above
 started : 1759 rows, every id `GET /magellan/productmodels/models/{id}` answers
 for, up to 2450. `model_catalogue.py` is that table, verbatim, minus the 101
 rows whose name is a firmware slot rather than a product -- `BD1 DEFAULT`,
@@ -480,7 +480,7 @@ wrong answer silently, and there were seven of them.
 
 The radiators get `CozytouchDeviceType.RADIATOR`, a member added next to
 `TOWEL_RACK` rather than reusing it: the API's own `ProductMainFamily` splits
-`Radiator` from `Towel_Dryer` (`research/data/model_families.txt`), and the
+`Radiator` from `Towel_Dryer` (read in the app, `docs/research/methods.md`), and the
 reporter's first complaint after "it is not an air conditioner" would have
 been "it is not a towel rail". The wiring is the towel rail's, via
 `ELECTRIC_HEATERS` in `capability.py`; the one id where they part is 100506,
@@ -574,7 +574,7 @@ Two of the slots under that appliance were mapped to products they are not.
 The catalogue calls 1376 `DHW_0 DEFAULT` and 1388 `TESC_0 DEFAULT`, both with
 an empty commercial reference, which is how it writes a firmware slot ; the
 Calypso SPLIT VS 270L is 1369 and the Doris range starts at 1556. Every
-capture in `research/capability-corpus/devices.tsv` that carries either id
+capture in the corpus's `devices.tsv` (`docs/research/corpus.md`) that carries either id
 shows it as `DHW_0` or `TESC_0` and never as a product. They were guesses, and
 the sensors they produce -- a hot water tank on 1376, a setpoint and a water
 temperature on 1388 -- are what a slot of that name would report.
@@ -694,7 +694,7 @@ two `ALFEA_*_INTERFACES` -- is a reconstruction of a field the API already
 sends and `account.py` already stores. The Android app reads that field and
 nothing else.
 
-`GacomaDeviceFactory.createDevice` (decompiled, in `research/`) takes the
+`GacomaDeviceFactory.createDevice` (decompiled; `docs/research/methods.md`) takes the
 device's `productId`, maps it to a `ProductType`, does the same for the parent
 named by `masterDeviceId`, and picks a class from the *pair* :
 
@@ -724,7 +724,7 @@ values it covers. The ones this integration meets :
 | `DISCOVER_MASTER` | 6, 44, 112, 113 |
 | `HDG2`, `DARWIN_BOILER`, `TD1`, `BD0`, `HE3Z` | 7, 4, 53, 41, 64 |
 
-The Navizone capture in `research/capability-corpus/local/` shows the field
+The Navizone capture (`scripts/test_ha/navizone.json`) shows the field
 arriving per device, beside two more the setup view sends : 1758 is
 `productId` 96 with `modelFamily` `Air_Conditioning`, its rooms are 26, 27, 28,
 and its zones 65, 66, 67. `API_DECLARED_FIELDS` in `account.py` already keeps
@@ -1153,7 +1153,7 @@ that, which is what migration 2.3 is for.
 ### Seventeen names the iOS list got wrong
 
 The mapping's names came from an extraction of the iOS app. The Android
-enum (`research/data/capability_id_to_name_android.tsv`) disagrees on
+enum (`Capabilities`, app 3.31.0) disagrees on
 seventeen, and where the two differ the Android one is the enum itself,
 read in clear Kotlin, not a string recovered from a compiled binary.
 
@@ -1214,31 +1214,6 @@ cooling season, so the entity sat at "off" on every room page while the
 units cooled. Where it does move -- the radiators -- what it says already
 reaches the climate entity's action, which reads the capability and not the
 entity, and is unaffected. Anyone who wants the raw value turns it on.
-
-### Seventeen names the iOS list got wrong
-
-The mapping's names came from an extraction of the iOS app. The Android
-enum (`research/data/capability_id_to_name_android.tsv`) disagrees on
-seventeen, and where the two differ the Android one is the enum itself,
-read in clear Kotlin, not a string recovered from a compiled binary.
-
-Only the ones that said something *false* were changed; a paraphrase is not
-an error, and `dhw_error_code` is a better entity name than
-`ERROR_CODE_DHW`.
-
-| id | was | is |
-| -- | --- | -- |
-| 344 | `linked_interfaces_count` | `ROOM_COUNT` -- a count of rooms |
-| 100002, 100024 | `*_estimation_modes` | ventilation options, a `VentilationOption` mask |
-| 100004, 100021 | `*_control_modes` | ventilation controls, a `VentilationControls` mask |
-| 100196-100198 | `absence_schedule`, `*_target_temperature` | `PROG_ABSENCE` / `NIGHT` / `PRESENCE`, each a JSON `[temperature, offState]` pair and not a scalar |
-| 100334-100341 | `new_schedule_*` | `THERMOSTAT_LIFESTYLE_HEATING_*` -- the lifestyle program, nothing new about it |
-| 100078 | `identify_supported` | `VENTILATION_WINK_REQUEST`, read by `isWinkRequested` : a request, not a support flag |
-| 358 | `air_circulation_scope` | `thermalAmbianceScope` -- nothing to do with air circulation |
-
-358 is the one the Android enum does *not* carry : the app never reads it.
-Its name here comes from the iOS list, which is the only source for it, and
-which is wrong about every other id on this page at least once.
 
 ### Capability 153 is whether it is heating, not what is burning
 
@@ -1301,7 +1276,7 @@ already gone.
 There was a `SELF_DESCRIBING_CAPABILITIES` table saying "the name is
 everything we know", one name per id. For twenty ids that stopped being
 true once the vendor app's readers were read
-(`research/data/android_capability_types.tsv`), and `STRING` is still what
+(app 3.31.0, `docs/research/methods.md`), and `STRING` is still what
 most of them say. They stay diag and stay **off by default**: knowing the
 encoding is not a reason to put twenty more entities on everybody's device
 page, and the flag is what makes the descriptor family cost nothing.
@@ -1371,7 +1346,7 @@ Left as raw strings on purpose:
 ### Six more masks, and the two bits the corpus could not place
 
 The vendor app's `fromBitField` classes were read whole in September 2026
-(`research/data/android_bitfields_331.tsv`, app 3.31.0). The twelve tables
+(app 3.31.0, `docs/research/methods.md`). The twelve tables
 already here matched it member for member, which is the useful part: it is
 the check that says the reverse-engineered ones were right.
 
@@ -1641,7 +1616,7 @@ neither.
 
 ### A timeout that stringifies to nothing named nothing
 
-The same log carries `Error requesting Cozytouch_27906640 data: Network error
+The same log carries `Error requesting Cozytouch_1000 data: Network error
 reading the setup view: , forcing reconnect`. The message is not truncated:
 `asyncio.TimeoutError` -- what aiohttp raises past `REQUEST_TIMEOUT`, and the
 commonest failure on this API -- carries no args, so `f"{err}"` is the empty
@@ -1736,7 +1711,7 @@ same reason.
 
 ### Five hot-water ids named off the Android enum, not off a capture
 
-`research/data/capability_id_to_name_android.tsv` names 244, 105011, 105122,
+The app's `Capabilities` enum names 244, 105011, 105122,
 105906 and 105907, and the mapping had nothing for the first three and the
 placeholders `Target 105906` / `Target 105907` for the last two. The names
 here are the app's, transliterated to the naming already in the table:
@@ -1776,7 +1751,7 @@ weaker than a capture.
 
 ### Twelve more ids the enum names and the corpus confirms
 
-Walking the whole of `capability_id_to_name_android.tsv` against the mapping,
+Walking the app's whole `Capabilities` enum against the mapping,
 rather than only the ids the fork happened to touch, left 14 named by the app
 and mapped nowhere here. Eleven are taken. `9812 DEBUG` and `106 POWER` are
 not, because a name that vague buys an entity nobody can read, and `100014
@@ -1785,7 +1760,7 @@ and a zone deliberately resolves to no entity at all. Naming it is what
 `test_a_zone_maps_to_nothing_at_all` exists to catch, and it caught it.
 
 What makes these better evidence than the five above is that
-`research/capability-corpus/by-capability.md` holds values for most of them:
+the corpus's `by-capability.md` (`docs/research/corpus.md`) holds values for most of them:
 
 | id | The app's name | Here | The corpus reads |
 | -- | -------------- | ---- | ---------------- |
@@ -1992,12 +1967,12 @@ every five seconds, and only while somebody has it open. See the entry under
 
 ### Neither plane is staler than the other, measured (22/09/2026)
 
-`research/probe_propagation.py` writes one capability and then watches both
+`scripts/probes/probe_propagation.py` writes one capability and then watches both
 routes until each agrees. Air circulation (102024) on ROOM_0 of the reporting
 account, three rooms behind one HUB Navizone :
 
-    wrote '1' on 27906641, execution 18612101 -> state 3
-      +0.0s  /capabilities(27906641)='1'  setupviewv2 agreeing: [27906641, 27906642, 27906643]
+    wrote '1' on 1001, execution 18612101 -> state 3
+      +0.0s  /capabilities(1001)='1'  setupviewv2 agreeing: [1001, 1002, 1003]
 
 Both planes carried the new value on the first read after the execution
 reported completion, and all three rooms flipped together. So :
@@ -3235,7 +3210,7 @@ write it always had.
 ### What it is not, which took the whole investigation
 
 The app's call was assumed to differ from ours, and every way it could was
-probed with `research/probe_write_service.py` before the capture settled it.
+probed with `scripts/probes/probe_write_service.py` before the capture settled it.
 None of these is the difference, and none should be tried again :
 
 - **The body.** `{capabilityId, deviceId, value}`, the three fields we send.
@@ -3432,8 +3407,8 @@ Nothing on the wire says a capability is writable. `CapabilityEntity` is
 What the app has instead is its own call sites. `IGacomaDevice` exposes
 `getCapabilityValue` and `writeCapabilitySuspend`, both taking a
 `Capabilities` enum member, so every capability the app ever writes appears
-as a literal next to a write call. Collecting them gives 87 ids, recorded in
-`research/data/android_writable_capabilities.tsv` :
+as a literal next to a write call. Collecting them gives 87 ids (app
+3.31.0), with :
 
     grep -rh writeCapabilit sources/ | grep -v @Metadata |
       grep -oE 'Capabilities\.[A-Z_0-9]+'
@@ -3552,8 +3527,8 @@ capability were mistyped.
 `ANTIFROST = 16`, and the app gates its antifrost control on it. Gating
 `antifrost_temperature` (103199) the same way would add nothing: the mapping
 already builds it only for a device that reports 103199, and a device
-without the feature does not report it. The bit is recorded in
-`research/data/android_bitfields_331.tsv` for the day something needs it.
+without the feature does not report it. The app's enum names the bit, for
+the day something needs it.
 
 ## Atlantic named eleven capabilities, and two of ours were wrong
 

@@ -56,7 +56,7 @@ def device(deviceId, value="18"):
     return {
         "deviceId": deviceId,
         "name": f"ROOM_{deviceId}",
-        "gatewaySerialNumber": "3022-6760-8541",
+        "gatewaySerialNumber": "1234-5678-0000",
         "modelId": 557,
         "productId": 65,
         "zoneId": 991904,

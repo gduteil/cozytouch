@@ -42,8 +42,8 @@ from custom_components.cozytouch.sensor import (
 )
 from homeassistant.components.sensor.const import SensorDeviceClass
 
-DEVICE_ID = 27906641
-OTHER_DEVICE_ID = 27906642
+DEVICE_ID = 1001
+OTHER_DEVICE_ID = 1002
 
 # A date from a real capture, so the test reads like the payload does.
 CAPTURED = 1786182322
@@ -163,7 +163,7 @@ def build(last_modification_date, capabilities=(), last_poll=None):
         get_last_modification_date=lambda: last_modification_date,
         get_last_poll=lambda: last_poll,
         get_model_infos=lambda: ModelInfos(name="Air Conditioner (Salon)"),
-        get_serial_number=lambda: "3022-6760-8541",
+        get_serial_number=lambda: "1234-5678-0000",
         get_software_version=lambda: "1.2.3",
         get_via_device=lambda: None,
     )
@@ -235,7 +235,7 @@ def test_the_sensor_lands_on_the_same_device_as_the_others():
     info = sensor.device_info
 
     assert info["identifiers"] == {(DOMAIN, SUBENTRY_ID)}
-    assert info["serial_number"] == "3022-6760-8541"
+    assert info["serial_number"] == "1234-5678-0000"
     assert info["sw_version"] == "1.2.3"
 
 

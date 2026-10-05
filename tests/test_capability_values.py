@@ -1,10 +1,11 @@
 """What a descriptor capability's number is read as.
 
 The tables in `capability.py` come from the vendor's Android app and were
-checked against `research`'s capture corpus; these pin the readings the corpus
-actually holds, so a table edited on a hunch has to fail something. The values
-below are real ones -- 411 and 415 are what an air conditioner reports, 17 is
-what a radiator reports, 16133 is a Calypso's hot-water mask.
+checked against the capture corpus (docs/research/corpus.md); these pin the
+readings the corpus actually holds, so a table edited on a hunch has to fail
+something. The values below are real ones -- 411 and 415 are what an air
+conditioner reports, 17 is what a radiator reports, 16133 is a Calypso's
+hot-water mask.
 
 They also pin the two refusals: a mask nothing names is not decoded, and a bit
 past the last member the table knows is reported rather than dropped.

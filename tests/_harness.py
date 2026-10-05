@@ -20,7 +20,7 @@ TRANSLATIONS = (
 )
 
 
-def entry_over(hub, deviceId=27906641):
+def entry_over(hub, deviceId=1001):
     """An account entry holding one device, which is what a subentry is."""
     return SimpleNamespace(
         runtime_data=SimpleNamespace(

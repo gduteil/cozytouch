@@ -183,12 +183,12 @@ each carrying:
 `?productid=` or `?familyid=` narrows it to one product's or one family's ids,
 one filter at a time.
 
-`research/fetch_capability_catalogue.py` fetches it, along with the rest of the
-read-only routes of the same three APIs, and saves every answer under
-`research/data/endpoints/`, one file per route and the refusals with them.
-Both live in `research/`, which is not in the repository: the probes are
-operator tools and their output is half a megabyte of vendor JSON, and what
-the project keeps is what was concluded from them. What that run established, on 2026-09-22:
+`scripts/probes/fetch_capability_catalogue.py` fetches it, along with the rest
+of the read-only routes of the same three APIs, and saves every answer under a
+git-ignored `.endpoints/`, one file per route and the refusals with them. The
+output is half a megabyte of vendor JSON and is not kept: what the project
+keeps is what was concluded from it, and the three catalogue routes as
+`scripts/*_catalogue.jsonl`. What that run established, on 2026-09-22:
 
 | Route | |
 | ----- | --- |
@@ -401,7 +401,7 @@ until it stops complaining. What that yielded:
 The payload is the gateway's room slots:
 
     [{"id": 0, "name": "Chambre parentale", "type": 1, "compatible": true},
-     {"id": 1, "name": "Bureau Julie",      "type": 1, "compatible": true},
+     {"id": 1, "name": "Bureau",            "type": 1, "compatible": true},
      {"id": 2, "name": "Chambre enfant",    "type": 1, "compatible": true}]
 
 Three slots on a gateway with three room units, ids counting from 0 like the
@@ -438,7 +438,7 @@ the open question was whether our devices also appear over there, described by
 the `widget` / `uiClass` / `controllableName` vocabulary that makes the Overkiz
 integration need no model table at all.
 
-Measured on the real account (`research/probe_overkiz_plane.py`, one Navizone
+Measured on the real account (`scripts/probes/probe_overkiz_plane.py`, one Navizone
 gateway, three room units, three thermal zones):
 
 | Step | Route | Result |
@@ -520,7 +520,7 @@ product.
 
 Treat its Magellan tables as leads rather than evidence. The towel-rack block
 matches ours id for id; its heater, climate and water-heater blocks use a low
-id space (1, 2, 3, 4, 8, 9) that no capture in `research/capability-corpus` has
+id space (1, 2, 3, 4, 8, 9) that no capture in the corpus (`docs/research/corpus.md`) has
 ever shown, with no dump cited -- its climate table reads capability 7 as the
 current temperature where every capture here has it as the HVAC mode.
 
@@ -578,6 +578,25 @@ over DBus, a lighttpd REST API shipped disabled whose auth check can be patched
 out in Lua bytecode, serving `/enduser-mobile-web/1/enduserAPI/setup/devices`.
 That is the Overkiz local plane on Overkiz hardware. It says nothing about a
 Navizone or a CozyBox, which are not that box, and it needs physical access.
+
+## What the app computes beside the capabilities
+
+Two values the app shows for hot water do not come from a capability. They
+are use-cases of the KMM layer's device service, addressed by `deviceUrl`
+rather than by capability id (read off the iOS app's MagellanKitKMM; the exact
+routes were not recorded):
+
+| Use-case | Answers |
+| -------- | ------- |
+| `getRemainingHotWater` | `{isReliable: Bool, percentage: Int}` -- a 0-100 % share with a reliability flag, not a volume |
+| `getLeftTimeBeforeShower` | `{numberOfMinutes: Int}` |
+
+Neither is implemented here. The capability form of the same idea is 292/293,
+expected and remaining showers.
+
+Two boost durations are bounded by the app itself, not by a capability: a
+room's boost runs from **15 minutes to 2 hours**, entered as hours and
+minutes, while the hot-water boost is counted in **days**.
 
 ## Where to look next
 
