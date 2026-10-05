@@ -717,6 +717,11 @@
             "schedule_stopped":         "{entity_name} ne suit plus son programme"
         }
     },
+    "exceptions": {
+        "cloud_unreachable":   { "message": "Le cloud Cozytouch est injoignable pour le moment : la commande n'a pas été envoyée. L'intégration se reconnecte à sa prochaine mise à jour." },
+        "device_offline":      { "message": "Cozytouch signale cet appareil hors ligne : la commande n'a pas pu lui parvenir. Vérifiez la connexion de la passerelle, et si l'application Cozytouch arrive à le piloter." },
+        "write_not_completed": { "message": "Cozytouch n'a pas exécuté la commande. La prochaine mise à jour montrera ce que fait réellement l'appareil." }
+    },
     "issues": {
         "device_fault": {
             "title": "{device_name} signale un défaut",

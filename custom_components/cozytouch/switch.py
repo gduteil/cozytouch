@@ -6,6 +6,7 @@ import logging
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -142,12 +143,22 @@ class CozytouchAwayModeSwitch(CozytouchSwitch):
 
         self._nb_ignore = 5
         self._state = True
-        await self.coordinator.set_away_mode(int(timestampStart), int(timestampEnd))
+        try:
+            await self.coordinator.set_away_mode(int(timestampStart), int(timestampEnd))
+        except HomeAssistantError:
+            # Refused : the next read is the device's, not this guess.
+            self._nb_ignore = 0
+            raise
         self._nb_ignore = 1
 
     async def async_turn_off(self):
         """Turn Off method."""
         self._nb_ignore = 5
         self._state = False
-        await self.coordinator.set_away_mode(None, None)
+        try:
+            await self.coordinator.set_away_mode(None, None)
+        except HomeAssistantError:
+            # Refused : the next read is the device's, not this guess.
+            self._nb_ignore = 0
+            raise
         self._nb_ignore = 1

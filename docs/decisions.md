@@ -2161,6 +2161,39 @@ class : the tests drive those methods unbound against a duck-typed stand-in
 A write that never lands has to leave the local value alone, and let the next
 poll say what the device really did.
 
+### A write that does not land says so
+
+It used to return quietly as well : no session, a refused POST, an execution
+ending in error or never completing all left the entity as it was, with an
+INFO line in the log at best. A report on 2026-10-04 (HUB Cozytouch 1457, five
+Fujitsu rooms) read as "every entity is there and none of them works" ; its
+dump had every device at `isAvailable: false` and 218 at 4, the Navilink
+interface offline. The commands were reaching a cloud that could not pass them
+on, and nothing on the page said so.
+
+So `Hub.set_capability_value` raises a translated `HomeAssistantError`, which
+Home Assistant shows to whoever pressed, with one of three reasons :
+
+| Key | When |
+| --- | --- |
+| `cloud_unreachable` | the account's session is down, so nothing was sent |
+| `device_offline` | the write failed and the device's `isAvailable` is false |
+| `write_not_completed` | the write failed on a device not known to be offline |
+
+`isAvailable` only picks the wording. A write is still attempted on a device
+marked offline, since the flag can lag behind a gateway coming back, and an
+absent flag reads as unknown, never as offline. The account logs a warning for
+each failure, with the HTTP status or the execution state, so a log carries
+what the toast does not.
+
+The absence is the one write that spans the account's devices, and it goes on
+past a device that refuses : the others are still switched and refreshed, and
+the first refusal is raised once they all have been.
+
+What the cloud answers for a write to an offline device -- a refused POST, an
+execution in error, or one left waiting -- has not been captured ; all three
+end in the same refusal here.
+
 ### The diagnostics dump describes the account, not the hub that was asked
 
 Every device the setup returns is listed, whether or not somebody added it,

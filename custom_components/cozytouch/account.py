@@ -738,6 +738,12 @@ class CozytouchAccount:
                     return False
 
                 if response.status != 201:
+                    _LOGGER.warning(
+                        "Writing capability %d of device %d refused: HTTP %d",
+                        capabilityId,
+                        deviceId,
+                        response.status,
+                    )
                     return False
 
                 executionId = await response.json()
@@ -748,6 +754,11 @@ class CozytouchAccount:
             return False
 
         if not await self._await_execution(executionId):
+            _LOGGER.warning(
+                "Writing capability %d of device %d was not carried out",
+                capabilityId,
+                deviceId,
+            )
             return False
 
         self._pending_writes[(deviceId, capabilityId)] = (
@@ -787,7 +798,11 @@ class CozytouchAccount:
                         _LOGGER.info("Execution_state completed")
                         return True
                     else:
-                        _LOGGER.info("Execution_state error")
+                        _LOGGER.warning(
+                            "Execution %s ended in state %s",
+                            executionId,
+                            execution_state,
+                        )
                         return False
             except (TimeoutError, ClientError) as err:
                 _LOGGER.warning("Network error polling execution: %s", why(err))
@@ -795,6 +810,11 @@ class CozytouchAccount:
 
             nbRetry += 1
             if nbRetry > 5:
+                _LOGGER.warning(
+                    "Execution %s still not completed after %d polls",
+                    executionId,
+                    nbRetry,
+                )
                 return False
 
             await asyncio.sleep(1)

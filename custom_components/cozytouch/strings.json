@@ -717,6 +717,11 @@
             "schedule_stopped":         "{entity_name} stopped following its program"
         }
     },
+    "exceptions": {
+        "cloud_unreachable":   { "message": "The Cozytouch cloud cannot be reached right now, so the command was not sent. The integration reconnects at its next update." },
+        "device_offline":      { "message": "Cozytouch reports this device as offline, so the command could not reach it. Check the gateway's connection, and whether the Cozytouch app can control it." },
+        "write_not_completed": { "message": "Cozytouch did not carry out the command. The next update will show what the device is actually doing." }
+    },
     "issues": {
         "device_fault": {
             "title": "{device_name} reports a fault",

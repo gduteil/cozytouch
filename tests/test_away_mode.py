@@ -149,6 +149,32 @@ def test_every_device_of_the_account_is_switched_with_it():
     assert heater.get_away_mode_start() == START
 
 
+def test_a_device_that_refuses_does_not_keep_the_others_from_following():
+    """A write that fails raises now, so the loop has to outlive it.
+
+    Every device is still asked and refreshed, and the refusal reaches whoever
+    pressed once they all have been.
+    """
+    account = FakeAccount()
+    log = []
+    heater = hub_over(account, {227: "0", 226: "[0,0]"}, log=log)
+    boiler = hub_over(account, {152: "0", 222: "[0,0]"}, [heater], log)
+
+    async def offline(capabilityId, value):
+        raise HomeAssistantError("offline")
+
+    boiler.set_capability_value = offline
+
+    with pytest.raises(HomeAssistantError, match="offline"):
+        asyncio.run(boiler.set_away_mode(START, END))
+
+    assert log == [
+        (id(heater), 226, f"[{START},{END}]"),
+        (id(heater), 227, "2"),
+    ]
+    assert (boiler.refreshed, heater.refreshed) == (1, 1)
+
+
 def test_a_refused_window_switches_nothing():
     account = FakeAccount(accepts=False)
     hub = hub_over(account, {152: "0", 222: "[0,0]"})
@@ -188,6 +214,36 @@ def test_the_switch_sends_the_window_the_pickers_hold():
     asyncio.run(CozytouchAwayModeSwitch.async_turn_on(switch_over(hub)))
 
     assert hub.account.absences == [(START, END)]
+
+
+@pytest.mark.parametrize(
+    ("turn", "reported"),
+    [
+        (CozytouchAwayModeSwitch.async_turn_on, "0"),
+        (CozytouchAwayModeSwitch.async_turn_off, "1"),
+    ],
+)
+def test_a_refused_switch_reads_the_device_again_at_once(turn, reported):
+    """A refusal raises now, and used to skip what ends the switch's guess.
+
+    It kept the state it had guessed for five reads, beside the error saying
+    the opposite.
+    """
+    hub = hub_over(FakeAccount(), {152: reported, 222: "[0,0]"})
+
+    async def refused(start, end):
+        raise HomeAssistantError("offline")
+
+    hub.set_away_mode = refused
+    switch = switch_over(hub)
+    switch._capability = SimpleNamespace(capabilityId=152)
+    switch._value_off = "0"
+    switch._value_pending = "2"
+
+    with pytest.raises(HomeAssistantError):
+        asyncio.run(turn(switch))
+
+    assert CozytouchAwayModeSwitch.is_on.fget(switch) is (reported != "0")
 
 
 def test_the_switch_replaces_a_window_already_over():

@@ -717,6 +717,11 @@
             "schedule_stopped":         "{entity_name} stopped following its program"
         }
     },
+    "exceptions": {
+        "cloud_unreachable":   { "message": "No se puede contactar con la nube de Cozytouch en este momento, así que la orden no se ha enviado. La integración se reconecta en su próxima actualización." },
+        "device_offline":      { "message": "Cozytouch indica que este dispositivo está desconectado, así que la orden no ha podido llegarle. Compruebe la conexión de la pasarela y si la aplicación Cozytouch puede controlarlo." },
+        "write_not_completed": { "message": "Cozytouch no ha ejecutado la orden. La próxima actualización mostrará lo que el dispositivo está haciendo realmente." }
+    },
     "issues": {
         "device_fault": {
             "title": "{device_name} informa de un fallo",

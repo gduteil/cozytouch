@@ -9,6 +9,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
@@ -690,12 +691,17 @@ class Hub(DataUpdateCoordinator):
         return dev.get("isAvailable") if dev else None
 
     async def set_capability_value(self, capabilityId: int, value: str):
-        """Set value for a device capability."""
+        """Set value for a device capability, or say why it did not land.
+
+        See docs/decisions.md, *A write that does not land says so*.
+        """
         _LOGGER.debug(
             "Set_capability_value for %d : %d = %s", self._deviceId, capabilityId, value
         )
         if not self.online:
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cloud_unreachable"
+            )
 
         dev = device_of(self)
         if dev is None:
@@ -706,11 +712,19 @@ class Hub(DataUpdateCoordinator):
                 continue
 
             # Only on a completed execution. See docs/decisions.md.
-            if await self._account.write_capability(
+            if not await self._account.write_capability(
                 self._deviceId, capabilityId, value
             ):
-                capability["value"] = value
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key=(
+                        "device_offline"
+                        if self.get_is_available() is False
+                        else "write_not_completed"
+                    ),
+                )
 
+            capability["value"] = value
             return
 
     def away_mode_init(self, timestampStart, timestampEnd):
@@ -849,6 +863,8 @@ class Hub(DataUpdateCoordinator):
             now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
             state = "value_pending" if timestampStart > now else "value_on"
 
+        # One device that refuses does not keep the others from following.
+        refused: HomeAssistantError | None = None
         for hub in self._account_hubs():
             switches = hub.away_mode_switches()
             if not switches:
@@ -857,13 +873,19 @@ class Hub(DataUpdateCoordinator):
             # Cleared, the pickers go back to what the switch would send.
             hub.away_mode_init(timestampStart, timestampEnd)
 
-            for capabilityId, settings in switches.items():
-                await hub.set_capability_value(
-                    settings["timestampsCapabilityId"], pair
-                )
-                await hub.set_capability_value(capabilityId, settings[state])
+            try:
+                for capabilityId, settings in switches.items():
+                    await hub.set_capability_value(
+                        settings["timestampsCapabilityId"], pair
+                    )
+                    await hub.set_capability_value(capabilityId, settings[state])
+            except HomeAssistantError as err:
+                refused = refused or err
 
             await hub.async_request_refresh()
+
+        if refused is not None:
+            raise refused
 
         if away:
             _LOGGER.info("Away mode enabled %d -> %d", timestampStart, timestampEnd)
