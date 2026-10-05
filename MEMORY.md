@@ -78,8 +78,9 @@ overturn one, edit the line here in the same pull request.
 
 - Pull requests go to `mathieuletyrant/cozytouch-hacs`, base `main` ; the
   repository is no longer tied to `gduteil/cozytouch` or
-  `mathieuletyrant/cozytouch`. A Claude Code on the web session has no `gh`
-  and opens them through the GitHub MCP tools, scoped to this repository.
+  `mathieuletyrant/cozytouch`. A Claude Code on the web session opens them
+  through the GitHub MCP tools, scoped to this repository ; only screenshot
+  attachments go through `gh` (`verify-cozytouch`, needs `GH_TOKEN`).
 - `scripts/check.sh` runs ruff, pyright and pytest, CI's three checks ; run
   it before every push.
 - Releases are the maintainer's call : never run the release workflow, tag or

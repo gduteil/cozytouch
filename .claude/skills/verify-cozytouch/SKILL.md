@@ -24,6 +24,13 @@ and call it as `R start`, `R doctor`, and so on.
 
 ## Launch
 
+In a Claude Code on the web session, install the browser first ; the
+session-start hook builds only the test venv :
+
+```bash
+npm install -g playwright && npx playwright install --with-deps chromium
+```
+
 1. **Pick the Home Assistant.** By default it runs from `.venv-ha`, the
    version `requirements_test.txt` pins ; build it once with `R setup`.
    To reproduce an issue, run the reporter's version instead -- their dump
@@ -166,6 +173,15 @@ against the reporter's dump and HA version when there is one :
    `| ![Before: ...](./before.png) | ![After: ...](./after.png) |`, the HA
    version, the dump used and how it was adapted. `--edit-last` replaces
    your previous comment instead of adding one.
+
+   **In a Claude Code on the web session** too : this is the one thing done
+   with `gh` there rather than the GitHub MCP tools, which cannot upload a
+   file. The session-start hook installs a recent `gh` under
+   `~/.local/gh/bin` (call it by that path if `gh --version` still says
+   older than 2.99), and `gh` authenticates with the `GH_TOKEN` the
+   environment provides -- a fine-grained token on this repository only.
+   No `GH_TOKEN`, or an old `gh` : say so in the pull request and send the
+   shots to the maintainer instead. Never commit them to get a URL.
 
 ## What the fake does not know
 
