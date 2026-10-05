@@ -8,5 +8,5 @@
     "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/mathieuletyrant/cozytouch-hacs/issues",
     "requirements": [],
-    "version": "2026.10.0"
+    "version": "2026.10.1"
 }
