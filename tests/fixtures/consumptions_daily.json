@@ -1,0 +1,84 @@
+[
+  {
+    "serialNumber": "0000-0000-0000",
+    "deviceId": null,
+    "category": 2,
+    "type": 1,
+    "unit": 1,
+    "currency": 101,
+    "deviceUrl": null,
+    "zoneId": null,
+    "zoneLabel": null,
+    "consumptionPeriods": [
+      {
+        "consumedQuantity": 4,
+        "cost": 0.58,
+        "date": 1788825600,
+        "mode": 2,
+        "producedQuantity": null,
+        "profil": 0
+      },
+      {
+        "consumedQuantity": 3.31,
+        "cost": 0.47,
+        "date": 1788912000,
+        "mode": 2,
+        "producedQuantity": null,
+        "profil": 0
+      },
+      {
+        "consumedQuantity": 3.87,
+        "cost": 0.56,
+        "date": 1788998400,
+        "mode": 2,
+        "producedQuantity": null,
+        "profil": 0
+      },
+      {
+        "consumedQuantity": 1.16,
+        "cost": 0.25,
+        "date": 1788998400,
+        "mode": 1,
+        "producedQuantity": null,
+        "profil": 0
+      }
+    ]
+  },
+  {
+    "serialNumber": "0000-0000-0000",
+    "deviceId": null,
+    "category": 2,
+    "type": 4,
+    "unit": 2,
+    "currency": 101,
+    "deviceUrl": null,
+    "zoneId": null,
+    "zoneLabel": null,
+    "consumptionPeriods": [
+      {
+        "consumedQuantity": 99.99,
+        "cost": 0,
+        "date": 1788825600,
+        "mode": 0,
+        "producedQuantity": null,
+        "profil": 3
+      },
+      {
+        "consumedQuantity": 90.99,
+        "cost": 0,
+        "date": 1788912000,
+        "mode": 0,
+        "producedQuantity": null,
+        "profil": 3
+      },
+      {
+        "consumedQuantity": 109,
+        "cost": 0,
+        "date": 1788998400,
+        "mode": 0,
+        "producedQuantity": null,
+        "profil": 3
+      }
+    ]
+  }
+]

@@ -1,0 +1,20 @@
+# The oldest Home Assistant hacs.json claims to support, so that the claim is
+# tested rather than asserted. Nothing else exercises it: a contributor's venv
+# and the main CI job both run the pin in requirements_test.txt, and a release
+# that quietly needed something newer would only surface as a bug report from
+# whoever runs the old version. tests/test_floor.py is what makes this job say
+# something: it imports every module and names the APIs the floor has to have.
+#
+# 2025.12.0, and why -- along with the floor it replaced -- is in
+# docs/decisions.md.
+#
+# It needs Python >= 3.13.2, which is what the matrix pairs it with. Raising
+# the floor here means raising it in hacs.json too; test_floor.py fails if the
+# two drift.
+homeassistant==2025.12.0
+
+# Without this, `import aiodns` raises and nothing collects. See
+# docs/decisions.md.
+pycares<5
+
+pytest==9.1.1

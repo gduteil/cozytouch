@@ -1,0 +1,16 @@
+# The environment a contributor builds and CI runs. Pinned exactly, not `>=`,
+# because `homeassistant>=2024.12.0` does not mean "a recent Home Assistant":
+# pip resolves it against whatever interpreter it finds, and on a Python that
+# the current release does not support it walks backwards until something
+# installs. On Python 3.14.0rc2 that silently produced HA 2026.2.3, whose
+# pinned mashumaro still imports typing.ByteString -- removed in 3.14 -- so the
+# suite failed to collect at all, with nothing in the error naming the cause.
+#
+# An exact pin turns that into the right failure: pip says this release needs
+# Python >= 3.14.2, which is a sentence someone can act on.
+#
+# CLAUDE.md explains how to build the venv. requirements_test_min.txt is the
+# same file for the oldest release hacs.json claims to support; keep the pytest
+# pin here and there in step.
+homeassistant==2026.8.3
+pytest==9.1.1

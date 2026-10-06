@@ -1,0 +1,138 @@
+# Ruff is the only tool configured here. This repository ships a Home Assistant
+# custom component, not a distributable package, so there is no build backend
+# and no dependency list -- requirements_test.txt is where versions live.
+#
+# The selection below is Home Assistant core's, minus the rules that fight this
+# codebase instead of improving it. Every exclusion carries its reason, so the
+# next person does not have to guess whether it was a decision or an oversight.
+
+[tool.ruff]
+line-length = 88          # what Home Assistant core uses
+target-version = "py312"  # hacs.json declares HA 2024.12.0, which needs >= 3.12
+
+[tool.ruff.lint]
+select = [
+    "F",      # pyflakes: undefined and unused names. This is the rule that
+              # earns the whole file -- a shadowed `time` import made every
+              # time entity raise, and tests/test_regressions.py had to be
+              # written to catch what a linter reports for free.
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "I",      # import order, which Home Assistant enforces
+    "D",      # docstring conventions
+    "A",      # shadowed builtins
+    "ASYNC",  # blocking calls in async code -- the integration is all async
+    "B",      # bugbear: mutable defaults, silent gotchas
+    "BLE",    # blind excepts
+    "C4",     # comprehension rewrites
+    "C90",    # cyclomatic complexity, see mccabe below
+    "DTZ",    # naive datetimes, in an integration that reads unix timestamps
+    "EXE",    # shebang and executable-bit mismatches
+    "FA",     # missing `from __future__ import annotations`
+    "FLY",    # static str.join of a literal tuple
+    "G",      # logging call format
+    "ICN",    # import conventions
+    "INT",    # gettext f-strings
+    "ISC",    # implicit str concatenation
+    "LOG",    # logging misuse
+    "PERF",   # obvious performance rewrites
+    "PIE",    # misc lints
+    "PT",     # pytest style
+    "PYI",    # stub-file idioms that also apply to annotations
+    "Q",      # quote consistency
+    "RET",    # return-path clarity
+    "RSE",    # raise syntax
+    "RUF",    # ruff's own, including RUF100 for noqa that no longer apply
+    "S",      # bandit
+    "SIM",    # simplifications
+    "SLOT",   # __slots__ on subclasses of immutables
+    "T20",    # stray print
+    "TID",    # tidy imports
+    "UP",     # pyupgrade
+    "YTT",    # sys.version misuse
+]
+
+# Ruff exempts anything matching this from "assigned but never used", and its
+# default exempts every name starting with an underscore. That is too generous
+# here: set_away_mode_timestamps carried two dead locals called
+# _timestamp_away_mode_start and _timestamp_away_mode_end -- self. missing from
+# what were meant to be attribute writes -- and the default hid both.
+dummy-variable-rgx = "^_$"
+
+ignore = [
+    "D203",  # conflicts with D211, which is the convention in this codebase
+    "D213",  # conflicts with D212, same
+    "D205",  # docstring summaries here deliberately run onto a second line
+             # (Hub.get_capability_names is the clearest case). The rule would
+             # reword 25 docstrings and explain nothing better.
+    "D401",  # docstrings are noun phrases on purpose -- "What the mapping
+             # answers for one id", not "Answer what the mapping ...". The
+             # house style in CLAUDE.md is that a comment says why a value is
+             # what it is, and the docstrings follow it.
+    "RUF001",  # the ambiguous characters it finds are deliberate typography:
+               # `×` in the generated capability table, matching the prose in
+               # docs/architecture.md.
+]
+
+# Naming and magic-value rules are deliberately not selected at all, because
+# they are wrong for this domain rather than merely noisy:
+#
+#   N803/N806  camelCase parameters and locals -- capabilityId, modelInfos,
+#              availableCapabilityIds -- mirror the field names the Atlantic
+#              API itself uses. Renaming them would break the correspondence
+#              with docs/api-surface.md, which is the only reference there is.
+#   PLR2004    magic value comparison. The numeric capability and model ids
+#              *are* the domain; `if capabilityId == 172` is the mapping.
+
+[tool.ruff.lint.mccabe]
+# Home Assistant core's threshold. Two functions exceed it and say so with a
+# noqa: get_model_infos and CozytouchClimate._handle_coordinator_update. Both
+# are long if/elif chains over ids, which is the shape of the problem, not a
+# tangle to unpick -- but the ceiling still stops a new one appearing unnoticed.
+max-complexity = 25
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+split-on-trailing-comma = false
+# homeassistant sits in its own block, before the local imports, which is what
+# every module in custom_components/cozytouch already does.
+known-first-party = ["homeassistant", "custom_components", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# Asserts are what a test is, and a test function's name is its docstring.
+# S105/S106/S107 flag string literals that look like passwords: a test that
+# covers what happens to a wrong password has to contain one, and the whole
+# point is that it is not real.
+"tests/*" = ["S101", "S105", "S106", "S107", "D1"]
+# These are operator tools run by hand, not shipped code: printing is their
+# output, and probe_api.py opens URLs because probing the API is its job.
+"scripts/*" = ["T20", "S310", "D1"]
+# A scraped table, kept in the vendor's own spelling. Five of the Alfea names
+# run past 88 columns; wrapping them would be editing the data.
+"custom_components/cozytouch/model_catalogue.py" = ["E501"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.pyright]
+# The typed core, not the tree -- the scope and its reasons are in
+# docs/decisions.md.
+include = [
+    "custom_components/cozytouch/capability.py",
+    "custom_components/cozytouch/capability_table.py",
+    "custom_components/cozytouch/infos.py",
+    "custom_components/cozytouch/model.py",
+]
+typeCheckingMode = "basic"
+# The floor's Python, not the pinned one: syntax the floor cannot parse has to
+# fail here, and anything 3.13 accepts the pinned 3.14 accepts too.
+pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,112 @@
+set_schedule:
+  target:
+    entity:
+      integration: cozytouch
+      domain: climate
+  fields:
+    program:
+      required: true
+      example: cooling
+      selector:
+        select:
+          translation_key: program
+          options:
+            - heating
+            - cooling
+    days:
+      required: true
+      example: '["weekdays"]'
+      selector:
+        select:
+          multiple: true
+          translation_key: days
+          options:
+            - all
+            - weekdays
+            - weekend
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+    slots:
+      required: true
+      # Kept for the installs whose frontend predates the schema'd object
+      # selector below : there this field is still a YAML box, and this is
+      # the shape it expects.
+      example: |
+        - time: "00:00"
+          temperature: 26
+        - time: "07:00"
+          temperature: 24
+      selector:
+        object:
+          multiple: true
+          label_field: time
+          description_field: temperature
+          translation_key: schedule_slot
+          fields:
+            time:
+              required: true
+              label: Starts at
+              selector:
+                time:
+            temperature:
+              required: true
+              label: Temperature
+              selector:
+                number:
+                  min: 0
+                  max: 30
+                  # Whole degrees only : every program matrix seen in a
+                  # capture holds integers, so a half degree is untested
+                  # against the device.
+                  step: 1
+                  unit_of_measurement: "°C"
+                  # Without this a slider is drawn, since min and max are
+                  # both given -- unusable inside a slot row.
+                  mode: box
+
+get_schedule:
+  target:
+    entity:
+      integration: cozytouch
+      domain: climate
+  fields:
+    program:
+      required: true
+      example: heating
+      selector:
+        select:
+          translation_key: program
+          options:
+            - heating
+            - cooling
+
+set_away_mode:
+  target:
+    entity:
+      integration: cozytouch
+      domain: switch
+  fields:
+    start:
+      example: "2026-10-01 08:00:00"
+      selector:
+        datetime:
+    end:
+      example: "2026-10-08 18:00:00"
+      selector:
+        datetime:
+    duration:
+      example: '{"days": 7}'
+      selector:
+        duration:
+          enable_day: true
+
+clear_away_mode:
+  target:
+    entity:
+      integration: cozytouch
+      domain: switch

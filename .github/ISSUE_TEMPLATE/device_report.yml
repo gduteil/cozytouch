@@ -1,0 +1,113 @@
+name: Something is missing or wrong on a device
+description: An entity you expected is not there, reads wrong, or does nothing
+title: "Device report: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The integration works out what a device is from what the API sends
+        about it, so you no longer have to find a model id anywhere. What it
+        cannot work out on its own is what a capability *means* -- a number on
+        the wire with no name and no unit -- and that is what this form is
+        for.
+
+
+        **If a notice in Home Assistant sent you here**, saying some
+        capabilities are not named yet, this is the right form and the
+        diagnostics file at the bottom is the important part. Nothing is
+        broken: those ids are reaching Home Assistant as nothing at all, and
+        the file says what they are called. Fill in the rest as best you can
+        -- the app screenshots are what turn a name into a control that
+        works.
+
+  - type: textarea
+    id: device
+    attributes:
+      label: What the device is
+      description: >
+        The brand and commercial name on the box. If the report covers several
+        devices on one account -- a gateway, its rooms, its zones -- name each
+        of them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is missing or wrong
+      description: >
+        What you expected to see in Home Assistant and what you see instead.
+        An entity that is not there, one that reads a value you do not
+        recognise, a control that does nothing when you use it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: app
+    attributes:
+      label: What the Cozytouch app offers for it
+      description: >
+        The modes the app lists (heating, cooling, automatic, eco, boost, …),
+        the fan speeds and swing positions if it has them, and whether it
+        offers a quiet mode and an absence temperature. The screenshots below
+        carry most of this; write down anything they do not show, and anything
+        the app words oddly.
+
+
+        Asked because nothing else can answer it. A device reporting a
+        capability does not mean the app exposes it -- the rooms behind a
+        Navizone report an eco capability the app never shows, and that is the
+        difference between a control that works and one that writes into the
+        void.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots of the Cozytouch app
+      description: >
+        Drag the images in here. Three, and all three are needed:
+
+
+        1. the app's home screen, with every device on the account;
+
+        2. each device's own screen, one per device this report covers;
+
+        3. the screens behind it -- mode picker, schedule, settings.
+
+
+        The dump says what a device reports. Only these say what you can
+        actually do with it, and that is what has to be got right.
+        Crop anything you would rather not show.
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: >
+        Drag the file in here.
+        **Settings → Devices & Services → Atlantic Cozytouch → ⋮ → Download
+        diagnostics**. It lists every device on the account with what the API
+        says about it and the capability ids nothing names yet, which is what
+        a fix is built from. Your credentials and address are stripped out
+        before the file is written.
+
+
+        One file covers the whole account, so one is enough however many
+        devices this report is about : it carries every device the API
+        returns, with the value of every capability each one reports --
+        including the devices you have not added.
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Home Assistant, and the version of this integration.
+      placeholder: "HA 2026.9.1, cozytouch 2026.9.16"
+    validations:
+      required: true

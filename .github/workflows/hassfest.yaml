@@ -5,8 +5,11 @@ on:
     branches:
       - "main"
   pull_request:
+    # The base branch, so a stacked pull request gets checks too -- see the
+    # comment in tests.yaml.
     branches:
       - "main"
+      - "claude/**"
   schedule:
     - cron:  '0 0 * * *'
 

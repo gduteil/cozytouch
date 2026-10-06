@@ -1,0 +1,5 @@
+# Installed on top of requirements_test.txt, not on its own : pyright resolves
+# the homeassistant imports, so it needs the full test environment. Read by
+# the pyright job in .github/workflows/tests.yaml and by
+# .claude/hooks/session-start.sh -- see docs/decisions.md.
+pyright==1.1.411

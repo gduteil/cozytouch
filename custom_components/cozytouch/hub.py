@@ -2,258 +2,311 @@
 
 from __future__ import annotations
 
-import asyncio
-import copy
-from datetime import UTC, datetime, time as t, timedelta, timezone
-import json
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 
-from aiohttp import ClientError, ClientSession, ClientTimeout, ContentTypeError, FormData
-
-from homeassistant import exceptions
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import dt as dt_util
 
+from . import faults
+from .account import (
+    API_DECLARED_FIELDS,
+    CozytouchAccount,
+    CozytouchApiError,
+    CozytouchRateLimited,
+)
 from .capability import get_capability_infos
-from .const import COZYTOUCH_ATLANTIC_API, COZYTOUCH_CLIENT_ID
-from .model import get_model_infos
+from .capability_table import CAPABILITIES
+from .const import DOMAIN
+from .infos import CapabilityCategory, CapabilityInfos, CapabilityType
+from .model import get_device_model_infos, get_model_infos
+from .repairs import async_check_faults
 
 _LOGGER = logging.getLogger(__name__)
 
-# Timeout for all HTTP requests. Without this, a hung Atlantic API server
-# will stall _async_update_data forever, blocking all subsequent polls.
-REQUEST_TIMEOUT = ClientTimeout(total=30)
+# How often the account asks Atlantic for the setup view, and the bounds the
+# option is held between. See docs/decisions.md.
+DEFAULT_POLL_INTERVAL = 60
+MIN_POLL_INTERVAL = 15
+MAX_POLL_INTERVAL = 600
+
+POLL_INTERVAL_OPTION = "poll_interval"
+
+# How long after a write the account is read a second time, in seconds. The
+# first read is immediate : both planes carry the new value the moment the
+# execution completes, measured. See docs/decisions.md.
+WRITE_SETTLE_DELAY = 15
 
 
-class Hub(DataUpdateCoordinator):
-    """Atlantic Cozytouch Hub."""
+# What each away switch writes, read off the table so that a switch mapped
+# later is written with the others.
+AWAY_MODE_SWITCHES: dict[int, Mapping[str, object]] = {
+    capabilityId: {
+        "value_off": "0",
+        "value_on": "1",
+        "value_pending": "2",
+        **(row.extra or {}),
+    }
+    for capabilityId, row in CAPABILITIES.items()
+    if row.type is CapabilityType.AWAY_MODE_SWITCH
+}
 
-    manufacturer = "Atlantic Group"
-    _localization = {}
-    _setup = {}
-    _zones = {}
 
-    _timestamp_away_mode_last_change = None
-    _timestamp_away_mode_start = None
-    _timestamp_away_mode_end = None
+# Whether a room's absence is under way. A room has no switch of its own.
+ROOM_ABSENCE_CAPABILITY_ID = 100261
+
+# The `modelFamily` the API declares for air conditioning.
+AIR_CONDITIONING_FAMILY = "Air_Conditioning"
+
+
+@dataclass
+class CozytouchRuntimeData:
+    """One account, and one hub per device, keyed by the device's subentry."""
+
+    account: CozytouchAccount
+    hubs: dict[str, Hub]
+    coordinator: AccountCoordinator
+
+# The firmware version, which the device registry wants as a string on the
+# device rather than as an entity somewhere in the list.
+SOFTWARE_VERSION_CAPABILITY_ID = 121
+
+type CozytouchConfigEntry = ConfigEntry[CozytouchRuntimeData]
+
+
+def poll_interval(entry: ConfigEntry, rate_limit: int | None) -> timedelta:
+    """How often to poll, from the option and what the account will allow.
+
+    The ceiling is `rateLimit` read as requests per minute. See
+    docs/decisions.md.
+    """
+    seconds = entry.options.get(
+        POLL_INTERVAL_OPTION,
+        entry.data.get(POLL_INTERVAL_OPTION, DEFAULT_POLL_INTERVAL),
+    )
+
+    try:
+        seconds = int(seconds)
+    except (TypeError, ValueError):
+        seconds = DEFAULT_POLL_INTERVAL
+
+    seconds = max(MIN_POLL_INTERVAL, min(MAX_POLL_INTERVAL, seconds))
+
+    if rate_limit and rate_limit > 0:
+        # One request per interval is the whole steady-state cost, so the
+        # budget is spent when the interval drops below 60 / rateLimit.
+        allowed = 60 / rate_limit
+        if seconds < allowed:
+            _LOGGER.warning(
+                "Poll interval of %ds exceeds the account's declared rateLimit"
+                " of %s; using %ds",
+                seconds,
+                rate_limit,
+                int(allowed) + 1,
+            )
+            seconds = int(allowed) + 1
+
+    return timedelta(seconds=seconds)
+
+
+class AccountCoordinator(DataUpdateCoordinator):
+    """The one thing on a beat : re-read the setup view, tell every hub.
+
+    The hubs stay coordinators with no schedule of their own, and are pushed to
+    from here. See docs/decisions.md.
+    """
 
     def __init__(
         self,
         hass: HomeAssistant,
-        username: str,
-        password: str,
+        account: CozytouchAccount,
+        config_entry: ConfigEntry,
+        hubs: dict[str, Hub],
+    ) -> None:
+        """Init the account coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            # Not the username : this name reaches every debug line written.
+            config_entry=config_entry,
+            name="Cozytouch_" + config_entry.entry_id,
+            update_interval=poll_interval(config_entry, account.rate_limit),
+        )
+        self._account = account
+        self._hubs = hubs
+        self._entry = config_entry
+        self._settle_unsubs: list[Callable[[], None]] = []
+        config_entry.async_on_unload(self.async_cancel_settle)
+
+        # Without a listener of its own, this coordinator never reschedules
+        # and no poll follows setup's first one. See docs/decisions.md.
+        self.async_add_listener(lambda: None)
+
+    async def async_after_write(self) -> None:
+        """Re-read the account after somebody wrote something.
+
+        The device written to refreshes itself; this is what its siblings get,
+        since a capability can be the whole home's. Immediately, because the
+        cloud already holds the value, and once more later for what the device
+        derives from it afterwards. See docs/decisions.md.
+        """
+        self.async_cancel_settle()
+        self._settle_unsubs = [
+            async_call_later(self.hass, WRITE_SETTLE_DELAY, self._settle_tick)
+        ]
+        await self.async_request_refresh()
+
+    def async_cancel_settle(self) -> None:
+        """Drop whatever a previous write scheduled."""
+        for unsub in self._settle_unsubs:
+            unsub()
+        self._settle_unsubs = []
+
+    async def _settle_tick(self, _now) -> None:
+        """The settling read, for the values a write leads to rather than sets."""
+        await self.async_refresh()
+
+    async def _async_update_data(self) -> None:
+        """Read the setup view once, and hand it to every device."""
+        self._account.check_token()
+
+        if not self._account.online:
+            if not await self._account.connect_or_auth_failed():
+                self._publish_error(UpdateFailed("Cannot connect to Atlantic"))
+                raise UpdateFailed("Cannot connect to Atlantic Cozytouch API")
+
+            # connect() reads the setup view itself, so this round is done.
+            await self._account.refresh_consumptions()
+            await self._publish()
+            return
+
+        try:
+            await self._account.refresh_setup()
+        except CozytouchRateLimited as err:
+            # Not an UpdateFailed : see docs/decisions.md.
+            _LOGGER.debug("Poll skipped, backing off : %s", err)
+            return
+        except CozytouchApiError as err:
+            self._publish_error(UpdateFailed(str(err)))
+            raise UpdateFailed(str(err)) from err
+
+        # On its own, slower clock ; a no-op on most polls. See
+        # docs/decisions.md.
+        await self._account.refresh_consumptions()
+        await self._publish()
+
+    async def _publish(self) -> None:
+        """Tell every hub its device has a fresh capability list."""
+        for hub in self._hubs.values():
+            await hub.async_account_updated()
+
+        # Once the hubs have read the poll, not once per hub: the check looks
+        # at the whole account, and only once it has one to look at.
+        if getattr(self._entry, "runtime_data", None) is not None:
+            async_check_faults(self.hass, self._entry)
+
+    def _publish_error(self, err: Exception) -> None:
+        """Mark every device unavailable, since the account they share failed."""
+        for hub in self._hubs.values():
+            hub.async_set_update_error(err)
+
+def as_epoch(value) -> int | None:
+    """A modificationDate as an int, or None when it says nothing.
+
+    Missing, unparsable or at or below zero all read as None rather than as a
+    date in 1970. See docs/decisions.md.
+    """
+    try:
+        epoch = int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+    return epoch if epoch > 0 else None
+
+
+def device_of(hub, deviceId: int | None = None) -> dict | None:
+    """One device as the API describes it -- the hub's own, unless asked.
+
+    None when the account does not hold it; what a missing device means is
+    the caller's to decide.
+    """
+    deviceId = deviceId or hub._deviceId
+    return next(
+        (dev for dev in hub._account.devices if dev["deviceId"] == deviceId),
+        None,
+    )
+
+
+class Hub(DataUpdateCoordinator):
+    """One device of an Atlantic Cozytouch account.
+
+    The session, the token, the setup view and the poll are the account's and
+    live in `account.py`. What is left here is per device : which capability
+    ids it reports, what its model makes of them, and the away-mode window
+    its pickers show. A coordinator with `update_interval=None`,
+    pushed to by `AccountCoordinator`. See docs/decisions.md.
+    """
+
+    manufacturer = "Atlantic Group"
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        account: CozytouchAccount,
         deviceId: int | None = None,
+        config_entry: ConfigEntry | None = None,
+        subentry_id: str | None = None,
     ) -> None:
         """Init hub."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Cozytouch_" + str(deviceId),
-            update_interval=timedelta(seconds=60),
+            update_interval=None,
         )
-        self._session = ClientSession()
-        self._host = "none"
+        self._account = account
         self._hass = hass
-        self._username = username
-        self._password = password
+        self._entry = config_entry
+        self._subentry_id = subentry_id
         self._deviceId = deviceId
-        self._zoneId = -1
-        self._access_token = ""
-        self._id = "cozytouch." + username.lower()
         self._create_unknown = False
-        self._dump_json = False
-        self._devices = []
+        # What the vendor's table says about the faults this device is
+        # reporting now, per capability id. Empty on a healthy device, which
+        # is what spends no request. See docs/decisions.md.
+        self._faults: dict[int, list[dict]] = {}
 
-        self.online = False
-        self._token_expiry: float = 0  # Unix timestamp; 0 = unknown/expired
-
-        modelInfos = self.get_model_infos()
-        if "name" in modelInfos:
-            self.device_info = DeviceInfo(
-                entry_type=DeviceEntryType.SERVICE,
-                identifiers={("cozytouch", "cozytouch" + str(deviceId))},
-                manufacturer="Atlantic",
-                name=modelInfos["name"],
-            )
-
-        self._timestamps_away_mode_capability_id = None
-
-        # Load json for test during dev
-        self._test_load = False
-        if self._test_load:
-            self._dump_json = False
-            self.online = True
-            with open(
-                self._hass.config.config_dir + "/cozytouch_eoras2.json",
-                encoding="utf-8",
-            ) as json_file:
-                file_contents = json_file.read()
-                self.update_devices_from_json_data(json.loads(file_contents))
+        # The window the pickers show, which is only sent while the absence
+        # is on. See docs/decisions.md.
+        self._timestamp_away_mode_start = None
+        self._timestamp_away_mode_end = None
 
     @property
-    def hub_id(self) -> str:
-        """ID for hub."""
-        return self._id
+    def account(self) -> CozytouchAccount:
+        """The account this device hangs off."""
+        return self._account
 
-    async def test_connection(self) -> bool:
-        """Test connection."""
-        await self.connect()
-        return self.online
+    @property
+    def subentry_id(self) -> str | None:
+        """The subentry this device was added as, and so the device's identity."""
+        return self._subentry_id
 
-    async def connect(self) -> bool:
-        """Connect to Cozytouch server."""
-        if self.online is False:
-            try:
-                async with self._session.post(
-                    COZYTOUCH_ATLANTIC_API + "/users/token",
-                    data=FormData(
-                        {
-                            "grant_type": "password",
-                            "scope": "openid",
-                            "username": "GA-PRIVATEPERSON/" + self._username,
-                            "password": self._password,
-                        }
-                    ),
-                    headers={
-                        "Authorization": f"Basic {COZYTOUCH_CLIENT_ID}",
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    timeout=REQUEST_TIMEOUT,
-                ) as response:
-                    token = await response.json()
-
-                    if "error" in token and token["error"] == "invalid_grant":
-                        raise CannotConnect
-
-                    if "token_type" not in token:
-                        raise CannotConnect
-
-                    if "access_token" not in token:
-                        raise CannotConnect
-
-                    self._access_token = token["access_token"]
-                    # Track token expiry; fall back to 1 hour if not provided
-                    expires_in = token.get("expires_in", 3600)
-                    self._token_expiry = datetime.now(UTC).timestamp() + expires_in - 60
-
-                headers = {
-                    "Authorization": f"Bearer {self._access_token}",
-                    "Content-Type": "application/json",
-                }
-                async with self._session.get(
-                    COZYTOUCH_ATLANTIC_API + "/magellan/cozytouch/setupviewv2",
-                    headers=headers,
-                    timeout=REQUEST_TIMEOUT,
-                ) as response:
-                    json_data = await response.json()
-
-                    # Store setup
-                    for key in (
-                        "absence",
-                        "address",
-                        "area",
-                        "currency",
-                        "id",
-                        "mainDHWEnergy",
-                        "mainHeatingEnergy",
-                        "name",
-                        "numberOfPersons",
-                        "numberOfRooms",
-                        "setupBuildingDate",
-                        "type",
-                    ):
-                        if key in json_data[0]:
-                            self._setup[key] = copy.deepcopy(json_data[0][key])
-
-                    # Update devices infos
-                    await asyncio.get_event_loop().run_in_executor(
-                        None, self.update_devices_from_json_data, json_data
-                    )
-
-                    # Store country to retrieve localization informations
-                    if "address" in json_data[0]:
-                        await self._update_localization(
-                            json_data[0]["address"].get("country", None)
-                        )
-
-                    # Store zones informations
-                    if "zones" in json_data[0]:
-                        copy.deepcopy(json_data[0]["zones"])
-
-                self.online = True
-
-            except CannotConnect:
-                self.online = False
-            except (ClientError, asyncio.TimeoutError) as err:
-                _LOGGER.warning("connect: network error: %s", err)
-                self.online = False
-
-        return self.online
-
-    async def close(self) -> None:
-        """Close session."""
-        await self._session.close()
-
-    def update_devices_from_json_data(self, json_data) -> None:
-        """Update the devices list."""
-
-        if self._dump_json:
-            with open(
-                self._hass.config.config_dir + "/Cozytouch.json", "w", encoding="utf-8"
-            ) as outfile:
-                json_object = json.dumps(json_data, indent=4)
-                outfile.write(json_object)
-
-        # Get zones
-        if len(self._zones) == 0 and "zones" in json_data[0]:
-            self._zones = copy.deepcopy(json_data[0]["zones"])
-
-        # Start by removing old devices
-        for local_device in self._devices[:]:
-            bStillExists = False
-            for remote_device in json_data[0]["devices"]:
-                if remote_device["deviceId"] == local_device["deviceId"]:
-                    bStillExists = True
-                    break
-
-            if bStillExists is False:
-                self._devices.remove(local_device)
-
-        # Create new devices
-        deviceIndex = -1
-        for remote_device in json_data[0]["devices"]:
-            deviceIndex = -1
-            for i, local_device in enumerate(self._devices):
-                if remote_device["deviceId"] == local_device["deviceId"]:
-                    deviceIndex = i
-                    self._zoneId = remote_device["zoneId"]
-                    break
-
-            if deviceIndex == -1:
-                device = {
-                    "deviceId": remote_device["deviceId"],
-                    "name": remote_device["name"],
-                    "gatewaySerialNumber": remote_device["gatewaySerialNumber"],
-                    "modelId": remote_device["modelId"],
-                    "productId": remote_device["productId"],
-                    "zoneId": remote_device["zoneId"],
-                    "modelInfos": get_model_infos(remote_device["modelId"]),
-                    "capabilities": [],
-                    "tags": [],
-                }
-                if "tags" in remote_device:
-                    device["tags"] = copy.deepcopy(remote_device["tags"])
-
-                self._devices.append(device)
-                deviceIndex = len(self._devices) - 1
-
-            # Only retrieve capabilites from current device
-            if self._deviceId == remote_device["deviceId"]:
-                self._devices[deviceIndex]["capabilities"] = copy.deepcopy(
-                    remote_device["capabilities"]
-                )
+    @property
+    def online(self) -> bool:
+        """Whether the account this device belongs to is connected."""
+        return self._account.online
 
     def set_create_entities_for_unknown_entities(self, create_unknown: bool) -> None:
         """Set option from config flow to create entities for unknown capabilities."""
@@ -263,456 +316,679 @@ class Hub(DataUpdateCoordinator):
         """Get option from config flow to create entities for unknown capabilities."""
         return self._create_unknown
 
-    def set_dump_json(self, dump_json: bool) -> None:
-        """Set option from config flow to dump JSON from API."""
-        self._dump_json = dump_json
+    async def async_account_updated(self) -> None:
+        """The account has a fresh setup view; publish it as this device's data.
 
-    async def _async_update_data(self):
-        _LOGGER.debug("_async_update_data %d", self._deviceId)
-        if self._test_load:
+        Nothing left to fetch : the values are already on `account.devices`.
+        """
+        self._follow_reported_away_window()
+        await self._refresh_faults()
+        self.async_set_updated_data(None)
+
+    async def _refresh_faults(self) -> None:
+        """Name the faults the device reports, in the vendor's own words.
+
+        Reads the table only when a code is actually active, so a healthy
+        account never asks for one. See docs/decisions.md.
+        """
+        active = {
+            capabilityId: rows
+            for capabilityId in faults.FAULT_CAPABILITIES
+            if (
+                rows := faults.active_rows(
+                    self.get_capability_value(capabilityId, None)
+                )
+            )
+        }
+
+        if not active:
+            self._faults = {}
             return
 
-        # Proactively re-authenticate if the token is about to expire
-        if self.online and datetime.now(UTC).timestamp() >= self._token_expiry:
-            _LOGGER.info("Token expired or about to expire, re-authenticating")
-            self.online = False
+        modelId = self.get_model_id()
+        table = (
+            await self._account.fetch_fault_table(modelId)
+            if modelId is not None
+            else []
+        )
 
-        if self.online:
-            try:
-                headers = {
-                    "Authorization": f"Bearer {self._access_token}",
-                    "Content-Type": "application/json",
-                }
-                async with self._session.get(
-                    COZYTOUCH_ATLANTIC_API
-                    + "/magellan/capabilities/?deviceId="
-                    + str(self._deviceId),
-                    headers=headers,
-                    timeout=REQUEST_TIMEOUT,
-                ) as response:
-                    # 401 means the token was rejected; force re-auth next poll
-                    if response.status == 401:
-                        _LOGGER.warning("Got 401, forcing re-authentication next poll")
-                        self.online = False
-                        return
-
-                    if response.status != 200:
-                        _LOGGER.warning(
-                            "Unexpected status %d from capabilities endpoint",
-                            response.status,
-                        )
-                        self.online = False
-                        return
-
-                    try:
-                        json_data = await response.json()
-                    except ContentTypeError:
-                        _LOGGER.warning("Non-JSON response from capabilities endpoint")
-                        self.online = False
-                        return
-
-                    if isinstance(json_data, list):
-                        for dev in self._devices:
-                            if dev["deviceId"] == self._deviceId:
-                                dev["capabilities"] = copy.deepcopy(json_data)
-                                break
-
-                        if (
-                            self._timestamp_away_mode_last_change is not None
-                            and self._timestamps_away_mode_capability_id is not None
-                            and self._timestamp_away_mode_start is not None
-                            and self._timestamp_away_mode_end is not None
-                        ):
-                            now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
-                            if now - self._timestamp_away_mode_last_change > 20:
-                                await self.set_away_mode_timestamps(
-                                    None,
-                                    None,
-                                    self._timestamps_away_mode_capability_id,
-                                    self._timestamp_away_mode_start,
-                                    self._timestamp_away_mode_end,
-                                )
-                    else:
-                        _LOGGER.warning(
-                            "Capabilities response is not a list (got %s), forcing reconnect",
-                            type(json_data).__name__,
-                        )
-                        self.online = False
-
-            except asyncio.TimeoutError:
-                _LOGGER.warning(
-                    "Timeout fetching capabilities for device %d, forcing reconnect",
-                    self._deviceId,
-                )
-                self.online = False
-            except ClientError as err:
-                _LOGGER.warning(
-                    "Network error fetching capabilities for device %d: %s, forcing reconnect",
-                    self._deviceId,
-                    err,
-                )
-                self.online = False
-
-        else:
-            await self.connect()
-
-    def devices(self):
-        """Get devices list."""
-        devs = []
-        for dev in self._devices:
-            devs.append(
-                {
-                    "deviceId": dev["deviceId"],
-                    "name": dev["name"],
-                    "model": dev["modelInfos"]["name"],
-                }
+        self._faults = {
+            capabilityId: described
+            for capabilityId, rows in active.items()
+            if (
+                described := [
+                    fault
+                    for row in rows
+                    if (fault := faults.describe(table, row)) is not None
+                ]
             )
+        }
 
-        return devs
+    def get_faults(self) -> dict[int, list[dict]]:
+        """The named faults this device is reporting, per capability id."""
+        return self._faults
+
+    async def _async_update_data(self):
+        """Fetch this one device, for a refresh that could not wait.
+
+        Runs when `async_request_refresh()` asks, which is after a write. See
+        docs/decisions.md.
+        """
+        _LOGGER.debug("_async_update_data %d", self._deviceId)
+
+        # Proactively re-authenticate if the token is about to expire
+        self._account.check_token()
+
+        if not self._account.online:
+            if not await self._account.connect_or_auth_failed():
+                raise UpdateFailed("Cannot connect to Atlantic Cozytouch API")
+
+            # A reconnect re-reads the setup view, so this round is done.
+            return
+
+        try:
+            capabilities = await self._account.fetch_capabilities(self._deviceId)
+        except CozytouchRateLimited:
+            # Throttled, not broken : keep the values and stay available.
+            return
+        except CozytouchApiError as err:
+            raise UpdateFailed(str(err)) from err
+
+        self._account.store_capabilities(self._deviceId, capabilities)
+        self._follow_reported_away_window()
+        await self._refresh_faults()
+
+        # This ran because of a write, and a write can be the home's. See
+        # docs/decisions.md.
+        if (runtime := getattr(self._entry, "runtime_data", None)) is not None:
+            await runtime.coordinator.async_after_write()
 
     def get_zone_name(self, zoneId: int | None = None) -> str:
         """Get zone infos."""
-        if not zoneId:
-            zoneId = self._zoneId
-
-        for zone in self._zones:
-            if "id" in zone and zone["id"] == zoneId:
-                return zone["name"]
-
-        return str(zoneId)
+        return self._account.get_zone_name(zoneId)
 
     def get_model_infos(self, deviceId: int | None = None) -> str:
         """Get model infos."""
-        if not deviceId:
-            deviceId = self._deviceId
+        dev = device_of(self, deviceId)
+        if dev is None:
+            return get_model_infos(-1)
 
-        for dev in self._devices:
-            if dev["deviceId"] == deviceId:
-                zoneId = dev["zoneId"]
+        zoneId = dev["zoneId"]
 
-                # Special case for sub-devices, use master zone Id
-                for masterDev in self._devices:
-                    if "tags" in masterDev:
-                        for tag in masterDev["tags"]:
-                            if (
-                                "label" in tag
-                                and tag["label"] == "iothubChildrenIds"
-                                and "value" in tag
-                                and tag["value"] == dev["name"]
-                            ):
-                                zoneId = masterDev["zoneId"]
-                                break
+        # Special case for sub-devices, use master zone Id
+        for masterDev in self._account.devices:
+            if "tags" in masterDev:
+                for tag in masterDev["tags"]:
+                    if (
+                        "label" in tag
+                        and tag["label"] == "iothubChildrenIds"
+                        and "value" in tag
+                        and tag["value"] == dev["name"]
+                    ):
+                        zoneId = masterDev["zoneId"]
+                        break
 
-                return get_model_infos(dev["modelId"], self.get_zone_name(zoneId))
+        return get_device_model_infos(
+            self._account.devices, dev, self.get_zone_name(zoneId)
+        )
 
-        return get_model_infos(-1)
+    def get_model_id(self, deviceId: int | None = None) -> int | None:
+        """The model id the API reports, which is what the mapping is keyed on."""
+        dev = device_of(self, deviceId)
+        return dev["modelId"] if dev else None
 
     def get_serial_number(self, deviceId: int | None = None) -> str:
         """Get serial number."""
-        if not deviceId:
-            deviceId = self._deviceId
+        dev = device_of(self, deviceId)
+        return dev["gatewaySerialNumber"] if dev else "Unknown"
 
-        for dev in self._devices:
-            if dev["deviceId"] == deviceId:
-                return dev["gatewaySerialNumber"]
+    def get_software_version(self) -> str | None:
+        """The firmware version the device reports about itself, if it does.
 
-        return "Unknown"
+        None for a device that does not report 121, the gateways among them,
+        which leaves the registry field empty rather than guessing.
+        """
+        return self.get_capability_value(SOFTWARE_VERSION_CAPABILITY_ID, None)
+
+    def get_via_device(self, deviceId: int | None = None) -> tuple[str, str] | None:
+        """Identifiers of the gateway this device hangs off, when HA has it.
+
+        None for a gateway, and for a child whose gateway nobody added. See
+        docs/decisions.md.
+        """
+        dev = device_of(self, deviceId)
+        masterDeviceId = dev.get("masterDeviceId") if dev else None
+
+        if not masterDeviceId:
+            return None
+
+        for subentry_id, subentry in self._entry.subentries.items():
+            if subentry.data.get("deviceId") == masterDeviceId:
+                return (DOMAIN, subentry_id)
+
+        return None
 
     def get_capabilities_for_device(self, deviceId: int | None = None):
         """Get capabilities for a device."""
+        dev = device_of(self, deviceId)
+        if dev is None:
+            return []
 
-        if not deviceId:
-            deviceId = self._deviceId
+        modelInfos = get_device_model_infos(self._account.devices, dev)
+        availableCapabilityIds = {cap["capabilityId"] for cap in dev["capabilities"]}
 
         capabilities = []
-        for dev in self._devices:
-            if dev["deviceId"] == deviceId:
-                modelInfos = get_model_infos(dev["modelId"])
-                for capability in dev["capabilities"]:
-                    capability_infos = get_capability_infos(
-                        modelInfos,
-                        capability["capabilityId"],
-                        capability["value"],
-                    )
+        for capability in dev["capabilities"]:
+            capability_infos = get_capability_infos(
+                modelInfos,
+                capability["capabilityId"],
+                capability["value"],
+                availableCapabilityIds,
+            )
 
-                    if capability_infos is None and self._create_unknown:
-                        capability_infos = {
-                            "capabilityId": capability["capabilityId"],
-                            "name": "Capability_" + str(capability["capabilityId"]),
-                            "type": "string",
-                            "category": "diag",
-                        }
+            if capability_infos is None and self._create_unknown:
+                capability_infos = CapabilityInfos(
+                    capabilityId=capability["capabilityId"],
+                    name="Capability_" + str(capability["capabilityId"]),
+                    type=CapabilityType.STRING,
+                    category=CapabilityCategory.DIAG,
+                )
 
-                    if capability_infos is not None and len(capability_infos) > 0:
-                        capability_infos["deviceId"] = deviceId
+            if capability_infos is None or len(capability_infos) == 0:
+                continue
 
-                        isDuplicate = False
-                        if "capabilityDuplicate" in capability_infos:
-                            for cap in capabilities:
-                                if (
-                                    cap["capabilityId"]
-                                    == capability_infos["capabilityDuplicate"]
-                                ):
-                                    isDuplicate = True
-                                    break
+            capability_infos.deviceId = dev["deviceId"]
 
-                        if not isDuplicate:
-                            capabilities.append(capability_infos)
+            if "capabilityDuplicate" in capability_infos and any(
+                cap["capabilityId"] == capability_infos.capabilityDuplicate
+                for cap in capabilities
+            ):
+                continue
+
+            capabilities.append(capability_infos)
 
         return capabilities
 
-    def get_capability_infos(
-        self, modelId: int, capabilityId: int, capabilityValue: str
-    ):
-        """Get capability infos."""
-        return get_capability_infos(modelId, capabilityId, capabilityValue)
+    def get_capability_names(
+        self, deviceId: int | None = None
+    ) -> tuple[dict[int, str], list[int], list[int]]:
+        """Split what a device reports three ways: named, suppressed, unknown.
+
+        Three and not two. `get_capability_infos` answers None for an id
+        nothing in the mapping knows, and an empty `CapabilityInfos` for one it
+        knows and deliberately does not turn into an entity here -- a flag the
+        product does not have, a type the row is absent on, a mode id the
+        device reports without steering on. Both are falsy, so reading them the
+        same way filed a decision as a gap: this account's 171, 172 and 100507
+        have rows and read as unnamed. See docs/decisions.md.
+
+        Read by the diagnostics dump and by the notice that asks for one, so
+        the rule lives here rather than in each.
+        """
+        dev = device_of(self, deviceId)
+        if dev is None:
+            return {}, [], []
+
+        modelInfos = get_device_model_infos(self._account.devices, dev)
+        availableCapabilityIds = {cap["capabilityId"] for cap in dev["capabilities"]}
+
+        mapped: dict[int, str] = {}
+        suppressed: list[int] = []
+        unmapped: list[int] = []
+        for cap in dev["capabilities"]:
+            infos = get_capability_infos(
+                modelInfos,
+                cap["capabilityId"],
+                cap["value"],
+                availableCapabilityIds,
+            )
+            if infos:
+                mapped[cap["capabilityId"]] = infos.get("name")
+            elif infos is None:
+                unmapped.append(cap["capabilityId"])
+            else:
+                suppressed.append(cap["capabilityId"])
+
+        return mapped, sorted(suppressed), sorted(unmapped)
+
+    def get_diagnostics(self) -> dict:
+        """Describe the account as the API reports it, for a diagnostics dump.
+
+        Every device the setup returns, whether or not somebody added it :
+        unmapped hardware is what a dump is read for. A property of the account
+        and not of the hub that happened to be asked. See docs/decisions.md.
+        """
+        configured = {
+            subentry.data.get("deviceId")
+            for subentry in self._entry.subentries.values()
+        }
+
+        devices = []
+        for dev in self._account.devices:
+            modelInfos = get_device_model_infos(self._account.devices, dev)
+
+            mapped, suppressed, unmapped = self.get_capability_names(
+                dev["deviceId"]
+            )
+
+            devices.append(
+                {
+                    "deviceId": dev["deviceId"],
+                    "name": dev["name"],
+                    "modelId": dev["modelId"],
+                    "productId": dev["productId"],
+                    "zoneId": dev["zoneId"],
+                    "zoneName": self.get_zone_name(dev["zoneId"]),
+                    "tags": dev["tags"],
+                    "isConfiguredHere": dev["deviceId"] in configured,
+                    # Under the API's own names, so a report can be compared
+                    # against docs/api-surface.md without a translation step.
+                    **{field: dev.get(field) for field in API_DECLARED_FIELDS},
+                    "model": {
+                        "name": modelInfos.name,
+                        "type": str(modelInfos.type),
+                        "infos": {
+                            key: str(value)
+                            for key, value in modelInfos.items()
+                            if key not in ("name", "type")
+                        },
+                    },
+                    "capabilities": {
+                        "mapped": mapped,
+                        # Known, and deliberately not an entity on this
+                        # product. Listed rather than dropped: it is the
+                        # difference between "nobody has named this" and
+                        # "somebody decided this", and only one of the two is
+                        # a report worth opening.
+                        "suppressed": suppressed,
+                        "unmapped": unmapped,
+                        "values": {
+                            cap["capabilityId"]: cap["value"]
+                            for cap in dev["capabilities"]
+                        },
+                        # When the device last changed each value, which is
+                        # what tells a wrong value from an id the hardware
+                        # never feeds at all.
+                        "modificationDates": {
+                            cap["capabilityId"]: as_epoch(
+                                cap.get("modificationDate")
+                            )
+                            for cap in dev["capabilities"]
+                        },
+                    },
+                }
+            )
+
+        return {
+            "setup": dict(self._account.setup),
+            "zones": list(self._account.zones),
+            "devices": devices,
+        }
 
     def get_capability_value(
         self, capabilityId: int, defaultIfNotExist: str | None = "0"
     ):
         """Get value for a device capability."""
-        for dev in self._devices:
-            if dev["deviceId"] == self._deviceId:
-                for capability in dev["capabilities"]:
-                    if capabilityId == capability["capabilityId"]:
-                        return capability["value"]
+        dev = device_of(self)
+        if dev is None:
+            return None
 
-                return defaultIfNotExist
+        for capability in dev["capabilities"]:
+            if capabilityId == capability["capabilityId"]:
+                return capability["value"]
 
-        return None
+        return defaultIfNotExist
+
+    def get_capability_modification_date(self, capabilityId: int) -> int | None:
+        """When the device last changed one capability, as the API says."""
+        dev = device_of(self)
+        if dev is None:
+            return None
+
+        return next(
+            (
+                as_epoch(capability.get("modificationDate"))
+                for capability in dev["capabilities"]
+                if capability["capabilityId"] == capabilityId
+            ),
+            None,
+        )
+
+    def get_last_modification_date(self) -> int | None:
+        """The newest modification date this device reports, if it reports one.
+
+        The whole device rather than one capability : any one of them can sit
+        unchanged for hours. See docs/decisions.md.
+        """
+        dev = device_of(self)
+        if dev is None:
+            return None
+
+        dates = [
+            as_epoch(capability.get("modificationDate"))
+            for capability in dev["capabilities"]
+        ]
+
+        return max([date for date in dates if date is not None], default=None)
+
+    def get_last_poll(self) -> datetime | None:
+        """When the integration last heard from the API, as an aware datetime.
+
+        The account's date, not this device's. Paired with
+        `get_last_modification_date`, it separates "nothing changed" from
+        "nobody asked".
+        """
+        return self._account.last_poll
+
+    def get_is_available(self, deviceId: int | None = None) -> bool | None:
+        """The cloud's own reachability flag for this device (`isAvailable`).
+
+        Finer than `online`, which is the account's session. None when the
+        field is absent, so a missing reading is unknown rather than a guessed
+        connected state, and not cleared when the session drops.
+        """
+        dev = device_of(self, deviceId)
+        return dev.get("isAvailable") if dev else None
 
     async def set_capability_value(self, capabilityId: int, value: str):
-        """Set value for a device capability."""
+        """Set value for a device capability, or say why it did not land.
+
+        See docs/decisions.md, *A write that does not land says so*.
+        """
         _LOGGER.debug(
             "Set_capability_value for %d : %d = %s", self._deviceId, capabilityId, value
         )
-        if self.online:
-            for dev in self._devices:
-                if dev["deviceId"] == self._deviceId:
-                    for capability in dev["capabilities"]:
-                        if capabilityId == capability["capabilityId"]:
-                            if self._test_load:
-                                capability["value"] = value
-                            else:
-                                try:
-                                    # Write capability value
-                                    async with self._session.post(
-                                        COZYTOUCH_ATLANTIC_API
-                                        + "/magellan/executions/writecapability",
-                                        json={
-                                            "capabilityId": capabilityId,
-                                            "deviceId": self._deviceId,
-                                            "value": value,
-                                        },
-                                        headers={
-                                            "Authorization": f"Bearer {self._access_token}",
-                                            "Content-Type": "application/json",
-                                        },
-                                        timeout=REQUEST_TIMEOUT,
-                                    ) as response:
-                                        if response.status == 201:
-                                            # Check completion
-                                            executionId = await response.json()
-                                            completed = False
-                                            nbRetry = 0
-                                            while not completed:
-                                                async with self._session.get(
-                                                    COZYTOUCH_ATLANTIC_API
-                                                    + "/magellan/executions/"
-                                                    + str(executionId),
-                                                    headers={
-                                                        "Authorization": f"Bearer {self._access_token}",
-                                                        "Content-Type": "application/json",
-                                                    },
-                                                    timeout=REQUEST_TIMEOUT,
-                                                ) as executionResponse:
-                                                    try:
-                                                        execution_data = (
-                                                            await executionResponse.json()
-                                                        )
-                                                        execution_state = (
-                                                            execution_data.get(
-                                                                "state", False
-                                                            )
-                                                        )
-                                                        if execution_state == 1:
-                                                            _LOGGER.info(
-                                                                "Execution_state waiting execution"
-                                                            )
-                                                        if execution_state == 2:
-                                                            _LOGGER.info(
-                                                                "Execution_state in progress"
-                                                            )
-                                                        elif execution_state == 3:
-                                                            _LOGGER.info(
-                                                                "Execution_state completed"
-                                                            )
-                                                            completed = True
-                                                            break
-                                                        else:
-                                                            _LOGGER.info(
-                                                                "Execution_state error"
-                                                            )
-                                                            break
+        if not self.online:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cloud_unreachable"
+            )
 
-                                                    except ContentTypeError:
-                                                        self.online = False
-                                                        break
+        dev = device_of(self)
+        if dev is None:
+            return
 
-                                                nbRetry += 1
-                                                if nbRetry > 5:
-                                                    break
+        for capability in dev["capabilities"]:
+            if capabilityId != capability["capabilityId"]:
+                continue
 
-                                                await asyncio.sleep(1)
+            # Only on a completed execution. See docs/decisions.md.
+            if not await self._account.write_capability(
+                self._deviceId, capabilityId, value
+            ):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key=(
+                        "device_offline"
+                        if self.get_is_available() is False
+                        else "write_not_completed"
+                    ),
+                )
 
-                                            if completed:
-                                                capability["value"] = value
-                                except (ClientError, asyncio.TimeoutError) as err:
-                                    _LOGGER.warning(
-                                        "Network error writing capability %d: %s",
-                                        capabilityId,
-                                        err,
-                                    )
-                            break
+            capability["value"] = value
+            return
 
     def away_mode_init(self, timestampStart, timestampEnd):
         """Init away mode timestamps."""
         self._timestamp_away_mode_start = timestampStart
         self._timestamp_away_mode_end = timestampEnd
 
-    async def set_away_mode_start(
-        self,
-        capabilityIdTimestamps: int,
-        timestamp,
-    ):
-        """Set away mode start timestamp."""
-        self._timestamp_away_mode_start = timestamp
-        self._timestamps_away_mode_capability_id = capabilityIdTimestamps
-        self._timestamp_away_mode_last_change = datetime.now(
-            tz=dt_util.DEFAULT_TIME_ZONE
-        ).timestamp()
+    def away_mode_switches(self) -> dict[int, Mapping[str, object]]:
+        """The away switches this device reports, with what each one writes."""
+        return {
+            capabilityId: settings
+            for capabilityId, settings in AWAY_MODE_SWITCHES.items()
+            if self.get_capability_value(capabilityId, None) is not None
+        }
+
+    def reported_away_window(self) -> tuple[int, int] | None:
+        """The window the device reports beside its switch, if one is set."""
+        for settings in self.away_mode_switches().values():
+            value = self.get_capability_value(settings["timestampsCapabilityId"], None)
+            try:
+                start, end = (int(bound) for bound in value.strip("[]").split(","))
+            except (AttributeError, ValueError):
+                continue
+            if start and end:
+                return start, end
+        return None
+
+    def _follow_reported_away_window(self) -> None:
+        """While the absence is on, the pickers show the one under way.
+
+        Whoever set it -- the vendor app included. See docs/decisions.md.
+        """
+        if self.is_away() and (window := self.reported_away_window()):
+            self.away_mode_init(*window)
+
+    def reports_absence(self) -> bool:
+        """Whether this device says if the absence is on, one way or another."""
+        return bool(self.away_mode_switches()) or (
+            self.get_capability_value(ROOM_ABSENCE_CAPABILITY_ID, None) is not None
+        )
+
+    def absence_under_way(self) -> bool:
+        """Whether the absence has started, rather than being on or programmed.
+
+        A room reports it on its own (100261) ; a device with a switch reads
+        it there, where 2 is an absence still waiting for its start.
+        """
+        if self.get_capability_value(ROOM_ABSENCE_CAPABILITY_ID, None) == "1":
+            return True
+        return any(
+            self.get_capability_value(capabilityId, None) == settings["value_on"]
+            for capabilityId, settings in self.away_mode_switches().items()
+        )
+
+    def is_air_conditioning(self) -> bool:
+        """Whether this device, or the gateway it hangs off, is an air
+        conditioner, going by the family the API declares.
+
+        What an absence does depends on it : an air conditioner stops. See
+        docs/decisions.md.
+        """
+        dev = device_of(self)
+        if dev is None:
+            return False
+
+        master = (
+            device_of(self, dev["masterDeviceId"])
+            if dev.get("masterDeviceId")
+            else None
+        )
+        return any(
+            candidate is not None
+            and candidate.get("modelFamily") == AIR_CONDITIONING_FAMILY
+            for candidate in (dev, master)
+        )
+
+    def is_away(self) -> bool:
+        """Whether this device's absence is on, or programmed."""
+        return any(
+            self.get_capability_value(capabilityId, None) != settings["value_off"]
+            for capabilityId, settings in self.away_mode_switches().items()
+        )
+
+    async def set_away_mode_bound(self, index: int, timestamp: int) -> None:
+        """Move the start (index 0) or the end (index 1) of the window.
+
+        Kept on the hub while the absence is off, for the switch to send when
+        it is turned on ; sent at once while it is on. See docs/decisions.md.
+        """
+        if index == 0:
+            self._timestamp_away_mode_start = timestamp
+        else:
+            self._timestamp_away_mode_end = timestamp
+
+        start, end = self._timestamp_away_mode_start, self._timestamp_away_mode_end
+        if self.is_away() and away_window_is_valid(start, end):
+            await self.set_away_mode(start, end)
 
     def get_away_mode_start(self):
         """Get away mode start timestamp."""
         return self._timestamp_away_mode_start
 
-    async def set_away_mode_end(
-        self,
-        capabilityIdTimestamps: int,
-        timestamp,
-    ):
-        """Set away mode end timestamp."""
-        self._timestamp_away_mode_end = timestamp
-        self._timestamps_away_mode_capability_id = capabilityIdTimestamps
-        self._timestamp_away_mode_last_change = datetime.now(
-            tz=dt_util.DEFAULT_TIME_ZONE
-        ).timestamp()
-
     def get_away_mode_end(self):
         """Get away mode end timestamp."""
         return self._timestamp_away_mode_end
 
-    async def set_away_mode_timestamps(
-        self,
-        capabilityIdMode,
-        valueMode,
-        capabilityIdTimestamps: int,
-        timestampStart,
-        timestampEnd,
-    ):
-        """Set away mode timestamps."""
+    def _account_hubs(self) -> list[Hub]:
+        """Every hub of the account this one belongs to, itself included."""
+        runtime = getattr(self._entry, "runtime_data", None)
+        if runtime is None:
+            return [self]
 
-        if self.online:
-            # Update setup
-            json_data = {}
-            for key in (
-                "address",
-                "area",
-                "currency",
-                "mainHeatingEnergy",
-                "mainDHWEnergy",
-                "name",
-                "numberOfPersons",
-                "numberOfRooms",
-                "setupBuildingDate",
-                "type",
-            ):
-                if key in self._setup:
-                    json_data[key] = copy.deepcopy(self._setup[key])
+        hubs = list(runtime.hubs.values())
+        return hubs if self in hubs else [self, *hubs]
 
-            json_data["absence"] = {}
-            if timestampStart is not None and timestampEnd is not None:
-                json_data["absence"]["startDate"] = timestampStart
-                json_data["absence"]["endDate"] = timestampEnd
-                _timestamp_away_mode_start = timestampStart
-                _timestamp_away_mode_end = timestampEnd
+    async def set_away_mode(self, timestampStart, timestampEnd) -> bool:
+        """Set the account's absence, or clear it with None, in one go.
 
-            async with self._session.put(
-                COZYTOUCH_ATLANTIC_API
-                + "/magellan/v2/setups/"
-                + str(self._setup["id"]),
-                json=json_data,
-                headers={
-                    "Authorization": f"Bearer {self._access_token}",
-                    "Content-Type": "application/json",
-                },
-                timeout=REQUEST_TIMEOUT,
-            ) as response:
-                if response.status in (200, 204):
-                    if timestampStart is not None and timestampEnd is not None:
-                        valueTimestamps = (
-                            "[" + str(timestampStart) + "," + str(timestampEnd) + "]"
-                        )
-                        await self.set_capability_value(
-                            capabilityIdTimestamps, valueTimestamps
-                        )
-                        _LOGGER.info(
-                            "Away mode enabled %d -> %d", timestampStart, timestampEnd
-                        )
-                    else:
-                        valueTimestamps = "[0,0]"
-                        await self.set_capability_value(
-                            capabilityIdTimestamps, valueTimestamps
-                        )
-                        _LOGGER.info("Away mode disabled")
+        The window is the setup's, so it is sent once ; every device of the
+        account that switches the absence then mirrors it and is switched with
+        it. See docs/decisions.md.
+        """
+        if not self.online:
+            return False
 
-                    if capabilityIdMode is not None and valueMode is not None:
-                        await self.set_capability_value(capabilityIdMode, valueMode)
+        if not await self._account.set_absence(timestampStart, timestampEnd):
+            return False
 
-                    self._timestamp_away_mode_last_change = None
-                else:
-                    _LOGGER.error(
-                        "Set away mode : response %d (%s)",
-                        response.status,
-                        str(response.request_info),
-                    )
+        away = timestampStart is not None and timestampEnd is not None
+        pair = f"[{timestampStart},{timestampEnd}]" if away else "[0,0]"
 
-    async def _update_localization(self, country: str):
-        if len(self._localization) == 0:
-            headers = {
-                "Authorization": f"Bearer {self._access_token}",
-                "Content-Type": "application/json",
-            }
+        # A start still to come is programmed, as the vendor app writes it.
+        # See docs/decisions.md.
+        state = "value_off"
+        if away:
+            now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
+            state = "value_pending" if timestampStart > now else "value_on"
+
+        # The setup took the window, so a device refusing to mirror it is
+        # not a failure. See docs/decisions.md.
+        for hub in self._account_hubs():
+            switches = hub.away_mode_switches()
+            if not switches:
+                continue
+
+            # Cleared, the pickers go back to what the switch would send.
+            hub.away_mode_init(timestampStart, timestampEnd)
+
             try:
-                async with self._session.get(
-                    COZYTOUCH_ATLANTIC_API + "/magellan/refs/countries",
-                    headers=headers,
-                    timeout=REQUEST_TIMEOUT,
-                ) as response:
-                    try:
-                        json_data = await response.json()
-                        if isinstance(json_data, list):
-                            for localization in json_data:
-                                if localization.get("countryCode", "") == country:
-                                    self._localization = copy.deepcopy(localization)
-                                    break
+                for capabilityId, settings in switches.items():
+                    await hub.set_capability_value(
+                        settings["timestampsCapabilityId"], pair
+                    )
+                    await hub.set_capability_value(capabilityId, settings[state])
+            except HomeAssistantError as err:
+                _LOGGER.warning("Device did not mirror the absence: %s", err)
 
-                    except ContentTypeError:
-                        self._localization = {}
-            except (ClientError, asyncio.TimeoutError) as err:
-                _LOGGER.warning("Could not fetch localization: %s", err)
-                self._localization = {}
+            await hub.async_request_refresh()
+
+        if away:
+            _LOGGER.info("Away mode enabled %d -> %d", timestampStart, timestampEnd)
+        else:
+            _LOGGER.info("Away mode disabled")
+
+        return True
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+def away_window_is_valid(
+    timestampStart, timestampEnd, now: float | None = None
+) -> bool:
+    """Whether a window is one worth sending : both ends, in order, not over."""
+    if now is None:
+        now = datetime.now(tz=dt_util.DEFAULT_TIME_ZONE).timestamp()
+
+    return (
+        bool(timestampStart)
+        and bool(timestampEnd)
+        and timestampStart < timestampEnd
+        and timestampEnd > now
+    )
+
+
+# see docs/decisions.md
+_VIA_DEVICE_ID_SUPPORTED = "via_device_id" in DeviceInfo.__annotations__
+
+
+def via_device_info(hass: HomeAssistant, via_device: tuple[str, str]) -> DeviceInfo:
+    """The gateway link, keyed the way the running Home Assistant wants it.
+
+    Empty when the registry does not hold the gateway. See docs/decisions.md.
+    """
+    if not _VIA_DEVICE_ID_SUPPORTED:
+        return DeviceInfo(via_device=via_device)
+
+    gateway = dr.async_get(hass).async_get_device(identifiers={via_device})
+    if gateway is None:
+        return DeviceInfo()
+
+    return DeviceInfo(via_device_id=gateway.id)
+
+
+def device_info_for(coordinator: Hub, device_uniq_id: str) -> DeviceInfo:
+    """The device every entity of one subentry belongs to.
+
+    Setup registers every device from this before any platform runs, so what
+    the registry holds and what the entities declare are the same description.
+    See docs/decisions.md.
+    """
+    model_name = coordinator.get_model_infos().name
+    info = DeviceInfo(
+        identifiers={(DOMAIN, device_uniq_id)},
+        manufacturer="Atlantic",
+        name=model_name,
+        model=model_name,
+        serial_number=coordinator.get_serial_number(),
+        # On the device and not only as a diagnostic entity : "which version
+        # is this box on" is the first line of a bug report.
+        sw_version=coordinator.get_software_version(),
+    )
+    via_device = coordinator.get_via_device()
+    if via_device is not None:
+        info.update(via_device_info(coordinator.hass, via_device))
+
+    return info
+
+
+class CozytouchDeviceEntity(CoordinatorEntity):
+    """A coordinator entity that belongs to one subentry's device."""
+
+    _device_uniq_id: str
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return device_info_for(self.coordinator, self._device_uniq_id)
+
+
+def add_capability_entities(
+    config_entry: CozytouchConfigEntry,
+    async_add_entities,
+    builders: dict[CapabilityType, Callable],
+) -> None:
+    """Build one platform's entities from the capabilities each device reports.
+
+    `builders` maps a capability type to what to make of it, called with the
+    four arguments every entity here takes and returning one entity or several.
+    A type absent from the map belongs to another platform.
+    """
+    for subentry_id, subentry in config_entry.subentries.items():
+        hub = config_entry.runtime_data.hubs[subentry_id]
+
+        entities = []
+        for capability in hub.get_capabilities_for_device():
+            builder = builders.get(capability.type)
+            if builder is None:
+                continue
+
+            built = builder(
+                coordinator=hub,
+                capability=capability,
+                config_title=subentry.title,
+                config_uniq_id=subentry_id,
+            )
+            entities.extend(built if isinstance(built, list) else [built])
+
+        if entities:
+            async_add_entities(entities, True, config_subentry_id=subentry_id)

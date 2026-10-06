@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, CalVer (ex: 2026.8.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 0
+
+      - name: Check the version looks like CalVer
+        run: |
+          echo "${{ github.event.inputs.version }}" | grep -Eq '^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$' \
+            || { echo "Expected YEAR.MONTH.PATCH, got '${{ github.event.inputs.version }}'"; exit 1; }
+
+      - name: Refuse to reuse an existing tag
+        run: |
+          git rev-parse -q --verify "refs/tags/${{ github.event.inputs.version }}" >/dev/null \
+            && { echo "Tag ${{ github.event.inputs.version }} already exists"; exit 1; } || true
+
+      # main is protected : changes go through a pull request. So the job
+      # cannot write the version itself, and the bump has to be merged before
+      # a release is dispatched. Checked here, before the slow steps, so a
+      # forgotten bump costs seconds rather than a minute of pip.
+      - name: Check the manifest carries the version being released
+        run: |
+          CURRENT=$(jq -r .version custom_components/cozytouch/manifest.json)
+          if [ "$CURRENT" != "$VERSION" ]; then
+            echo "manifest.json says $CURRENT, not $VERSION."
+            echo
+            echo "Set \"version\" to $VERSION in"
+            echo "custom_components/cozytouch/manifest.json, merge that pull"
+            echo "request, then dispatch this workflow again."
+            exit 1
+          fi
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+
+      - uses: "actions/setup-python@v5"
+        with:
+          python-version: "3.14"
+
+      - name: Install test requirements
+        run: pip install -r requirements_test.txt
+
+      - name: Run pytest
+        run: pytest tests/ -q
+
+      - name: Tag the commit
+        run: |
+          git tag "$VERSION"
+          git push origin "$VERSION"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+
+      - name: Write the release notes
+        # --generate-notes lists merged pull requests, which for 2026.8.2 was a
+        # bare compare link and nothing else. The commit subjects are the
+        # changelog. The grep drops the "Release x" bumps older releases
+        # committed themselves, back when this job could push to main.
+        #
+        # A commit subject says what changed, one change at a time ; what the
+        # release *means* is release_notes/<version>.md, written in the same
+        # pull request as the manifest bump. Not a dispatch input : those are
+        # single-line fields, and a pasted paragraph arrives as one line. The
+        # commit list stays, folded, because it is what somebody chasing a
+        # behaviour change reads.
+        run: |
+          PREVIOUS=$(git describe --tags --abbrev=0 "${{ github.event.inputs.version }}^" 2>/dev/null || true)
+          NOTES=$(cat "release_notes/$VERSION.md" 2>/dev/null || true)
+
+          {
+            if [ -n "$NOTES" ]; then
+              echo "$NOTES"
+              echo
+              echo '<details><summary>Every change in this release</summary>'
+              echo
+            fi
+            if [ -n "$PREVIOUS" ]; then
+              git log --no-merges --format='- %s (%h)' \
+                --invert-grep --grep='^Release ' \
+                "$PREVIOUS..${{ github.event.inputs.version }}"
+              echo
+              echo "**Full changelog**: ${{ github.server_url }}/${{ github.repository }}/compare/$PREVIOUS...${{ github.event.inputs.version }}"
+            else
+              git log --no-merges --format='- %s (%h)' "${{ github.event.inputs.version }}"
+            fi
+            if [ -n "$NOTES" ]; then
+              echo
+              echo '</details>'
+            fi
+          } > release-notes.md
+
+          cat release-notes.md
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+
+      - name: Create the GitHub release
+        run: |
+          gh release create "${{ github.event.inputs.version }}" \
+            --title "${{ github.event.inputs.version }}" \
+            --notes-file release-notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}

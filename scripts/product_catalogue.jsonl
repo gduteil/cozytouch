@@ -1,0 +1,123 @@
+{"familyId":16,"id":1,"isRemoteMaintainable":true,"name":"PASSAPC BOILER"}
+{"familyId":15,"id":2,"isRemoteMaintainable":true,"name":"PASSAPC HEATPUMP"}
+{"familyId":17,"id":3,"isRemoteMaintainable":true,"name":"PASSAPC HYBRIDHP"}
+{"familyId":5,"id":4,"isRemoteMaintainable":true,"name":"SIF UNDEFINED"}
+{"familyId":9,"id":6,"isRemoteMaintainable":true,"name":"WATERDROP IOTHUB"}
+{"familyId":9,"id":7,"isRemoteMaintainable":true,"name":"HDG2"}
+{"familyId":11,"id":8,"isRemoteMaintainable":false,"name":"BD1"}
+{"familyId":11,"id":9,"isRemoteMaintainable":false,"name":"RAD"}
+{"familyId":11,"id":10,"isRemoteMaintainable":false,"name":"BD3_3"}
+{"familyId":12,"id":11,"isRemoteMaintainable":false,"name":"IC4"}
+{"familyId":12,"id":12,"isRemoteMaintainable":false,"name":"IC3"}
+{"familyId":10,"id":13,"isRemoteMaintainable":false,"name":"V3SOCLE"}
+{"familyId":10,"id":14,"isRemoteMaintainable":false,"name":"SPLIT"}
+{"familyId":10,"id":15,"isRemoteMaintainable":false,"name":"AEX"}
+{"familyId":10,"id":16,"isRemoteMaintainable":false,"name":"V3MURAL"}
+{"familyId":10,"id":17,"isRemoteMaintainable":false,"name":"CV4"}
+{"familyId":9,"id":18,"isRemoteMaintainable":false,"name":"FLAT"}
+{"familyId":9,"id":19,"isRemoteMaintainable":false,"name":"CARRE"}
+{"familyId":10,"id":20,"isRemoteMaintainable":false,"name":"CV4E"}
+{"familyId":2,"id":21,"isRemoteMaintainable":false,"name":"ZC2"}
+{"familyId":8,"id":22,"isRemoteMaintainable":false,"name":"HRV"}
+{"familyId":11,"id":23,"isRemoteMaintainable":false,"name":"PASS_IO"}
+{"familyId":8,"id":24,"isRemoteMaintainable":false,"name":"DOUBLEFLUX"}
+{"familyId":18,"id":25,"isRemoteMaintainable":false,"name":"CLIF"}
+{"familyId":18,"id":26,"isRemoteMaintainable":false,"name":"ROOM_0"}
+{"familyId":18,"id":27,"isRemoteMaintainable":false,"name":"ROOM_1"}
+{"familyId":18,"id":28,"isRemoteMaintainable":false,"name":"ROOM_2"}
+{"familyId":18,"id":29,"isRemoteMaintainable":false,"name":"ROOM_3"}
+{"familyId":18,"id":30,"isRemoteMaintainable":false,"name":"ROOM_4"}
+{"familyId":18,"id":31,"isRemoteMaintainable":false,"name":"UI_0"}
+{"familyId":18,"id":32,"isRemoteMaintainable":false,"name":"UI_1"}
+{"familyId":18,"id":33,"isRemoteMaintainable":false,"name":"UI_2"}
+{"familyId":18,"id":34,"isRemoteMaintainable":false,"name":"UI_3"}
+{"familyId":18,"id":35,"isRemoteMaintainable":false,"name":"UI_4"}
+{"familyId":18,"id":36,"isRemoteMaintainable":false,"name":"UI_5"}
+{"familyId":18,"id":37,"isRemoteMaintainable":false,"name":"UI_6"}
+{"familyId":18,"id":38,"isRemoteMaintainable":false,"name":"UI_7"}
+{"familyId":18,"id":39,"isRemoteMaintainable":false,"name":"UI_8"}
+{"familyId":18,"id":40,"isRemoteMaintainable":false,"name":"UI_9"}
+{"familyId":11,"id":41,"isRemoteMaintainable":false,"name":"BD0 WIFI"}
+{"familyId":11,"id":42,"isRemoteMaintainable":false,"name":"BD4"}
+{"familyId":11,"id":43,"isRemoteMaintainable":false,"name":"BD3_3 WITHOUT LIGHT"}
+{"familyId":10,"id":44,"isRemoteMaintainable":false,"name":"DISCOVER V3/3S"}
+{"familyId":10,"id":45,"isRemoteMaintainable":false,"name":"V3RENO"}
+{"familyId":3,"id":46,"isRemoteMaintainable":false,"name":"DHW DEFAULT"}
+{"familyId":3,"id":47,"isRemoteMaintainable":false,"name":"DHW_0"}
+{"familyId":11,"id":48,"isRemoteMaintainable":false,"name":"RAD MODBUSLINK"}
+{"familyId":3,"id":49,"isRemoteMaintainable":false,"name":"DHW MODBUSLINK"}
+{"familyId":15,"id":50,"isRemoteMaintainable":true,"name":"SIF HEATPUMP"}
+{"familyId":17,"id":51,"isRemoteMaintainable":true,"name":"SIF HYBRIDHP"}
+{"familyId":16,"id":52,"isRemoteMaintainable":true,"name":"SIF BOILER"}
+{"familyId":12,"id":53,"isRemoteMaintainable":false,"name":"TD1W"}
+{"familyId":5,"id":54,"isRemoteMaintainable":true,"name":"CESA V2"}
+{"familyId":0,"id":55,"isRemoteMaintainable":false,"name":"TESC_0"}
+{"familyId":0,"id":56,"isRemoteMaintainable":false,"name":"TESC_1"}
+{"familyId":0,"id":57,"isRemoteMaintainable":false,"name":"TESC_2"}
+{"familyId":5,"id":58,"isRemoteMaintainable":false,"name":"GENERATOR_0"}
+{"familyId":5,"id":59,"isRemoteMaintainable":false,"name":"GENERATOR_HEAT_PUMP_0"}
+{"familyId":5,"id":60,"isRemoteMaintainable":false,"name":"GENERATOR_HYBRID_HEAT_PUMP_0"}
+{"familyId":5,"id":61,"isRemoteMaintainable":false,"name":"GENERATOR_BOILER_0"}
+{"familyId":10,"id":62,"isRemoteMaintainable":false,"name":"CETHI v5"}
+{"familyId":4,"id":63,"isRemoteMaintainable":true,"name":"HUB RAD"}
+{"familyId":11,"id":64,"isRemoteMaintainable":false,"name":"HExZ"}
+{"familyId":4,"id":65,"isRemoteMaintainable":false,"name":"THZONE_0"}
+{"familyId":4,"id":66,"isRemoteMaintainable":false,"name":"THZONE_1"}
+{"familyId":4,"id":67,"isRemoteMaintainable":false,"name":"THZONE_2"}
+{"familyId":4,"id":68,"isRemoteMaintainable":false,"name":"THZONE_3"}
+{"familyId":4,"id":69,"isRemoteMaintainable":false,"name":"THZONE_4"}
+{"familyId":4,"id":70,"isRemoteMaintainable":false,"name":"THZONE_5"}
+{"familyId":4,"id":71,"isRemoteMaintainable":false,"name":"THZONE_6"}
+{"familyId":4,"id":72,"isRemoteMaintainable":false,"name":"THZONE_7"}
+{"familyId":4,"id":73,"isRemoteMaintainable":false,"name":"THZONE_8"}
+{"familyId":4,"id":74,"isRemoteMaintainable":false,"name":"THZONE_9"}
+{"familyId":4,"id":75,"isRemoteMaintainable":false,"name":"THZONE_10"}
+{"familyId":4,"id":76,"isRemoteMaintainable":false,"name":"THZONE_11"}
+{"familyId":4,"id":77,"isRemoteMaintainable":false,"name":"THZONE_12"}
+{"familyId":4,"id":78,"isRemoteMaintainable":false,"name":"THZONE_13"}
+{"familyId":4,"id":79,"isRemoteMaintainable":false,"name":"THZONE_14"}
+{"familyId":4,"id":80,"isRemoteMaintainable":false,"name":"THZONE_15"}
+{"familyId":4,"id":81,"isRemoteMaintainable":false,"name":"THZONE_16"}
+{"familyId":4,"id":82,"isRemoteMaintainable":false,"name":"THZONE_17"}
+{"familyId":4,"id":83,"isRemoteMaintainable":false,"name":"THZONE_18"}
+{"familyId":4,"id":84,"isRemoteMaintainable":false,"name":"THZONE_19"}
+{"familyId":4,"id":85,"isRemoteMaintainable":false,"name":"THZONE_20"}
+{"familyId":4,"id":86,"isRemoteMaintainable":false,"name":"THZONE_21"}
+{"familyId":4,"id":87,"isRemoteMaintainable":false,"name":"THZONE_22"}
+{"familyId":4,"id":88,"isRemoteMaintainable":false,"name":"THZONE_23"}
+{"familyId":4,"id":89,"isRemoteMaintainable":false,"name":"THZONE_24"}
+{"familyId":4,"id":90,"isRemoteMaintainable":false,"name":"THZONE_25"}
+{"familyId":4,"id":91,"isRemoteMaintainable":false,"name":"THZONE_26"}
+{"familyId":4,"id":92,"isRemoteMaintainable":false,"name":"THZONE_27"}
+{"familyId":4,"id":93,"isRemoteMaintainable":false,"name":"THZONE_28"}
+{"familyId":4,"id":94,"isRemoteMaintainable":false,"name":"THZONE_29"}
+{"familyId":3,"id":95,"isRemoteMaintainable":true,"name":"SIF DHW"}
+{"familyId":18,"id":96,"isRemoteMaintainable":true,"name":"SIF ZONICLIM"}
+{"familyId":18,"id":97,"isRemoteMaintainable":false,"name":"ROOM_5"}
+{"familyId":18,"id":98,"isRemoteMaintainable":false,"name":"ROOM_6"}
+{"familyId":18,"id":99,"isRemoteMaintainable":false,"name":"ROOM_7"}
+{"familyId":18,"id":100,"isRemoteMaintainable":false,"name":"ROOM_8"}
+{"familyId":18,"id":101,"isRemoteMaintainable":false,"name":"ROOM_9"}
+{"familyId":18,"id":102,"isRemoteMaintainable":false,"name":"ROOM_10"}
+{"familyId":18,"id":103,"isRemoteMaintainable":false,"name":"ROOM_11"}
+{"familyId":18,"id":104,"isRemoteMaintainable":false,"name":"ROOM_12"}
+{"familyId":18,"id":105,"isRemoteMaintainable":false,"name":"ROOM_13"}
+{"familyId":18,"id":106,"isRemoteMaintainable":false,"name":"ROOM_14"}
+{"familyId":18,"id":107,"isRemoteMaintainable":false,"name":"ROOM_15"}
+{"familyId":18,"id":108,"isRemoteMaintainable":false,"name":"ROOM_16"}
+{"familyId":18,"id":109,"isRemoteMaintainable":false,"name":"ROOM_17"}
+{"familyId":18,"id":110,"isRemoteMaintainable":false,"name":"ROOM_18"}
+{"familyId":18,"id":111,"isRemoteMaintainable":false,"name":"ROOM_19"}
+{"familyId":10,"id":112,"isRemoteMaintainable":false,"name":"AEXV3"}
+{"familyId":9,"id":113,"isRemoteMaintainable":false,"name":"VM_CONCEPT"}
+{"familyId":0,"id":114,"isRemoteMaintainable":false,"name":"BRIDGE V1"}
+{"familyId":0,"id":115,"isRemoteMaintainable":false,"name":"BRIDGE V2"}
+{"familyId":11,"id":116,"isRemoteMaintainable":false,"name":"BD1 WIFI"}
+{"familyId":11,"id":117,"isRemoteMaintainable":false,"name":"BD3_2 CONNECT"}
+{"familyId":9,"id":118,"isRemoteMaintainable":false,"name":"WATERDROP FLAT/S4 EPOS"}
+{"familyId":10,"id":119,"isRemoteMaintainable":false,"name":"WATERDROP CLASS A EPOS"}
+{"familyId":0,"id":120,"isRemoteMaintainable":false,"name":"IHM N2 WIFI"}
+{"familyId":11,"id":121,"isRemoteMaintainable":false,"name":"PRE CONNECT"}
+{"familyId":18,"id":122,"isRemoteMaintainable":false,"name":"CONSOLE"}
+{"familyId":18,"id":123,"isRemoteMaintainable":false,"name":"MURALE"}
+{"familyId":18,"id":124,"isRemoteMaintainable":false,"name":"GAINABLE"}

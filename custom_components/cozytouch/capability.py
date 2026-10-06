@@ -1,765 +1,315 @@
-"""Atlantic Cozytouch capabilility mapping."""
+"""How a capability id becomes an entity.
 
-from homeassistant.const import UnitOfEnergy, UnitOfPressure
+The mechanism only : which row answers an id, how a descriptor's number
+reads, and the handful of ids no row can decide. The rows themselves are in
+`capability_table.py`, which is the file to open to add a device.
+"""
 
-from .const import CozytouchCapabilityVariableType
+from .capability_table import (
+    CAPABILITIES,
+    ELECTRIC_HEATERS,
+    SUPPRESSED_CAPABILITIES,
+    hidden_by_a_calendar,
+)
+from .const import program_days
+from .infos import CapabilityCategory, CapabilityInfos, CapabilityType, ModelInfos
 from .model import CozytouchDeviceType
 
 
-def get_capability_infos(modelInfos: dict, capabilityId: int, capabilityValue: str):  # noqa: C901
-    """Get capabilities for a device."""
-    modelId = modelInfos["modelId"]
+# The API's own families split the electric heaters in two -- Radiator and
+# Towel_Dryer -- and the mapping follows, because "seche-serviettes" in front
+# of a radiator is what gduteil/cozytouch#172 was about. Same wiring on this
+# side of it : both report the same ids and mean the same things by them. The
+# one place they part is 100506, below.
+def describe_capability_value(capabilityId: int, value) -> str | None:
+    """Read a descriptor capability as what it says, or None if nothing does.
 
-    capability = {"modelId": modelId, "capabilityId": capabilityId}
+    The row says how: `reads_as` when the number is looked up whole, `bits`
+    when it is a sum of them. A row that says neither is a number nobody has
+    decoded, and it reaches the entity as it came.
+
+    Bits nothing names are kept as a count rather than dropped: these entities
+    exist to investigate hardware nobody here owns, and a bit the table does
+    not cover is exactly what such a reader is after.
+    """
+    row = CAPABILITIES.get(capabilityId)
+    if row is None:
+        return None
+
+    if row.reads_as is not None:
+        return row.reads_as.get(str(value).strip())
+
+    if row.bits is None:
+        return None
+
+    try:
+        mask = int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+    if mask == 0:
+        return "none"
+
+    named = [label for bit, label in row.bits if mask & bit]
+
+    known = 0
+    for bit, _ in row.bits:
+        known |= bit
+    leftover = mask & ~known
+    if leftover:
+        named.append(f"unknown ({leftover})")
+
+    return ", ".join(named) if named else None
+
+
+# The program blocks whose slots hold a room temperature. The hot-water block
+# (237-243) is deliberately out: its slots really do carry 50-65 °C, so the
+# hundredths rule below would read a 65 °C tank as 0.65 °C.
+THERMOSTAT_PROG_IDS = program_days("heating") | program_days("cooling")
+
+
+def read_setpoint(capabilityId: int | None, value):
+    """Read a program slot's target temperature.
+
+    Some firmwares store it in hundredths -- the vendor app divides anything
+    above 40 by 100 and shows the result, so a slot reading 1950 is 19.5 °C
+    and not a device asking for 1950 °C. No capture here has ever shown one,
+    so this is the app's rule and nothing more; see docs/decisions.md.
+    """
+    if capabilityId not in THERMOSTAT_PROG_IDS:
+        return value
+
+    try:
+        setpoint = float(value)
+    except (TypeError, ValueError):
+        return value
+
+    return setpoint / 100 if setpoint > 40 else setpoint
+
+
+def _wire_override(capability: CapabilityInfos) -> None:
+    capability.progOverrideCapabilityId = 157
+    capability.progOverrideTotalTimeCapabilityId = 158
+    capability.progOverrideTimeCapabilityId = 159
+
+
+def _wire_program(capability: CapabilityInfos) -> None:
+    capability.progCapabilityId = 184
+    _wire_override(capability)
+
+
+def _wire_cooling(capability: CapabilityInfos) -> None:
+    capability.targetCoolCapabilityId = 177
+    capability.lowestCoolValueCapabilityId = 162
+    capability.highestCoolValueCapabilityId = 163
+
+
+def _wire_presets(
+    capability: CapabilityInfos,
+    modelInfos: ModelInfos,
+    availableCapabilityIds: set[int],
+) -> None:
+    if 100506 in availableCapabilityIds:
+        capability.activityCapabilityId = 100506
+    if (
+        modelInfos.get("ecoModeAvailable", True)
+        and 100507 in availableCapabilityIds
+    ):
+        capability.ecoCapabilityId = 100507
+    if 100505 in availableCapabilityIds:
+        capability.boostCapabilityId = 100505
+
+
+def _room_entity(
+    capability: CapabilityInfos,
+    modelInfos: ModelInfos,
+    availableCapabilityIds: set[int],
+) -> None:
+    # One room, whatever is in it. The vendor's own client does the same :
+    # a single class behind every gateway, and the capabilities decide
+    # what it offers, because nothing the slot reports says whether the
+    # room holds a radiator or an air conditioner. Every id below is asked
+    # for rather than assumed. See docs/decisions.md.
+    capability.name = "room"
+    capability.icon = "mdi:home-thermometer"
+    if 153 in availableCapabilityIds:
+        capability.heatingActiveCapabilityId = 153
+    if 184 in availableCapabilityIds:
+        capability.progCapabilityId = 184
+    if 157 in availableCapabilityIds:
+        _wire_override(capability)
+    if 177 in availableCapabilityIds:
+        _wire_cooling(capability)
+    _wire_presets(capability, modelInfos, availableCapabilityIds)
+
+
+def _climate_entity(
+    capability: CapabilityInfos,
+    capabilityId: int,
+    modelInfos: ModelInfos,
+    availableCapabilityIds: set[int],
+) -> CapabilityInfos:
+    """The climate entity, and everything it is wired to.
+
+    The only capability that is not one reading : it gathers the setpoint, the
+    bounds, the mode and the program from half a dozen other ids, and which of
+    them exist depends on the product and on what the device reports.
+    """
+    # Default Ids
+    capability.targetCapabilityId = 40
+    capability.lowestValueCapabilityId = 160
+    capability.highestValueCapabilityId = 161
 
     if (
-        capabilityId in (1, 2, 7, 8)
-        and capabilityId in modelInfos["HVACModesCapabilityId"]
+        modelInfos.get("currentTemperatureAvailable", True)
+        and 117 in availableCapabilityIds
     ):
-        # Default Ids
-        capability["targetCapabilityId"] = 40
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
+        capability.currentValueCapabilityId = 117
+        # The device says, at each poll, whether that reading means anything.
+        # See docs/decisions.md.
+        if 103150 in availableCapabilityIds:
+            capability.currentAvailableCapabilityId = 103150
 
-        if modelInfos.get("currentTemperatureAvailable", True):
-            capability["currentValueCapabilityId"] = 117
+    # 181 carries the mode the device is really running, which is not always
+    # the one it was asked for
+    if 181 in availableCapabilityIds:
+        capability.hvacActionCapabilityId = 181
 
-        if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER:
-            capability["name"] = "central_heating"
-            capability["icon"] = "mdi:radiator"
-            capability["progCapabilityId"] = 184
-            capability["progOverrideCapabilityId"] = 157
-            capability["progOverrideTotalTimeCapabilityId"] = 158
-            capability["progOverrideTimeCapabilityId"] = 159
-        elif modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
-            capability["name"] = "heat"
-            capability["icon"] = "mdi:heating-coil"
-            capability["progCapabilityId"] = 184
-            capability["progOverrideCapabilityId"] = 157
-            capability["progOverrideTotalTimeCapabilityId"] = 158
-            capability["progOverrideTimeCapabilityId"] = 159
-        elif modelInfos["type"] == CozytouchDeviceType.AC:
-            capability["name"] = "air_conditioner"
-            capability["icon"] = "mdi:air-conditioner"
-            capability["targetCoolCapabilityId"] = 177
-            capability["lowestCoolValueCapabilityId"] = 162
-            capability["highestCoolValueCapabilityId"] = 163
-            capability["activityCapabilityId"] = 100506
-            capability["ecoCapabilityId"] = 100507
-            capability["boostCapabilityId"] = 100505
-        elif modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
-            if capabilityId in (1, 7):
-                capability["name"] = "heat_pump_z1"
-                capability["targetCapabilityId"] = 17
-                if modelInfos.get("currentTemperatureAvailableZ1", True):
-                    capability["currentValueCapabilityId"] = 117
-                else:
-                    capability["currentValueCapabilityId"] = None
+    # While air circulation runs it drives the unit, and the Cozytouch app
+    # locks the mode and setpoint for the duration
+    if 102024 in availableCapabilityIds:
+        capability.airCirculationCapabilityId = 102024
+
+    # The service the whole system runs, which is what a mode change writes.
+    # See docs/decisions.md.
+    if 102020 in availableCapabilityIds:
+        capability.systemServiceCapabilityId = 102020
+
+    # TEMPERATURE_UPDATE_STEP: the device states the setpoint granularity
+    if 294 in availableCapabilityIds:
+        capability.stepCapabilityId = 294
+
+    if modelInfos.type == CozytouchDeviceType.GAZ_BOILER:
+        capability.name = "central_heating"
+        capability.icon = "mdi:radiator"
+        _wire_program(capability)
+    elif modelInfos.type in ELECTRIC_HEATERS:
+        capability.name = "heat"
+        capability.icon = "mdi:heating-coil"
+        # 153 is the element itself. 181 above only says which mode is
+        # running, so a radiator sitting above its setpoint read as
+        # heating -- see docs/decisions.md
+        if 153 in availableCapabilityIds:
+            capability.heatingActiveCapabilityId = 153
+        _wire_program(capability)
+    elif modelInfos.type == CozytouchDeviceType.ROOM:
+        _room_entity(capability, modelInfos, availableCapabilityIds)
+    elif modelInfos.type == CozytouchDeviceType.AC:
+        capability.name = "air_conditioner"
+        capability.icon = "mdi:air-conditioner"
+        _wire_cooling(capability)
+        _wire_presets(capability, modelInfos, availableCapabilityIds)
+    elif modelInfos.type == CozytouchDeviceType.HEAT_PUMP:
+        if capabilityId in (1, 7):
+            capability.name = "heat_pump_z1"
+            capability.targetCapabilityId = 17
+            if (
+                modelInfos.get("currentTemperatureAvailableZ1", True)
+                and 117 in availableCapabilityIds
+            ):
+                capability.currentValueCapabilityId = 117
             else:
-                capability["name"] = "heat_pump_z2"
-                capability["targetCapabilityId"] = 18
-                if modelInfos.get("currentTemperatureAvailableZ2", True):
-                    capability["currentValueCapabilityId"] = 118
-                else:
-                    capability["currentValueCapabilityId"] = None
-
-            # capability["lowestValueCapabilityId"] = 172
-            # capability["highestValueCapabilityId"] = 171
-            capability.pop("lowestValueCapabilityId")
-            capability.pop("highestValueCapabilityId")
-            capability["icon"] = "mdi:heat-pump"
+                capability.currentValueCapabilityId = None
         else:
-            capability["name"] = "heat"
-
-        capability["type"] = "climate"
-        capability["category"] = "sensor"
-
-        if "fanModes" in modelInfos:
-            capability["fanModeCapabilityId"] = 100801
-
-        if modelInfos.get("quietModeAvailable", False):
-            capability["quietModeCapabilityId"] = 100802
-
-        if modelInfos.get("overrideModeAvailable", True):
-            capability["progCapabilityId"] = 184
-            capability["progOverrideCapabilityId"] = 157
-            capability["progOverrideTotalTimeCapabilityId"] = 158
-            capability["progOverrideTimeCapabilityId"] = 159
-
-        if "swingModes" in modelInfos:
-            capability["swingModeCapabilityId"] = 100803
-            capability["swingOnCapabilityId"] = 100804
-
-    elif capabilityId == 19:
-        capability["name"] = "temperature_setpoint"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 22:
-        capability["name"] = "target_temperature_dhw"
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
-
-    elif capabilityId == 25:
-        capability["name"] = "number_of_starts_ch_pump"
-        capability["type"] = "int"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:water-pump"
-
-    elif capabilityId == 26:
-        capability["name"] = "number_of_starts_dhw_pump"
-        capability["type"] = "int"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:water-pump"
-
-    elif capabilityId == 28:
-        capability["name"] = "number_of_hours_ch_pump"
-        capability["type"] = "int"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:water-pump"
-
-    elif capabilityId == 29:
-        capability["name"] = "number_of_hours_dhw_pump"
-        capability["type"] = "int"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:water-pump"
-
-    elif capabilityId == 40:
-        capability["name"] = "target_temperature"
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
-
-    elif capabilityId == 41:
-        capability["name"] = "target_temperature_eco_z1"
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
-
-    elif capabilityId == 42:
-        capability["name"] = "target_temperature_eco_z2"
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
-
-    elif capabilityId == 44:
-        capability["name"] = "ch_power_consumption"
-        capability["type"] = "energy"
-        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:radiator"
-
-    elif capabilityId == 45:
-        capability["name"] = "dhw_power_consumption"
-        capability["type"] = "energy"
-        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:faucet"
-
-    elif capabilityId == 46:
-        capability["name"] = "total_power_consumption"
-        capability["type"] = "energy"
-        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:water-boiler"
-
-    elif capabilityId in (57, 59):
-        capability["name"] = "power_consumption"
-        capability["type"] = "energy"
-        capability["displayed_unit_of_measurement"] = UnitOfEnergy.KILO_WATT_HOUR
-        capability["category"] = "sensor"
-
-    elif capabilityId == 86:
-        capability["name"] = "domestic_hot_water"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:faucet"
-
-    elif capabilityId == 87:
-        capability["name"] = "heating_mode"
-        capability["type"] = "select"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:water-boiler"
-        capability["modelList"] = "HeatingModes"
-
-    elif capabilityId == 88:
-        capability["name"] = "model_name"
-        capability["type"] = "string"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:tag"
-
-    elif capabilityId in (94, 98):
-        capability["name"] = "product_number"
-        capability["type"] = "string"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:tag"
-
-    elif capabilityId == 99:
-        if modelInfos["type"] == CozytouchDeviceType.WATER_HEATER:
-            capability["name"] = "resistance"
-            capability["icon"] = "mdi:radiator"
-        else:
-            capability["name"] = "dhw_pump"
-            capability["icon"] = "mdi:faucet"
-
-        capability["type"] = "binary"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 100:
-        capability["name"] = "water_pressure"
-        capability["type"] = "pressure"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:gauge"
-        capability["displayed_unit_of_measurement"] = UnitOfPressure.BAR
-
-    elif capabilityId in (101, 102, 103, 104):
-        capability["name"] = "Capability_" + str(capabilityId)
-        capability["type"] = "string"
-        capability["value_type"] = CozytouchCapabilityVariableType.ARRAY
-        capability["category"] = "sensor"
-
-    elif capabilityId == 109:
-        capability["name"] = "boiler_water_temperature"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 111:
-        capability["name"] = "dhw_temperature"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 116:
-        if modelInfos.get("exhaustTemperatureAvailable", True):
-            capability["name"] = "exhaust_temperature"
-            capability["type"] = "temperature"
-            capability["category"] = "sensor"
-        else:
-            return {}
-
-    elif capabilityId == 117:
-        capability["name"] = "thermostat_temperature_z1"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 118:
-        capability["name"] = "thermostat_temperature_z2"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 119:
-        # Outside temperature is invalid when value is -327.68
-        if float(capabilityValue) > -327.68:
-            capability["name"] = "outside_temperature"
-            capability["type"] = "temperature"
-            capability["category"] = "sensor"
-        else:
-            return {}
-
-    elif capabilityId == 121:
-        capability["name"] = "version"
-        capability["type"] = "string"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:tag"
-
-    elif capabilityId in (152, 227):
-        capability["name"] = "away_mode"
-        capability["type"] = "away_mode_switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:airplane"
-        capability["value_off"] = "0"
-        capability["value_on"] = "1"
-        capability["value_pending"] = "2"
-        if capabilityId == 152:
-            capability["timestampsCapabilityId"] = 222
-        elif capabilityId == 227:
-            capability["timestampsCapabilityId"] = 226
-
-    elif capabilityId == 153:
-        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
-            capability["name"] = "resistance"
-            capability["icon"] = "mdi:radiator"
-        else:
-            capability["name"] = "flame"
-            capability["icon"] = "mdi:fire"
-
-        capability["type"] = "binary"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 154:
-        capability["name"] = "zone_1"
-        capability["type"] = "string"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:home-floor-1"
-
-    elif capabilityId == 155:
-        capability["name"] = "zone_2"
-        capability["type"] = "string"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:home-floor-2"
-
-    # elif capabilityId == 157:
-    #    # Prog override flag
-    #    return {}
-
-    elif capabilityId == 158:
-        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
-            capability["name"] = "override_total_time"
-        else:
-            capability["name"] = "override_total_time_z1"
-
-        capability["type"] = "hours_adjustment_number"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:clock-outline"
-        capability["lowest_value"] = 1
-        capability["highest_value"] = 24
-
-    elif capabilityId == 159:
-        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
-            capability["name"] = "override_remain_time"
-        else:
-            capability["name"] = "override_remain_time_z1"
-
-        capability["type"] = "time"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:clock-outline"
-
-    elif capabilityId == 160:
-        # Target temperature adjustment min limit
-        capability["name"] = "temperature_adjustment_min"
-        capability["type"] = "temperature"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:thermometer-chevron-down"
-
-    elif capabilityId == 161:
-        # Target temperature adjustment max limit
-        capability["name"] = "temperature_adjustment_max"
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:thermometer-chevron-up"
-        capability["lowest_value"] = 19
-        capability["highest_value"] = 28
-        capability["step"] = 0.5
-
-    elif capabilityId == 165:
-        capability["name"] = "boost_mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:water-boiler"
-
-        if modelInfos["type"] == CozytouchDeviceType.HEAT_PUMP:
-            capability["value_off"] = "false"
-            capability["value_on"] = "true"
-
-    elif capabilityId == 169:
-        capability["name"] = "radio_signal"
-        capability["type"] = "percentage"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:radio-tower"
-
-    elif capabilityId == 172:
-        capability["name"] = "away_mode_temperature"
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 160
-        capability["highestValueCapabilityId"] = 161
-
-    elif capabilityId == 177:
-        if modelInfos["type"] == CozytouchDeviceType.GAZ_BOILER:
-            return {}
-
-        capability["name"] = "target_cool_temperature"
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 162
-        capability["highestValueCapabilityId"] = 163
-
-    elif capabilityId == 179:
-        capability["name"] = "wifi_signal"
-        capability["type"] = "signal"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:wifi"
-
-    elif capabilityId == 181:
-        # Ignore, same as heat sensor (7, 8)
-        return {}
-
-    elif capabilityId == 184:
-        capability["name"] = "prog_mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:clock-outline"
-
-    elif capabilityId == 196:
-        capability["name"] = "prog_01_z1"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 197:
-        capability["name"] = "prog_02_z1"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 198:
-        capability["name"] = "prog_03_z1"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 199:
-        capability["name"] = "prog_04_z1"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 200:
-        capability["name"] = "prog_05_z1"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 201:
-        capability["name"] = "prog_06_z1"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 202:
-        capability["name"] = "prog_07_z1"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 203:
-        capability["name"] = "prog_08_z2"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 204:
-        capability["name"] = "prog_09_z2"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 205:
-        capability["name"] = "prog_10_z2"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 206:
-        capability["name"] = "prog_11_z2"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 207:
-        capability["name"] = "prog_12_z2"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 208:
-        capability["name"] = "prog_13_z2"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 209:
-        capability["name"] = "prog_14_z2"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 219:
-        capability["name"] = "wifi_ssid"
-        capability["type"] = "string"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:wifi"
-
-    elif capabilityId in (222, 226):
-        capability["name"] = "away_mode"
-        capability["name_0"] = "away_mode_start"
-        capability["name_1"] = "away_mode_stop"
-        capability["type"] = "away_mode_timestamps"
-        capability["category"] = "sensor"
-        capability["icon_0"] = "mdi:airplane-takeoff"
-        capability["icon_1"] = "mdi:airplane-landing"
-        capability["timezoneCapabilityId"] = 315
-        if capabilityId == 222:
-            capability["capabilityDuplicate"] = 226
-        else:
-            capability["capabilityDuplicate"] = 222
-
-    elif capabilityId == 231:
-        capability["name"] = "target_temperature"
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
-        capability["lowestValueCapabilityId"] = 105301
-        capability["highestValueCapabilityId"] = 105304
-
-    elif capabilityId == 232:
-        capability["name"] = "boost_total_time"
-        capability["type"] = "time"
-        capability["category"] = "diagnostic"
-        capability["icon"] = "mdi:clock-outline"
-
-    elif capabilityId == 233:
-        capability["name"] = "boost_remaining_time"
-        capability["type"] = "time"
-        capability["category"] = "diagnostic"
-        capability["icon"] = "mdi:clock-outline"
-
-    elif capabilityId == 245:
-        capability["name"] = "prog_01"
-        capability["type"] = "progtime"
-        capability["category"] = "diag"
-
-    elif capabilityId == 246:
-        capability["name"] = "prog_02"
-        capability["type"] = "progtime"
-        capability["category"] = "diag"
-
-    elif capabilityId == 247:
-        capability["name"] = "prog_03"
-        capability["type"] = "progtime"
-        capability["category"] = "diag"
-
-    elif capabilityId == 248:
-        capability["name"] = "prog_04"
-        capability["type"] = "progtime"
-        capability["category"] = "diag"
-
-    elif capabilityId == 249:
-        capability["name"] = "prog_05"
-        capability["type"] = "progtime"
-        capability["category"] = "diag"
-
-    elif capabilityId == 250:
-        capability["name"] = "prog_06"
-        capability["type"] = "progtime"
-        capability["category"] = "diag"
-
-    elif capabilityId == 251:
-        capability["name"] = "prog_07"
-        capability["type"] = "progtime"
-        capability["category"] = "diag"
-
-    elif capabilityId == 258:
-        capability["name"] = "tank_capacity"
-        capability["type"] = "volume"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 264:
-        capability["name"] = "condenser_temperature"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 265:
-        capability["name"] = "tank_middle_temperature"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 266:
-        capability["name"] = "tank_top_temperature"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 267:
-        capability["name"] = "tank_bottom_temperature"
-        capability["type"] = "temperature"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 268:
-        capability["name"] = "v40_water_available"
-        capability["type"] = "volume"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:water-thermometer"
-
-    elif capabilityId == 269:
-        capability["name"] = "water_consumption"
-        capability["type"] = "water_consumption"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:water-pump"
-
-    elif capabilityId == 270:
-        capability["name"] = "v40_water_capacity"
-        capability["type"] = "volume"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:water-thermometer"
-
-    elif capabilityId == 271:
-        capability["name"] = "hot_water_available"
-        capability["type"] = "percentage"
-        capability["category"] = "sensor"
-
-    elif capabilityId == 283:
-        capability["name"] = "off_peak_hours"
-        capability["type"] = "binary"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:clock-outline"
-
-    elif capabilityId == 315:
-        capability["name"] = "timezone"
-        capability["type"] = "timezone"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:map-clock-outline"
-
-    elif capabilityId == 316:
-        capability["name"] = "interface_fw"
-        capability["type"] = "string"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:tag"
-
-    elif capabilityId == 335:
-        capability["name"] = "serial_number"
-        capability["type"] = "string"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:tag"
-
-    elif capabilityId == 100402:
-        capability["name"] = "number_of_hours_burner"
-        capability["type"] = "int"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:fire"
-
-    elif capabilityId == 100406:
-        capability["name"] = "number_of_starts_burner"
-        capability["type"] = "int"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:fire"
-
-    elif capabilityId == 100505:
-        capability["name"] = "powerful_mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:wind-power"
-
-    elif capabilityId == 100506:
-        if modelInfos["type"] == CozytouchDeviceType.TOWEL_RACK:
-            capability = {}
-        else:
-            capability["name"] = "presence_mode"
-            capability["type"] = "switch"
-            capability["category"] = "sensor"
-            capability["icon"] = "mdi:account"
-
-    elif capabilityId == 100507:
-        capability["name"] = "eco_mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:flower-outline"
-
-    elif capabilityId == 100320:
-        capability["name"] = "prog_heat_monday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100321:
-        capability["name"] = "prog_heat_tuesday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100322:
-        capability["name"] = "prog_heat_wednesday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100323:
-        capability["name"] = "prog_heat_thursday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100324:
-        capability["name"] = "prog_heat_friday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100325:
-        capability["name"] = "prog_heat_saturday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100326:
-        capability["name"] = "prog_heat_sunday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100327:
-        capability["name"] = "prog_cool_monday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100328:
-        capability["name"] = "prog_cool_tuesday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100329:
-        capability["name"] = "prog_cool_wednesday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100330:
-        capability["name"] = "prog_cool_thursday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100331:
-        capability["name"] = "prog_cool_friday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100332:
-        capability["name"] = "prog_cool_saturday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100333:
-        capability["name"] = "prog_cool_sunday"
-        capability["type"] = "prog"
-        capability["category"] = "diag"
-
-    elif capabilityId == 100802:
-        capability["name"] = "quiet_mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:fan-minus"
-
-    elif capabilityId == 100804:
-        capability["name"] = "swing_mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:arrow-oscillating"
-
-    elif capabilityId == 104044:
-        capability["name"] = "boost_mode"
-        capability["type"] = "switch"
-        capability["category"] = "sensor"
-        capability["icon"] = "mdi:heat-wave"
-
-    elif capabilityId == 104047:
-        # Boost timeout max. in minutes
-        capability["name"] = "boost_timeout_max"
-        capability["type"] = "minutes_adjustment_number"
-        capability["category"] = "diag"
-        capability["icon"] = "mdi:clock-outline"
-        capability["lowest_value"] = 5
-        capability["highest_value"] = 60
-        capability["step"] = 5
-
-    elif capabilityId == 105906:
-        capability["name"] = "Target 105906"
-        capability["type"] = "temperature_percent_adjustment_number"
-        capability["category"] = "sensor"
-        capability["temperatureMin"] = 15.0
-        capability["temperatureMax"] = 65.0
-
-    elif capabilityId == 105907:
-        capability["name"] = "Target 105907"
-        capability["type"] = "temperature_percent_adjustment_number"
-        capability["category"] = "sensor"
-        capability["temperatureMin"] = 15.0
-        capability["temperatureMax"] = 65.0
-
-    # For test
-    elif capabilityId == 312:
-        capability["name"] = "Temp_" + str(capabilityId)
-        capability["type"] = "temperature_adjustment_number"
-        capability["category"] = "sensor"
+            capability.name = "heat_pump_z2"
+            capability.targetCapabilityId = 18
+            if (
+                modelInfos.get("currentTemperatureAvailableZ2", True)
+                and 118 in availableCapabilityIds
+            ):
+                capability.currentValueCapabilityId = 118
+            else:
+                capability.currentValueCapabilityId = None
+
+        del capability.lowestValueCapabilityId
+        del capability.highestValueCapabilityId
+        capability.icon = "mdi:heat-pump"
+    else:
+        capability.name = "heat"
+
+    capability.type = CapabilityType.CLIMATE
+    capability.category = CapabilityCategory.SENSOR
+
+    if "fanModes" in modelInfos and 100801 in availableCapabilityIds:
+        capability.fanModeCapabilityId = 100801
+
+    if (
+        modelInfos.get("quietModeAvailable", False)
+        and 100802 in availableCapabilityIds
+    ):
+        capability.quietModeCapabilityId = 100802
+
+    if modelInfos.get("overrideModeAvailable", True):
+        _wire_program(capability)
+
+    if "swingModes" in modelInfos and 100803 in availableCapabilityIds:
+        capability.swingModeCapabilityId = 100803
+
+        if 100804 in availableCapabilityIds:
+            capability.swingOnCapabilityId = 100804
+
+    return capability
+
+
+def get_capability_infos(
+    modelInfos: ModelInfos,
+    capabilityId: int,
+    capabilityValue: str,
+    availableCapabilityIds: set[int],
+) -> CapabilityInfos | None:
+    """What this device turns this capability into.
+
+    Three answers, in order : the climate entity for an id carrying an HVAC
+    mode, nothing at all for an id deliberately dropped, and a row of
+    `CAPABILITIES` for everything else. None means the mapping does not know
+    the id, which is what the diagnostics dump reports so somebody can name
+    it.
+
+    availableCapabilityIds is what the device actually reports. Optional
+    features are declared per model, but the same model id is reused across
+    hardware that does not always implement them, so they are only wired up
+    when the device backs them.
+    """
+    capability = CapabilityInfos(
+        modelId=modelInfos.modelId, capabilityId=capabilityId
+    )
+
+    if capabilityId in (1, 2, 7, 8):
+        # The four ids that can carry an HVAC mode. A product steers on one or
+        # two of them and still reports the others; those get no entity, and
+        # their row below exists so the reading beside the climate one reads as
+        # a word rather than a number.
+        if capabilityId not in modelInfos.HVACModesCapabilityId:
+            return CapabilityInfos()
+
+        capability = _climate_entity(
+            capability, capabilityId, modelInfos, availableCapabilityIds
+        )
+
+    elif capabilityId in SUPPRESSED_CAPABILITIES:
+        return CapabilityInfos()
+
+    elif capabilityId in CAPABILITIES:
+        capability = CAPABILITIES[capabilityId].resolve(
+            capability, modelInfos, capabilityValue
+        )
+        if capabilityId == 100078 and modelInfos.get("winkable", False):
+            # Writable only where the vendor's app offers the button, which
+            # its device classes decide rather than the device. See
+            # docs/decisions.md.
+            capability.type = CapabilityType.SWITCH
+        if hidden_by_a_calendar(capabilityId, availableCapabilityIds):
+            capability.enabled_by_default = False
 
     else:
         return None
