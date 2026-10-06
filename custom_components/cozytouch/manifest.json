@@ -1,12 +1,18 @@
 {
-    "domain": "cozytouch",
-    "name": "Atlantic Cozytouch",
-    "codeowners": ["@mathieuletyrant"],
-    "config_flow": true,
-    "dependencies": ["http", "repairs"],
-    "documentation": "https://github.com/mathieuletyrant/cozytouch-hacs",
-    "iot_class": "cloud_polling",
-    "issue_tracker": "https://github.com/mathieuletyrant/cozytouch-hacs/issues",
-    "requirements": [],
-    "version": "2026.10.1"
+  "domain": "cozytouch",
+  "name": "Atlantic Cozytouch",
+  "codeowners": [
+    "@gduteil",
+    "@mathieuletyrant"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http",
+    "repairs"
+  ],
+  "documentation": "https://github.com/gduteil/cozytouch",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/gduteil/cozytouch/issues",
+  "requirements": [],
+  "version": "2026.10.0"
 }
