@@ -145,7 +145,8 @@ Proof standards :
   the cloud.
 
 Evidence lives in `<scratchpad>/shots/`, never in the repository, and
-survives cleanup.
+survives cleanup. It reaches the maintainer by `SendUserFile` in the
+conversation, or by uploads.sh on a pull request (below).
 
 ### Before and after, on a pull request
 
@@ -157,27 +158,49 @@ against the reporter's dump and HA version when there is one :
 2. `git checkout <branch> -- custom_components/` (or check the branch out),
    `R restart`, the same shots as "after".
 3. `git checkout main -- custom_components/` to put the tree back.
-4. Comment on the pull request with the shots attached -- `gh` 2.99 or
-   later uploads them as GitHub attachments, nothing is committed. Write the
-   body in a file, reference each shot by its relative path, and run it from
-   the directory holding them ; `gh` rewrites each reference to the uploaded
-   asset :
+4. Upload the shots with [uploads.sh](https://uploads.sh) and comment on
+   the pull request with the Markdown it returns. Nothing is committed, and
+   it works the same in a local session and in a Claude Code on the web
+   one, whose GitHub proxy refuses every native way to attach an image.
 
    ```bash
    cd <scratchpad>/shots
-   gh pr comment <n> --repo mathieuletyrant/cozytouch-hacs -F body.md \
-       --attach before.png --attach after.png
+   uploads --json put before.png --pr <n> --repo mathieuletyrant/cozytouch-hacs \
+       --state before --meta path=<page> --alt "Before: ..." --width 430
+   uploads --json put after.png  --pr <n> --repo mathieuletyrant/cozytouch-hacs \
+       --state after  --meta path=<page> --alt "After: ..."  --width 430
    ```
 
-   with, in `body.md`, a table such as
-   `| ![Before: ...](./before.png) | ![After: ...](./after.png) |`, the HA
-   version, the dump used and how it was adapted. `--edit-last` replaces
-   your previous comment instead of adding one.
+   Each answer carries an `embedUrl` on `embed.uploads.sh`, which GitHub's
+   image proxy revalidates. Put it in an HTML tag, `<img src="<embedUrl>"
+   alt="..." width="430">`, not the `markdown` field : the web session's
+   GitHub MCP tools drop the leading `!` of `![alt](url)`, and the image
+   lands as a bare link (#183, 2026-10-06). Then post one
+   comment -- through the GitHub MCP tools on the web, `gh pr comment -F
+   body.md` locally -- with a table such as `| before | after |` holding
+   the two images, the HA version, the dump used and how it was adapted.
+   A `--pr` key is stable : putting the same name again replaces the image
+   in place, and the comment follows without being edited.
 
-   **In a Claude Code on the web session** this cannot work : its GitHub
-   proxy refuses every way to upload an image (GraphQL, Git Data writes,
-   any ref but a branch). Verify there, describe what the shots show in the
-   pull request, and leave the shots themselves to a local session.
+   If the uploads GitHub App is installed on the repository, `put --pr` also
+   keeps an attachments comment of its own (`uploads-sh[bot]`) ; without it
+   that step is declined, the upload is not, and your comment is the record.
+   Before the pull request exists, a bare `uploads put` on the branch stages
+   the shot, and `uploads attach --promote` moves it once the PR is open.
+
+   **What it needs.** The `uploads` CLI (`npm install -g
+   @buildinternet/uploads`, which the session-start hook does on the web)
+   and a workspace token in `UPLOADS_TOKEN`. On the web, that variable is set
+   in the cloud environment's settings, never pasted into a conversation ;
+   `uploads whoami` says whether it is there. Without it, verify anyway,
+   describe what the shots show, and say they were not uploaded.
+
+   **Everything uploaded is public**, at a predictable URL, whatever the
+   repository's visibility. The fixtures are safe. A reporter's dump is
+   not : their room names and device ids show on the page. Photograph a
+   reporter's case only once the names are replaced (as `navizone.json`'s
+   were), or crop to what the comment is about -- and when in doubt, ask
+   the maintainer before uploading.
 
 ## What the fake does not know
 

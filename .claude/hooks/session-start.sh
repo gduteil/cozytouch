@@ -27,3 +27,12 @@ if [ "$(.venv/bin/python --version 2>/dev/null)" != "Python $PYTHON" ]; then
 fi
 "$UV" pip install -q -r requirements_test.txt -r requirements_lint.txt \
   -r requirements_typecheck.txt
+
+# The uploads.sh CLI the verify-cozytouch skill puts screenshots on a pull
+# request with ; useless without the token, so installed only beside one.
+UPLOADS_CLI=0.56.7
+if [ -n "${UPLOADS_TOKEN:-}" ] \
+    && [ "$(uploads --version 2>/dev/null)" != "$UPLOADS_CLI" ]; then
+  npm install -g -s "@buildinternet/uploads@$UPLOADS_CLI" >/dev/null 2>&1 \
+    || echo "session-start: uploads CLI not installed" >&2
+fi
