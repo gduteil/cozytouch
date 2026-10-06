@@ -144,7 +144,7 @@ def wait_for(url, seconds):
                 return
         except OSError:
             pass
-        time.sleep(2)
+        time.sleep(0.2)
     raise SystemExit(f"{url} did not come up within {seconds}s ; see {WORK}/*.log")
 
 
@@ -171,9 +171,9 @@ def kill(name):
     pid = int(pidfile.read_text())
     try:
         os.killpg(pid, signal.SIGTERM)
-        for _ in range(30):
+        for _ in range(150):
             os.kill(pid, 0)
-            time.sleep(1)
+            time.sleep(0.2)
         os.killpg(pid, signal.SIGKILL)
     except ProcessLookupError:
         pass
@@ -200,15 +200,32 @@ def copy_integration():
     const.write_text(text.replace(REAL_API, FAKE_URL))
 
 
-def start_ha():
+def start_ha(onboarded=False):
     if not pathlib.Path(PYTHON).exists():
         raise SystemExit(f"No Home Assistant interpreter at {PYTHON} ; run setup")
     spawn("hass", [PYTHON, "-m", "homeassistant", "-c", str(CONFIG)])
     # The API answers before startup is over ; onboarding only once the
     # default integrations are set up, which on a first start includes
-    # installing their requirements.
+    # installing their requirements. Once onboarded, Home Assistant no longer
+    # serves /api/onboarding at all, so a restart waits for RUNNING instead.
     wait_for(HA_URL + "/api/", 900)
-    wait_for(HA_URL + "/api/onboarding", 900)
+    if onboarded:
+        wait_running(900)
+    else:
+        wait_for(HA_URL + "/api/onboarding", 900)
+
+
+def wait_running(seconds):
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        try:
+            config = request("GET", "/api/config", token=access_token())
+            if config["state"] == "RUNNING":
+                return
+        except (SystemExit, OSError):
+            pass
+        time.sleep(0.2)
+    raise SystemExit(f"Home Assistant did not reach RUNNING within {seconds}s")
 
 
 def onboard():
@@ -337,13 +354,17 @@ def start(dump):
     start_ha()
     onboard()
     add_account()
+    # Onboarding answers before startup is over ; stopped before RUNNING,
+    # Home Assistant does not write its auth store, and the next command's
+    # refresh token is refused.
+    wait_running(900)
     print(f"Home Assistant is up on {HA_URL}, owner {OWNER['username']}")
 
 
 def restart():
     kill("hass")
     copy_integration()
-    start_ha()
+    start_ha(onboarded=True)
     print(f"Restarted on {HA_URL}")
 
 
