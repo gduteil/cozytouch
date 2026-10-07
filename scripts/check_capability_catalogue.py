@@ -25,7 +25,7 @@ the report. Run from the repository root :
     rm -f ~/.cozytouch-pass
 
 Exit code 0 when nothing moved, CHANGED when a file changed, UNREACHABLE
-when the fetch itself failed -- which is what `.github/workflows/catalogue.yaml`
+when the fetch itself failed -- which is what the catalogue routine
 branches on. Neither is 1: Python exits 1 on an uncaught traceback, so a
 crashed run would otherwise read as "Atlantic changed the catalogue" and open
 an issue whose diff is empty. That is exactly what happened on the first run,
