@@ -492,9 +492,8 @@ A Homey app for Cozytouch, JavaScript, dual-plane: Overkiz devices detected by
 by a hand-maintained table of numeric capability ids. Independent confirmation
 that the split is real and that nothing self-describing exists on our side.
 
-It credits `gduteil/cozytouch` -- the upstream, not this fork -- and correctly:
-the entry it cross-references is modelId 390, which upstream's `model.py` has
-had all along. Nothing that originated here is in it.
+It credits `gduteil/cozytouch`, and correctly: the entry it cross-references
+is modelId 390, which `model.py` has had all along.
 
 Two things it knows that this document did not.
 
@@ -532,9 +531,9 @@ cleanly in two, and almost everybody is on the other side:
 | Plane | Clients |
 | ----- | ------- |
 | Overkiz (`haNNN-1.overkiz.com`, JWT via `magellan/accounts/jwt`) | `iMicknl/python-overkiz-api`, `dubocr/overkiz-client`, `pzim-devdata/tahoma`, `phimage/swift-overkiz-api`, `jbilcke-hf/flutter_overkiz`, `oznetmaster/OverkizClient`, `MaGOs92/cozy-airbnb`, `niavok/cozytouch_peak_hours` |
-| Magellan (`apis.groupe-atlantic.com/magellan`) | `gduteil/cozytouch`, this fork, `NicolasYDDER/homey-cozytouch`, `Vntoni/HomeHub` |
+| Magellan (`apis.groupe-atlantic.com/magellan`) | `gduteil/cozytouch`, `NicolasYDDER/homey-cozytouch`, `Vntoni/HomeHub` |
 
-Four magellan clients exist in the world, and two of them are this project.
+Three magellan clients exist in the world, and one of them is this project.
 
 ### A second client credential exists
 

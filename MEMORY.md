@@ -76,9 +76,7 @@ overturn one, edit the line here in the same pull request.
 
 ## Working here
 
-- Pull requests go to `mathieuletyrant/cozytouch-hacs`, base `main` ; the
-  repository is no longer tied to `gduteil/cozytouch` or
-  `mathieuletyrant/cozytouch`. A Claude Code on the web session opens them
+- Pull requests go to `gduteil/cozytouch`, base `main`. A Claude Code on the web session opens them
   through the GitHub MCP tools, scoped to this repository. Its proxy
   refuses every native way to attach an image (GraphQL, Git Data writes,
   any pushed ref but a branch ; tested 2026-10-05, #179), so screenshots go

@@ -20,14 +20,6 @@ and are worth reading before a change rather than after :
 
 @MEMORY.md
 
-## Repository topology
-
-This repo started as a fork of `gduteil/cozytouch` and now stands on its own :
-it is no longer tied to that project or to `mathieuletyrant/cozytouch`, and
-nothing here pushes to either. `origin` is `mathieuletyrant/cozytouch-hacs`,
-the only remote ; its `main` is what HACS installs, and every pull request
-targets it.
-
 ## Tests
 
 Python 3.14.2 — the system `python3` on this machine is too old. Build the

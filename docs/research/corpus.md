@@ -3,17 +3,12 @@
 A capability is `{capabilityId, value}`: no unit, no encoding, no bounds.
 The only way to learn something about one from the wire is to look at what
 many devices put in it. The corpus is that: every capture reporters have
-posted on the two trackers, reduced to `(modelId, capabilityId, value)`.
-
-Built in October 2026 it held 8220 readings over 53 model ids and 381
-capability ids, from `mathieuletyrant/cozytouch-hacs` and
-`gduteil/cozytouch` (the project this one forked, which holds the first 29
-captures and nowhere else), plus the Navizone fixture.
+posted on the tracker, reduced to `(modelId, capabilityId, value)`.
 
 ## Rebuilding it
 
 Nothing of it is committed: it is regenerated in a minute from public
-issues. `fetch.py` needs `gh` authenticated (any account; the trackers are
+issues. `fetch.py` needs `gh` authenticated (any account; the tracker is
 public).
 
 ```sh
@@ -34,7 +29,7 @@ maintainer's own Navizone capture, which is on no tracker; any other local
 dump can be passed as an extra argument, file or directory.
 
 The raw dumps stay out of the repository and out of the output: those on
-the trackers are public and re-downloadable, and they carry addresses and
+the tracker are public and re-downloadable, and they carry addresses and
 serial numbers there is no reason to copy.
 
 ## Two precautions in `extract.py`

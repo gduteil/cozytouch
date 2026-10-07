@@ -165,9 +165,9 @@ against the reporter's dump and HA version when there is one :
 
    ```bash
    cd <scratchpad>/shots
-   uploads --json put before.png --pr <n> --repo mathieuletyrant/cozytouch-hacs \
+   uploads --json put before.png --pr <n> --repo gduteil/cozytouch \
        --state before --meta path=<page> --alt "Before: ..." --width 430
-   uploads --json put after.png  --pr <n> --repo mathieuletyrant/cozytouch-hacs \
+   uploads --json put after.png  --pr <n> --repo gduteil/cozytouch \
        --state after  --meta path=<page> --alt "After: ..."  --width 430
    ```
 
@@ -228,9 +228,9 @@ checked for the originals before it is added.
 
 ## Helpers
 
-| Helper | What it does |
-| ------ | ------------ |
-| `scripts/test_ha/run.py` | `setup`, `start [DUMP]`, `restart`, `stop`, `doctor`, `states [TEXT]`, `call DOMAIN.SERVICE [JSON]`, `device ENTITY_ID`, `journal`, `token` |
-| `scripts/test_ha/overlay_dump.py` | `PARTIAL.json OUT.json [--base FIXTURE]` : a partial dump made servable |
-| `scripts/test_ha/screenshot.cjs` | `PATH OUT.png [--click TEXT]... [--full] [--width N] [--height N]` |
-| `scripts/test_ha/fake_atlantic.py` | the fake cloud ; `run.py` starts it, nothing else should |
+| Helper                             | What it does                                                                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/test_ha/run.py`           | `setup`, `start [DUMP]`, `restart`, `stop`, `doctor`, `states [TEXT]`, `call DOMAIN.SERVICE [JSON]`, `device ENTITY_ID`, `journal`, `token` |
+| `scripts/test_ha/overlay_dump.py`  | `PARTIAL.json OUT.json [--base FIXTURE]` : a partial dump made servable                                                                     |
+| `scripts/test_ha/screenshot.cjs`   | `PATH OUT.png [--click TEXT]... [--full] [--width N] [--height N]`                                                                          |
+| `scripts/test_ha/fake_atlantic.py` | the fake cloud ; `run.py` starts it, nothing else should                                                                                    |
