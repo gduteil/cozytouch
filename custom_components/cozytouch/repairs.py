@@ -6,11 +6,15 @@ the mapping is missing, with the report already written. See docs/decisions.md.
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 ISSUE_TRACKER = "https://github.com/gduteil/cozytouch/issues"
 
@@ -28,6 +32,9 @@ FAULT_ISSUE = "fault_{subentry_id}_{code}"
 # One issue for the whole account, not one per device and not one per id: the
 # answer to all of them is the same single file. See docs/decisions.md.
 UNNAMED_ISSUE = "unnamed_capabilities"
+
+# One issue however many 1.4 entries are left. See docs/decisions.md.
+LEGACY_ENTRY_ISSUE = "legacy_entries"
 
 
 def async_check_faults(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -98,6 +105,33 @@ def async_check_faults(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # them rather than sitting there forever.
     for issue_id in _open_issues(hass) - raised:
         ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+def async_raise_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Say what to do with an entry 1.4 made, which this version cannot load."""
+    _LOGGER.error(
+        "Cozytouch entry '%s' was created by version 1.4 and cannot be loaded "
+        "by this version. Delete every Cozytouch entry, then add your account "
+        "again: it brings all its devices at once",
+        entry.title,
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        LEGACY_ENTRY_ISSUE,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=LEGACY_ENTRY_ISSUE,
+    )
+
+
+def async_clear_legacy_entry(hass: HomeAssistant, removed: ConfigEntry) -> None:
+    """Close the notice once the last 1.4 entry is gone."""
+    if not any(
+        entry.version == 1 and entry.entry_id != removed.entry_id
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    ):
+        ir.async_delete_issue(hass, DOMAIN, LEGACY_ENTRY_ISSUE)
 
 
 def _open_issues(hass: HomeAssistant) -> set[str]:

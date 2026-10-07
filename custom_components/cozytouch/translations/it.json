@@ -727,6 +727,10 @@
             "title": "{device_name} segnala un guasto",
             "description": "Il dispositivo segnala il codice di guasto `{code}`. Atlantic lo chiama:\n\n**{label}**\n\nLe loro istruzioni di riparazione:\n\n{repair}\n\nNon c'è nulla da correggere in Home Assistant. Questo avviso scompare da solo quando il dispositivo smette di segnalare il codice."
         },
+        "legacy_entries": {
+            "title": "I dispositivi aggiunti con la versione 1.4 vanno aggiunti di nuovo",
+            "description": "Questa versione raggruppa i dispositivi di un account in un'unica voce e non può caricare le voci create dalla versione 1.4, una per dispositivo. Compaiono con un errore di migrazione nella pagina Cozytouch.\n\nElimina tutte le voci Cozytouch (Impostazioni, Dispositivi e servizi, Cozytouch, tre puntini, Elimina), poi aggiungi di nuovo il tuo account: porta tutti i suoi dispositivi in una volta. Gli ID delle entità cambiano, quindi automazioni e dashboard che li usano vanno aggiornate.\n\nQuesto avviso scompare da solo quando l'ultima vecchia voce viene eliminata."
+        },
         "unnamed_capabilities": {
             "title": "Alcune capacità non hanno ancora un nome",
             "description": "{devices} dispositivo/i di questo account segnalano {count} identificatori di capacità che l'integrazione non nomina, e che quindi non arrivano affatto in Home Assistant: {ids}.\n\nÈ una lacuna della mappatura, non un guasto dell'apparecchio, e non c'è nulla di rotto. Se desidera che vengano letti, apra una segnalazione allegando il file di diagnostica (pagina del dispositivo, tre punti, Scarica diagnostica). Il file riporta ciò che ciascuno dei suoi dispositivi segnala e ciò che il catalogo delle capacità di Atlantic dice degli identificatori che conosce, cioè gran parte del lavoro.\n\nQuesto avviso scompare da solo non appena la mappatura recupera."

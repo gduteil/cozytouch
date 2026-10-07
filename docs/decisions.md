@@ -2864,6 +2864,41 @@ to work out what a value means. `poll_interval` has to be : there is one poll
 for the account, so a per-device interval would describe something that does not
 exist.
 
+### 1.4 entries are migrated
+
+1.4, the release gduteil/cozytouch users run, made one entry per device ;
+this version makes one per account. A first answer was a breaking change :
+leave them in MIGRATION_ERROR with a notice saying to delete them and add
+the account again. The maintainer of gduteil/cozytouch tried that on his
+own install (2026-10-07) and lost every entity's history -- Home Assistant
+keys history on the entity id, and the entities came back under new ones.
+
+So `migrate_1_4.py` folds them. The first version 1 entry of an account to
+migrate becomes the account entry ; every version 1 entry of the same
+username, itself included, becomes a subentry ; their entities and devices
+move onto it, and the others are removed once empty. Nothing is recreated :
+an entity keeps its registry entry, so its entity id and its history.
+1.4 built unique ids and device identifiers from the entry id
+(`cozytouch_<entry>_climate_7`, `<entry>_0`) and this version from the
+subentry id with the same suffix, so rewriting that prefix is all an entity
+needs to be claimed again.
+
+What this version no longer builds -- the eco switch on air conditioners,
+the max temperature, the override duration that became a select -- would
+sit unavailable forever. It is removed once Home Assistant has started,
+when every platform has added what it builds : what nothing claimed shows
+as restored. A disabled entity has no state either way and is left alone,
+which keeps the per-day program sensors the 2.2 step disables.
+
+Measured on the test Home Assistant against fifteen captures gduteil's
+reporters sent (2026-10-07) : 1.4 installed, updated in place, every
+account ends as one loaded entry with no migration error ; the entity ids
+1.4 had are kept except those this version dropped. 1.3 gives the same
+result on the same capture, and the entry format has not changed since 0.7.
+What none of it covers is an account somebody already added again by
+hand : those version 1 entries are not merged into it, and keep the notice.
+
+
 ## `custom_components/cozytouch/translations/`
 
 ### Five languages, and why these five

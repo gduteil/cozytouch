@@ -233,6 +233,7 @@ def make_entry(version=2, minor_version=1, subentry_ids=(SUBENTRY_ID,)):
         version=version,
         minor_version=minor_version,
         entry_id="entry123",
+        title="entry123",
         subentries={subentry_id: SimpleNamespace() for subentry_id in subentry_ids},
     )
 
@@ -279,16 +280,6 @@ def test_an_entry_already_at_2_2_is_never_disabled_again(monkeypatch):
     assert registry.disabled == []
     assert bumps == [3, 4, 5]
 
-
-def test_a_version_1_entry_still_asks_to_be_added_again(monkeypatch):
-    """v1 landing in MIGRATION_ERROR is documented behaviour, not a gap this
-    migration is allowed to close by accident.
-    """
-    result, registry, bumps = migrate(monkeypatch, make_entry(version=1), [])
-
-    assert result is False
-    assert registry.disabled == []
-    assert bumps == []
 
 
 def test_the_migration_drops_the_number_312_used_to_build(monkeypatch):
