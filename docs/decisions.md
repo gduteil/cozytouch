@@ -1622,6 +1622,14 @@ integration. It goes when the floor passes 2026.8.0, which is not a floor worth
 having for it -- Home Assistant removes `via_device` in 2027.8 and the branch
 expires on its own.
 
+The lookup that resolves the gateway follows the same flag. HA 2026.10 warns
+on `async_get_device(identifiers=...)`, since identifiers are no longer
+unique across config entries, and stops answering it in 2027.8 ; the
+per-entry `async_get_device_by_identifier` replaces it. It arrived in
+**2026.8.0** too (2026.7.0 does not have it, read off the tagged sources), so
+the branch that declares `via_device_id` is the one that may call it, and the
+floor's branch never looks the gateway up at all.
+
 `tests/test_topology.py` pins both spellings on whichever release the job
 installed, rather than asserting whatever the installed `DeviceInfo` happens to
 declare: a test that says one thing at the floor and another at the pin proves
@@ -2806,6 +2814,14 @@ unnamed id and only appeared with "create entities for unknown capabilities"
 switched on. It is mapped now, with the same `AWAY_MODE_TIMESTAMPS` reading as
 222 and 226.
 
+A Kelud (1381, 1382) reports both 222 and 100260, each the same pair. Both
+built the start and end entities under the same two unique ids, so Home
+Assistant logged four errors at every start and dropped one pair. 100260
+names 222 as its duplicate the way 226 does : a device reporting 222 keeps
+222's pair, and a room behind a gateway, which reports 100260 alone, keeps
+its own. Seen on two Kelud captures gduteil's reporters sent (2026-10-07),
+and on the Navizone fixture for the rooms.
+
 What the room does not report is a switch: neither 152 nor 227, only 100261,
 which reads whether the absence is on and is a binary sensor. That matters
 because a datetime entity sends nothing while the absence is off — it keeps
@@ -3011,6 +3027,19 @@ Nothing guards the import, and nothing needs to : an install without the
 its list, and `tests/test_llm_tools.py` skips itself where the platform is
 missing.
 
+
+### What Home Assistant asks of a tool (2026.9 and 2026.10)
+
+HA 2026.9 started warning on tools whose name does not start with the
+integration's domain and a double underscore, and 2026.10 on tools that do
+not say which integration provides them or that return a bare JSON object
+instead of a `ToolResult`. The names stop being accepted in 2027.3, the
+JSON return in 2027.11. All five tools are `cozytouch__…` and carry
+`integration = DOMAIN`, which an older Tool simply ignores. `ToolResult`
+does not exist before 2026.10, so a tool answers one where it can be
+imported and the object itself otherwise. Checked by running HA 2026.10.0b5's
+own `_async_report_tool_issues` and the call path over the five tools: it
+reported every one of them before, and nothing after.
 
 ### The absence tools hand the model's dates to the services as they are
 

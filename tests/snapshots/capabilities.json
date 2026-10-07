@@ -168,6 +168,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 1381,
@@ -3414,6 +3415,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 1457,
@@ -6641,6 +6643,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 1505,
@@ -9882,6 +9885,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 1641,
@@ -13133,6 +13137,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 1734,
@@ -16400,6 +16405,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 211,
@@ -19625,6 +19631,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 2374,
@@ -22876,6 +22883,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 418,
@@ -26125,6 +26133,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 557,
@@ -29374,6 +29383,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 56,
@@ -32617,6 +32627,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 562,
@@ -35866,6 +35877,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 76,
@@ -39109,6 +39121,7 @@
     "type": "string"
    },
    "100260": {
+    "capabilityDuplicate": 222,
     "capabilityId": 100260,
     "category": "sensor",
     "modelId": 999999,
