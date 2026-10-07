@@ -26,12 +26,10 @@ from types import SimpleNamespace
 
 from _harness import SUBENTRY_ID, entry_over, set_up
 import pytest
-from test_faults import FakeRegistry
 
 from custom_components.cozytouch import (
     _covered_prog_unique_ids,
     async_migrate_entry,
-    repairs,
     sensor as sensor_platform,
 )
 from custom_components.cozytouch.capability import get_capability_infos
@@ -282,18 +280,6 @@ def test_an_entry_already_at_2_2_is_never_disabled_again(monkeypatch):
     assert registry.disabled == []
     assert bumps == [3, 4, 5]
 
-
-def test_a_version_1_entry_still_asks_to_be_added_again(monkeypatch):
-    """v1 landing in MIGRATION_ERROR is documented behaviour, not a gap this
-    migration is allowed to close by accident. The notice it raises is
-    tests/test_legacy_entries.py's.
-    """
-    monkeypatch.setattr(repairs, "ir", FakeRegistry())
-    result, registry, bumps = migrate(monkeypatch, make_entry(version=1), [])
-
-    assert result is False
-    assert registry.disabled == []
-    assert bumps == []
 
 
 def test_the_migration_drops_the_number_312_used_to_build(monkeypatch):

@@ -22,6 +22,7 @@ from .hub import (
     Hub,
     device_info_for,
 )
+from .migrate_1_4 import async_migrate_from_1_4
 from .repairs import async_clear_legacy_entry, async_raise_legacy_entry
 from .services import async_register_services
 
@@ -126,16 +127,21 @@ def _covered_prog_unique_ids(
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Bring a stored entry up to the current minor version.
 
-    A version 1 entry is 1.4's, one per device ; it lands in MIGRATION_ERROR
-    with a notice saying to delete it and add the account again. 2.2
+    A version 1 entry is 1.4's, one per device : the first of an account
+    becomes the account's and takes the others in (migrate_1_4.py), unless the
+    account was added again already, which raises a notice instead. 2.2
     disables the per-day program sensors a calendar makes redundant, once and
     not per start. 2.3 drops the number entity capability 312 used to build.
     2.4 drops the air-circulation switch and disables its speed select, both
     of which the fan now is. See docs/decisions.md.
     """
     if entry.version == 1:
-        async_raise_legacy_entry(hass, entry)
-        return False
+        migrated = await async_migrate_from_1_4(hass, entry)
+        if migrated is None:
+            return False
+        if not migrated:
+            async_raise_legacy_entry(hass, entry)
+            return False
     if entry.version != 2:
         return False
 

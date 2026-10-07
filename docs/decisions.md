@@ -2851,33 +2851,40 @@ to work out what a value means. `poll_interval` has to be : there is one poll
 for the account, so a per-device interval would describe something that does not
 exist.
 
-### 1.4 entries are not migrated
+### 1.4 entries are migrated
 
 1.4, the release gduteil/cozytouch users run, made one entry per device ;
-this version makes one per account. Its entries stay at version 1, and
-`async_migrate_entry` answers them `False`, so Home Assistant shows each as
-a migration error. Before 2026.10.0 that was all it showed : a "check the
-logs" link, and nothing in the logs.
+this version makes one per account. A first answer was a breaking change :
+leave them in MIGRATION_ERROR with a notice saying to delete them and add
+the account again. The maintainer of gduteil/cozytouch tried that on his
+own install (2026-10-07) and lost every entity's history -- Home Assistant
+keys history on the entity id, and the entities came back under new ones.
 
-A migration that keeps the entity ids was looked at and declined by the
-maintainer (2026-10-07). It is possible -- both versions build a unique id as
-`cozytouch_<entry or subentry id>_<suffix>` with the same suffix, so
-rewriting the prefix would carry an entity over -- but the entity ids change
-anyway on the devices whose model name changed (`air_conditioner_bureau_*`
-to `room_bureau_*` on a Naviclim room), and a breaking change stated once was
-judged cheaper than a migration that half works on hardware nobody here
-owns.
+So `migrate_1_4.py` folds them. The first version 1 entry of an account to
+migrate becomes the account entry ; every version 1 entry of the same
+username, itself included, becomes a subentry ; their entities and devices
+move onto it, and the others are removed once empty. Nothing is recreated :
+an entity keeps its registry entry, so its entity id and its history.
+1.4 built unique ids and device identifiers from the entry id
+(`cozytouch_<entry>_climate_7`, `<entry>_0`) and this version from the
+subentry id with the same suffix, so rewriting that prefix is all an entity
+needs to be claimed again.
 
-What a version 1 entry gets instead is a sentence : one error line per entry
-in the log, and one notice in Repairs however many entries there are. The
-notice closes when the last version 1 entry is deleted (`async_remove_entry`),
-not when an account is added, since a new account entry next to the old ones
-leaves the old entities unavailable.
+What this version no longer builds -- the eco switch on air conditioners,
+the max temperature, the override duration that became a select -- would
+sit unavailable forever. It is removed once Home Assistant has started,
+when every platform has added what it builds : what nothing claimed shows
+as restored. A disabled entity has no state either way and is left alone,
+which keeps the per-day program sensors the 2.2 step disables.
 
-Checked on the test Home Assistant with a gduteil reporter's Naviclim
-capture (11 devices) : 1.4 installed, updated in place, the notice raised,
-the 11 entries deleted (the notice stays until the 11th), the account added
-again -- no cozytouch entity left over in the registry, none unavailable.
+Measured on the test Home Assistant against fifteen captures gduteil's
+reporters sent (2026-10-07) : 1.4 installed, updated in place, every
+account ends as one loaded entry with no migration error ; the entity ids
+1.4 had are kept except those this version dropped. 1.3 gives the same
+result on the same capture, and the entry format has not changed since 0.7.
+What none of it covers is an account somebody already added again by
+hand : those version 1 entries are not merged into it, and keep the notice.
+
 
 ## `custom_components/cozytouch/translations/`
 
