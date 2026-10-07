@@ -1093,6 +1093,16 @@ CAPABILITIES: dict[int, Entity] = {
         enabled_by_default=False,
         icon="mdi:heat-wave",
         reads_as={"0": "off", "1": "heating", "2": "cooling"},
+        # Off by default for the rooms, where it never moves ; the products
+        # that heat with a burner or an element show it. See docs/decisions.md.
+        per_type={
+            (
+                CozytouchDeviceType.THERMOSTAT,
+                CozytouchDeviceType.GAZ_BOILER,
+                CozytouchDeviceType.TOWEL_RACK,
+                CozytouchDeviceType.RADIATOR,
+            ): {"enabled_by_default": True, "category": CapabilityCategory.SENSOR},
+        },
     ),
     154: Entity(
         name="zone_1",

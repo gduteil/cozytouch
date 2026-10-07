@@ -1215,6 +1215,19 @@ units cooled. Where it does move -- the radiators -- what it says already
 reaches the climate entity's action, which reads the capability and not the
 entity, and is unaffected. Anyone who wants the raw value turns it on.
 
+**Except where it moves (2026-10-07).** That default was read off the
+Navizone rooms and applied to every product, which is the shared-default
+mistake the section below describes. On a boiler (typed `thermostat` or
+`gaz_boiler`) and on an electric heater (`towel_rack`, `radiator`) it is
+the burner or the element, and 1.4 showed it, on by default, as "Flame" and
+"Resistance". gduteil/cozytouch's maintainer missed it on his Naema once it
+went off. Those four types get it back on by default and in the main
+section, under the same name ; the rooms, air conditioners and everything
+else keep it off. Measured on fifteen captures gduteil's reporters sent :
+Naema 2 Micro 25 and Duo 25 (56, 65) and Kelud (1381, 1382) report it ;
+none of them was seen reading 1, so what the entity shows while heating is
+the row's `reads_as`, not an observation.
+
 ### Capability 153 is whether it is heating, not what is burning
 
 Atlantic calls it `HEATING_STATUS` and reads it as `HeatingStatus { OFF,
