@@ -2634,6 +2634,8 @@ CAPABILITIES: dict[int, Entity] = {
         extra={
             "timestamps": AWAY_MODE_TIMESTAMPS,
             "timezoneCapabilityId": 315,
+            # A Kelud reports both. See docs/decisions.md.
+            "capabilityDuplicate": 222,
         },
     ),
     100261: Entity(
