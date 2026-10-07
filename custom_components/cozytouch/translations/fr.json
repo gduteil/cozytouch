@@ -727,6 +727,10 @@
             "title": "{device_name} signale un défaut",
             "description": "L'appareil remonte le code défaut `{code}`. Atlantic le nomme ainsi :\n\n**{label}**\n\nLeurs propres instructions de réparation :\n\n{repair}\n\nIl n'y a rien à corriger côté Home Assistant. Cet avis disparaît de lui-même dès que l'appareil cesse de remonter le code."
         },
+        "legacy_entries": {
+            "title": "Les appareils ajoutés avec la version 1.4 doivent être ajoutés à nouveau",
+            "description": "Cette version regroupe les appareils d'un compte sous une seule entrée, et ne peut pas charger les entrées créées par la version 1.4, une par appareil. Elles apparaissent en erreur de migration sur la page Cozytouch.\n\nSupprimez toutes les entrées Cozytouch (Paramètres, Appareils et services, Cozytouch, trois points, Supprimer), puis ajoutez à nouveau votre compte : il amène tous ses appareils d'un coup. Les identifiants d'entités changent : les automatisations et tableaux de bord qui les utilisent sont à mettre à jour.\n\nCet avis disparaît de lui-même une fois la dernière ancienne entrée supprimée."
+        },
         "unnamed_capabilities": {
             "title": "Des capacités ne sont pas encore nommées",
             "description": "{devices} appareil(s) de ce compte remontent {count} identifiants de capacité que l'intégration ne nomme pas, ils n'arrivent donc pas du tout dans Home Assistant : {ids}.\n\nC'est un manque dans le mappage, pas un défaut du matériel, et rien n'est cassé. Si vous souhaitez qu'ils soient lus, ouvrez un ticket en joignant votre fichier de diagnostic (page de l'appareil, trois points, Télécharger les diagnostics). Le fichier contient ce que chacun de vos appareils remonte, et ce que le catalogue de capacités d'Atlantic dit des identifiants qu'il connaît — soit l'essentiel du travail.\n\nCet avis disparaît de lui-même dès que le mappage rattrape son retard."

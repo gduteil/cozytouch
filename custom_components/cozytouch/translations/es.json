@@ -727,6 +727,10 @@
             "title": "{device_name} informa de un fallo",
             "description": "El aparato informa del código de fallo `{code}`. Atlantic lo denomina:\n\n**{label}**\n\nSus propias instrucciones de reparación:\n\n{repair}\n\nNo hay nada que Home Assistant pueda corregir aquí. Este aviso desaparece solo cuando el aparato deja de informar del código."
         },
+        "legacy_entries": {
+            "title": "Los dispositivos añadidos con la versión 1.4 deben añadirse de nuevo",
+            "description": "Esta versión agrupa los dispositivos de una cuenta en una sola entrada, y no puede cargar las entradas que creó la versión 1.4, una por dispositivo. Aparecen con un error de migración en la página de Cozytouch.\n\nElimine todas las entradas de Cozytouch (Ajustes, Dispositivos y servicios, Cozytouch, tres puntos, Eliminar) y añada de nuevo su cuenta: trae todos sus dispositivos a la vez. Los identificadores de entidad cambian, así que hay que actualizar las automatizaciones y paneles que los usan.\n\nEste aviso desaparece solo cuando se elimina la última entrada antigua."
+        },
         "unnamed_capabilities": {
             "title": "Algunas capacidades aún no tienen nombre",
             "description": "{devices} dispositivo(s) de esta cuenta informan de {count} identificadores de capacidad que la integración no nombra, por lo que no llegan a Home Assistant: {ids}.\n\nEs una laguna del mapeo, no un fallo del aparato, y no hay nada roto. Si desea que se lean, abra una incidencia adjuntando su archivo de diagnóstico (página del dispositivo, tres puntos, Descargar diagnósticos). El archivo contiene lo que informa cada uno de sus aparatos y lo que el catálogo de capacidades de Atlantic dice de los identificadores que conoce, que es la mayor parte del trabajo.\n\nEste aviso desaparece solo en cuanto el mapeo se pone al día."

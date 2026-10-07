@@ -101,9 +101,8 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     """Handle a config flow for Atlantic Cozytouch."""
 
     # 2: one entry per account with a subentry per device. A version 1 entry
-    # is one entry per device, whose data this no longer understands -- there
-    # is no migration, so it lands in MIGRATION_ERROR and asks to be added
-    # again, which is a sentence rather than a traceback.
+    # is 1.4's, one per device, and is not migrated : it lands in
+    # MIGRATION_ERROR with a notice. See docs/decisions.md.
     VERSION = 2
     # 2.2: the per-day program sensors of a calendar-covered block are
     # disabled by default, and async_migrate_entry disables the ones an

@@ -2851,6 +2851,34 @@ to work out what a value means. `poll_interval` has to be : there is one poll
 for the account, so a per-device interval would describe something that does not
 exist.
 
+### 1.4 entries are not migrated
+
+1.4, the release gduteil/cozytouch users run, made one entry per device ;
+this version makes one per account. Its entries stay at version 1, and
+`async_migrate_entry` answers them `False`, so Home Assistant shows each as
+a migration error. Before 2026.10.0 that was all it showed : a "check the
+logs" link, and nothing in the logs.
+
+A migration that keeps the entity ids was looked at and declined by the
+maintainer (2026-10-07). It is possible -- both versions build a unique id as
+`cozytouch_<entry or subentry id>_<suffix>` with the same suffix, so
+rewriting the prefix would carry an entity over -- but the entity ids change
+anyway on the devices whose model name changed (`air_conditioner_bureau_*`
+to `room_bureau_*` on a Naviclim room), and a breaking change stated once was
+judged cheaper than a migration that half works on hardware nobody here
+owns.
+
+What a version 1 entry gets instead is a sentence : one error line per entry
+in the log, and one notice in Repairs however many entries there are. The
+notice closes when the last version 1 entry is deleted (`async_remove_entry`),
+not when an account is added, since a new account entry next to the old ones
+leaves the old entities unavailable.
+
+Checked on the test Home Assistant with a gduteil reporter's Naviclim
+capture (11 devices) : 1.4 installed, updated in place, the notice raised,
+the 11 entries deleted (the notice stays until the 11th), the account added
+again -- no cozytouch entity left over in the registry, none unavailable.
+
 ## `custom_components/cozytouch/translations/`
 
 ### Five languages, and why these five
