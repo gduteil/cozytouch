@@ -12,7 +12,7 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
 
-ISSUE_TRACKER = "https://github.com/mathieuletyrant/cozytouch-hacs/issues"
+ISSUE_TRACKER = "https://github.com/gduteil/cozytouch/issues"
 
 # The device report form, opened rather than the bare issue list. Somebody
 # arriving from a notice has not decided to write a report yet -- they were
@@ -28,7 +28,6 @@ FAULT_ISSUE = "fault_{subentry_id}_{code}"
 # One issue for the whole account, not one per device and not one per id: the
 # answer to all of them is the same single file. See docs/decisions.md.
 UNNAMED_ISSUE = "unnamed_capabilities"
-
 
 
 def async_check_faults(hass: HomeAssistant, entry: ConfigEntry) -> None:

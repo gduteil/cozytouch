@@ -25,10 +25,8 @@ jobs:
           category: "integration"
           # brands : drop this once the integration has images in
           # https://github.com/home-assistant/brands
-          # license : this repo forks gduteil/cozytouch, which ships no
-          # licence at all. Most of the code here is still theirs, so we have
-          # no standing to put a licence on it — that is the upstream author's
-          # call. Ignoring the check keeps the other seven honest instead of
+          # license : the repository ships no licence, and putting one on it
+          # is the author's call. Ignoring the check keeps the other seven honest instead of
           # leaving the whole workflow red. Cost of it: HACS will not accept
           # the repo in its default store while there is no licence; installing
           # it as a custom repository, which is how anyone gets it today, is

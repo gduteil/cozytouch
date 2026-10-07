@@ -20,14 +20,6 @@ and are worth reading before a change rather than after :
 
 @MEMORY.md
 
-## Repository topology
-
-This repo started as a fork of `gduteil/cozytouch` and now stands on its own :
-it is no longer tied to that project or to `mathieuletyrant/cozytouch`, and
-nothing here pushes to either. `origin` is `mathieuletyrant/cozytouch-hacs`,
-the only remote ; its `main` is what HACS installs, and every pull request
-targets it.
-
 ## Tests
 
 Python 3.14.2 — the system `python3` on this machine is too old. Build the
@@ -195,11 +187,12 @@ what was left alone for lack of a report. Wrap at 76 columns.
 
 `GET /magellan/productmodels/capabilities` is where `capability_table.py` came
 from, and nothing announces an edit to it. `scripts/capability_catalogue.jsonl`
-is what it said last time, one capability per line, sorted ; the `Catalogue`
-workflow re-reads it on the 1st and the 15th and opens an issue with the diff
-when the two differ. `GET /magellan/productmodels/models` and `/products`
-are watched the same way, in `scripts/model_catalogue.jsonl` and
-`scripts/product_catalogue.jsonl`, with the same token and an issue each. It needs `COZYTOUCH_USER` and `COZYTOUCH_PASS` as repository secrets.
+is what it said last time, one capability per line, sorted ; the
+maintainer's own routine re-reads it on the 1st and the 15th and opens an
+issue with the diff when the two differ. `GET /magellan/productmodels/models`
+and `/products` are watched the same way, in `scripts/model_catalogue.jsonl`
+and `scripts/product_catalogue.jsonl`, with the same token and an issue each.
+The account's credentials never go into this repository.
 
 One login per run and no retry, deliberately -- repeated failed logins are
 what could lock the account, and an unattended job that retries is how that

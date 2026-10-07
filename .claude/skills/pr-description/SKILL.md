@@ -16,10 +16,12 @@ Three blocks, in this order, nothing else:
 <one sentence: the observed behaviour that made this necessary>
 
 ## What changed
+
 - <one line>
 - <one line>
 
 ## How to check
+
 <one command, or one click path>
 ```
 
@@ -53,6 +55,7 @@ fresh prose that says the same thing differently.
 ## Before posting
 
 Delete, in this order:
+
 1. Any sentence that starts "This PR".
 2. Any sentence explaining what a reviewer could read in the diff.
 3. Any hedge that carries no uncertainty.
@@ -62,7 +65,7 @@ know why this exists and how to verify it? If yes, post it.
 
 ## This repo
 
-Pull requests target `mathieuletyrant/cozytouch-hacs`, base `main`.
+Pull requests target `gduteil/cozytouch`, base `main`.
 
 `How to check` is normally `.venv/bin/pytest tests/ -q`, or the one test file
 the change touches. A docs-only PR still says so, with `ruff check .`.

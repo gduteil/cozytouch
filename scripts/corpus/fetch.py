@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
-"""Download every capability capture either tracker holds.
+"""Download every capability capture the tracker holds.
 
 Reporters paste their setupviewv2 into an issue -- attached as a file, or
 inline in the body or a comment. This pulls both into one directory so
 extract.py can walk it.
-
-Two trackers, because the captures live in two places : ours, where every new
-report arrives, and gduteil/cozytouch, which this project forked and which
-still holds the 29 captures the corpus was first built from. Nothing links the
-code to it any more, but those captures exist nowhere else -- dropping it would
-shrink the corpus to whatever our own tracker has seen.
 
     python3 fetch.py <outdir>
 
@@ -25,7 +19,7 @@ import re
 import subprocess
 import sys
 
-REPOS = ("mathieuletyrant/cozytouch-hacs", "gduteil/cozytouch")
+REPO = "gduteil/cozytouch"
 FILE_URL = re.compile(r"https://github\.com/\S+?\.json")
 
 
@@ -43,18 +37,14 @@ def main(outdir):
     out = pathlib.Path(outdir)
     out.mkdir(parents=True, exist_ok=True)
 
-    sources = []
-    for repo in REPOS:
-        # Both trackers number their issues from 1, so the repo goes in the tag:
-        # without it our issue 59 and theirs write the same file.
-        owner = repo.split("/")[0]
-        issues = gh(f"/repos/{repo}/issues?state=all&per_page=100")
-        comments = gh(f"/repos/{repo}/issues/comments?per_page=100")
+    owner = REPO.split("/")[0]
+    issues = gh(f"/repos/{REPO}/issues?state=all&per_page=100")
+    comments = gh(f"/repos/{REPO}/issues/comments?per_page=100")
 
-        sources += [(f"{owner}-i{it['number']}", it.get("body") or "") for it in issues]
-        for c in comments:
-            issue = c["issue_url"].rsplit("/", 1)[1]
-            sources.append((f"{owner}-c{issue}-{c['id']}", c.get("body") or ""))
+    sources = [(f"{owner}-i{it['number']}", it.get("body") or "") for it in issues]
+    for c in comments:
+        issue = c["issue_url"].rsplit("/", 1)[1]
+        sources.append((f"{owner}-c{issue}-{c['id']}", c.get("body") or ""))
 
     inline = attached = 0
     for tag, body in sources:

@@ -146,7 +146,7 @@ Proof standards :
 
 Evidence lives in `<scratchpad>/shots/`, never in the repository, and
 survives cleanup. It reaches the maintainer by `SendUserFile` in the
-conversation, or by uploads.sh on a pull request (below).
+conversation.
 
 ### Before and after, on a pull request
 
@@ -158,49 +158,9 @@ against the reporter's dump and HA version when there is one :
 2. `git checkout <branch> -- custom_components/` (or check the branch out),
    `R restart`, the same shots as "after".
 3. `git checkout main -- custom_components/` to put the tree back.
-4. Upload the shots with [uploads.sh](https://uploads.sh) and comment on
-   the pull request with the Markdown it returns. Nothing is committed, and
-   it works the same in a local session and in a Claude Code on the web
-   one, whose GitHub proxy refuses every native way to attach an image.
-
-   ```bash
-   cd <scratchpad>/shots
-   uploads --json put before.png --pr <n> --repo mathieuletyrant/cozytouch-hacs \
-       --state before --meta path=<page> --alt "Before: ..." --width 430
-   uploads --json put after.png  --pr <n> --repo mathieuletyrant/cozytouch-hacs \
-       --state after  --meta path=<page> --alt "After: ..."  --width 430
-   ```
-
-   Each answer carries an `embedUrl` on `embed.uploads.sh`, which GitHub's
-   image proxy revalidates. Put it in an HTML tag, `<img src="<embedUrl>"
-   alt="..." width="430">`, not the `markdown` field : the web session's
-   GitHub MCP tools drop the leading `!` of `![alt](url)`, and the image
-   lands as a bare link (#183, 2026-10-06). Then post one
-   comment -- through the GitHub MCP tools on the web, `gh pr comment -F
-   body.md` locally -- with a table such as `| before | after |` holding
-   the two images, the HA version, the dump used and how it was adapted.
-   A `--pr` key is stable : putting the same name again replaces the image
-   in place, and the comment follows without being edited.
-
-   If the uploads GitHub App is installed on the repository, `put --pr` also
-   keeps an attachments comment of its own (`uploads-sh[bot]`) ; without it
-   that step is declined, the upload is not, and your comment is the record.
-   Before the pull request exists, a bare `uploads put` on the branch stages
-   the shot, and `uploads attach --promote` moves it once the PR is open.
-
-   **What it needs.** The `uploads` CLI (`npm install -g
-   @buildinternet/uploads`, which the session-start hook does on the web)
-   and a workspace token in `UPLOADS_TOKEN`. On the web, that variable is set
-   in the cloud environment's settings, never pasted into a conversation ;
-   `uploads whoami` says whether it is there. Without it, verify anyway,
-   describe what the shots show, and say they were not uploaded.
-
-   **Everything uploaded is public**, at a predictable URL, whatever the
-   repository's visibility. The fixtures are safe. A reporter's dump is
-   not : their room names and device ids show on the page. Photograph a
-   reporter's case only once the names are replaced (as `navizone.json`'s
-   were), or crop to what the comment is about -- and when in doubt, ask
-   the maintainer before uploading.
+4. Send the shots to the maintainer with `SendUserFile`, and comment on
+   the pull request with what they show, the HA version, the dump used and
+   how it was adapted. Nothing is committed and nothing is hosted.
 
 ## What the fake does not know
 
@@ -228,9 +188,9 @@ checked for the originals before it is added.
 
 ## Helpers
 
-| Helper | What it does |
-| ------ | ------------ |
-| `scripts/test_ha/run.py` | `setup`, `start [DUMP]`, `restart`, `stop`, `doctor`, `states [TEXT]`, `call DOMAIN.SERVICE [JSON]`, `device ENTITY_ID`, `journal`, `token` |
-| `scripts/test_ha/overlay_dump.py` | `PARTIAL.json OUT.json [--base FIXTURE]` : a partial dump made servable |
-| `scripts/test_ha/screenshot.cjs` | `PATH OUT.png [--click TEXT]... [--full] [--width N] [--height N]` |
-| `scripts/test_ha/fake_atlantic.py` | the fake cloud ; `run.py` starts it, nothing else should |
+| Helper                             | What it does                                                                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/test_ha/run.py`           | `setup`, `start [DUMP]`, `restart`, `stop`, `doctor`, `states [TEXT]`, `call DOMAIN.SERVICE [JSON]`, `device ENTITY_ID`, `journal`, `token` |
+| `scripts/test_ha/overlay_dump.py`  | `PARTIAL.json OUT.json [--base FIXTURE]` : a partial dump made servable                                                                     |
+| `scripts/test_ha/screenshot.cjs`   | `PATH OUT.png [--click TEXT]... [--full] [--width N] [--height N]`                                                                          |
+| `scripts/test_ha/fake_atlantic.py` | the fake cloud ; `run.py` starts it, nothing else should                                                                                    |
