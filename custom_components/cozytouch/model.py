@@ -217,7 +217,7 @@ _AC_GATEWAY = {"awayModeTemperatureAvailable": False}
 # Everything a room air conditioner carries beyond its type and its modes.
 _AC_ROOM = {
     **_AC_GATEWAY,
-    "ecoModeAvailable": False,
+    "ecoModeAvailable": True,
     "quietModeAvailable": True,
     "AirCirculationSpeeds": {
         1: AIR_CIRCULATION_SPEED_LOW,
