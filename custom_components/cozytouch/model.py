@@ -217,7 +217,7 @@ _AC_GATEWAY = {"awayModeTemperatureAvailable": False}
 # Everything a room air conditioner carries beyond its type and its modes.
 _AC_ROOM = {
     **_AC_GATEWAY,
-    "ecoModeAvailable": True,
+    "ecoModeAvailable": False,
     "quietModeAvailable": True,
     "AirCirculationSpeeds": {
         1: AIR_CIRCULATION_SPEED_LOW,
@@ -420,6 +420,16 @@ OVERRIDES: dict[int, dict] = {
         "quietModeAvailable": None,
         "swingModes": None,
         "type": CozytouchDeviceType.HUB,
+    },
+    557: {
+        "ecoModeAvailable": True,
+        "currentTemperatureAvailableZ1": False,
+        "currentTemperatureAvailableZ2": False,
+    },
+    558: {
+        "ecoModeAvailable": True,
+        "currentTemperatureAvailableZ1": False,
+        "currentTemperatureAvailableZ2": False,
     },
     664: {
         "HVACModes": OFF_HEAT,
