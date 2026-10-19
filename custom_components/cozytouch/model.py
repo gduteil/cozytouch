@@ -423,13 +423,11 @@ OVERRIDES: dict[int, dict] = {
     },
     557: {
         "ecoModeAvailable": True,
-        "currentTemperatureAvailableZ1": False,
-        "currentTemperatureAvailableZ2": False,
+        "currentTemperatureAvailable": False,
     },
     558: {
         "ecoModeAvailable": True,
-        "currentTemperatureAvailableZ1": False,
-        "currentTemperatureAvailableZ2": False,
+        "currentTemperatureAvailable": False,
     },
     664: {
         "HVACModes": OFF_HEAT,
