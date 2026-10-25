@@ -727,6 +727,10 @@
             "title": "{device_name} meldet eine Störung",
             "description": "Das Gerät meldet den Fehlercode `{code}`. Atlantic bezeichnet ihn als:\n\n**{label}**\n\nIhre eigenen Reparaturhinweise:\n\n{repair}\n\nFür Home Assistant gibt es hier nichts zu beheben. Dieser Hinweis verschwindet von selbst, sobald das Gerät den Code nicht mehr meldet."
         },
+        "legacy_entries": {
+            "title": "Mit Version 1.4 hinzugefügte Geräte müssen neu hinzugefügt werden",
+            "description": "Diese Version fasst die Geräte eines Kontos in einem Eintrag zusammen und kann die Einträge der Version 1.4, einer pro Gerät, nicht laden. Sie erscheinen auf der Cozytouch-Seite mit einem Migrationsfehler.\n\nLösche alle Cozytouch-Einträge (Einstellungen, Geräte & Dienste, Cozytouch, drei Punkte, Löschen) und füge dein Konto dann neu hinzu: Es bringt alle seine Geräte auf einmal mit. Die Entitäts-IDs ändern sich, Automationen und Dashboards, die sie nutzen, müssen angepasst werden.\n\nDieser Hinweis verschwindet von selbst, sobald der letzte alte Eintrag gelöscht ist."
+        },
         "unnamed_capabilities": {
             "title": "Einige Fähigkeiten sind noch nicht benannt",
             "description": "{devices} Gerät(e) dieses Kontos melden {count} Fähigkeits-Kennungen, die die Integration nicht benennt; sie erreichen Home Assistant daher überhaupt nicht: {ids}.\n\nDas ist eine Lücke in der Zuordnung, kein Fehler der Hardware, und nichts ist kaputt. Wenn Sie möchten, dass sie gelesen werden, öffnen Sie ein Issue und hängen Sie Ihre Diagnosedatei an (Geräteseite, drei Punkte, Diagnose herunterladen). Die Datei enthält, was jedes Ihrer Geräte meldet, und was Atlantics eigener Fähigkeitskatalog über die ihm bekannten Kennungen sagt — also den größten Teil der Arbeit.\n\nDieser Hinweis verschwindet von selbst, sobald die Zuordnung aufgeholt hat."

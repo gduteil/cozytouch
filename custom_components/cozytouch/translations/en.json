@@ -727,6 +727,10 @@
             "title": "{device_name} reports a fault",
             "description": "The device is reporting fault code `{code}`. Atlantic names it:\n\n**{label}**\n\nTheir own repair instructions:\n\n{repair}\n\nThere is nothing for Home Assistant to fix here. This notice clears by itself once the device stops reporting the code."
         },
+        "legacy_entries": {
+            "title": "Devices added with version 1.4 must be added again",
+            "description": "This version groups an account's devices under one entry, and cannot load the entries version 1.4 made, one per device. They show as a migration error on the Cozytouch page.\n\nDelete every Cozytouch entry (Settings, Devices & services, Cozytouch, three dots, Delete), then add your account again: it brings all its devices at once. Entity ids change, so automations and dashboards that use them need updating.\n\nThis notice clears by itself once the last old entry is deleted."
+        },
         "unnamed_capabilities": {
             "title": "Some capabilities are not named yet",
             "description": "{devices} of this account's devices report {count} capability ids the integration does not name, so they reach Home Assistant as nothing at all: {ids}.\n\nThis is a gap in the mapping, not a fault on the hardware, and nothing here is broken. If you would like them read, open an issue with your diagnostics file attached (device page, three dots, Download diagnostics). The file carries what each of your devices reports, and what Atlantic's own capability catalogue says about the ids it knows — which is most of what naming one takes.\n\nThis notice clears by itself once the mapping catches up."
