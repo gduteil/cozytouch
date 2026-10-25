@@ -51,9 +51,11 @@ def bus(hass):
 
 
 def call(tool, hass, **args):
-    return asyncio.run(
+    result = asyncio.run(
         tool.async_call(hass, ToolInput(tool.name, args), CONTEXT)
     )
+    # A ToolResult from 2026.10 on, the bare object before it.
+    return getattr(result, "data", result)
 
 
 class WritingHub(FakeHub):
@@ -115,8 +117,8 @@ def hass(monkeypatch):
 def test_assist_is_offered_the_two_tools(hass):
     tools = llm.async_get_tools(hass[0], CONTEXT, LLM_API_ASSIST)
     assert [tool.name for tool in tools.tools] == [
-        "cozytouch_get_schedule",
-        "cozytouch_set_schedule_period",
+        "cozytouch__get_schedule",
+        "cozytouch__set_schedule_period",
     ]
 
 
@@ -251,18 +253,18 @@ def away(monkeypatch):
 def test_assist_is_offered_the_absence_tools_where_there_is_a_switch(away):
     tools = llm.async_get_tools(away[0], CONTEXT, LLM_API_ASSIST)
     assert [tool.name for tool in tools.tools] == [
-        "cozytouch_get_schedule",
-        "cozytouch_set_schedule_period",
-        "cozytouch_get_away_mode",
-        "cozytouch_set_away_mode",
-        "cozytouch_clear_away_mode",
+        "cozytouch__get_schedule",
+        "cozytouch__set_schedule_period",
+        "cozytouch__get_away_mode",
+        "cozytouch__set_away_mode",
+        "cozytouch__clear_away_mode",
     ]
     assert "whole home" in tools.prompt
 
 
 def test_a_home_without_an_away_switch_is_offered_no_absence_tool(hass):
     tools = llm.async_get_tools(hass[0], CONTEXT, LLM_API_ASSIST)
-    assert "cozytouch_set_away_mode" not in [tool.name for tool in tools.tools]
+    assert "cozytouch__set_away_mode" not in [tool.name for tool in tools.tools]
 
 
 def test_setting_an_absence_goes_through_the_service_and_reads_it_back(away):
@@ -312,4 +314,4 @@ def test_a_switch_kept_from_assist_is_not_offered(monkeypatch, away):
         llm, "async_should_expose", lambda hass, a, eid: eid != AWAY_SWITCH
     )
     tools = llm.async_get_tools(away[0], CONTEXT, LLM_API_ASSIST)
-    assert "cozytouch_set_away_mode" not in [tool.name for tool in tools.tools]
+    assert "cozytouch__set_away_mode" not in [tool.name for tool in tools.tools]

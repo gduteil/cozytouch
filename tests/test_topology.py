@@ -110,15 +110,18 @@ def test_an_unknown_device_id_is_not_linked_to_anything():
 # what these pin. See docs/decisions.md.
 
 
+ENTRY_ID = "entry123"
+
+
 class FakeDeviceRegistry:
     """Just the lookup `via_device_info` makes, over a fixed registry."""
 
     def __init__(self, devices):
         self._devices = devices
 
-    def async_get_device(self, identifiers):
-        ((_, subentry_id),) = identifiers
-        if subentry_id not in self._devices:
+    def async_get_device_by_identifier(self, identifier, config_entry_id):
+        (_, subentry_id) = identifier
+        if config_entry_id != ENTRY_ID or subentry_id not in self._devices:
             return None
         return SimpleNamespace(id=self._devices[subentry_id])
 
@@ -161,6 +164,7 @@ def registering_hub(via_device, hass=None):
         get_serial_number=lambda: "1234-5678-0000",
         get_software_version=lambda: None,
         get_via_device=lambda: via_device,
+        config_entry=SimpleNamespace(entry_id=ENTRY_ID),
     )
 
 
@@ -219,7 +223,7 @@ def test_a_gateway_is_registered_without_a_link():
 
 def test_the_link_names_the_gateways_registry_id():
     """Not its identifiers: that is the deprecated spelling."""
-    info = via_device_info(FakeHass(), (DOMAIN, "abc123"))
+    info = via_device_info(FakeHass(), (DOMAIN, "abc123"), ENTRY_ID)
 
     assert info == {"via_device_id": "registry-id-of-abc123"}
     assert "via_device" not in info
@@ -227,14 +231,14 @@ def test_the_link_names_the_gateways_registry_id():
 
 def test_no_link_is_declared_for_a_gateway_the_registry_does_not_hold():
     """A `via_device_id` naming nothing raises; this has to stay silent."""
-    assert via_device_info(FakeHass(devices={}), (DOMAIN, "abc123")) == {}
+    assert via_device_info(FakeHass(devices={}), (DOMAIN, "abc123"), ENTRY_ID) == {}
 
 
 def test_the_floor_still_gets_the_only_key_it_knows(monkeypatch):
     """DeviceInfo has no `via_device_id` before 2026.8; the floor is below it."""
     monkeypatch.setattr(hub_module, "_VIA_DEVICE_ID_SUPPORTED", False)
 
-    assert via_device_info(FakeHass(), (DOMAIN, "abc123")) == {
+    assert via_device_info(FakeHass(), (DOMAIN, "abc123"), ENTRY_ID) == {
         "via_device": (DOMAIN, "abc123")
     }
 

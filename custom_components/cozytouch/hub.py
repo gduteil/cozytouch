@@ -911,7 +911,9 @@ def away_window_is_valid(
 _VIA_DEVICE_ID_SUPPORTED = "via_device_id" in DeviceInfo.__annotations__
 
 
-def via_device_info(hass: HomeAssistant, via_device: tuple[str, str]) -> DeviceInfo:
+def via_device_info(
+    hass: HomeAssistant, via_device: tuple[str, str], config_entry_id: str
+) -> DeviceInfo:
     """The gateway link, keyed the way the running Home Assistant wants it.
 
     Empty when the registry does not hold the gateway. See docs/decisions.md.
@@ -919,7 +921,10 @@ def via_device_info(hass: HomeAssistant, via_device: tuple[str, str]) -> DeviceI
     if not _VIA_DEVICE_ID_SUPPORTED:
         return DeviceInfo(via_device=via_device)
 
-    gateway = dr.async_get(hass).async_get_device(identifiers={via_device})
+    # Same release as via_device_id, so the same flag. See docs/decisions.md.
+    gateway = dr.async_get(hass).async_get_device_by_identifier(
+        via_device, config_entry_id
+    )
     if gateway is None:
         return DeviceInfo()
 
@@ -946,7 +951,11 @@ def device_info_for(coordinator: Hub, device_uniq_id: str) -> DeviceInfo:
     )
     via_device = coordinator.get_via_device()
     if via_device is not None:
-        info.update(via_device_info(coordinator.hass, via_device))
+        info.update(
+            via_device_info(
+                coordinator.hass, via_device, coordinator.config_entry.entry_id
+            )
+        )
 
     return info
 
