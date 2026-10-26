@@ -2296,4 +2296,47 @@
 {"commercialReference":"024486","id":3635,"longName":"IDU AEROLIA 5 DUO R454C","name":"Aerolia","productId":0,"productRange":null}
 {"commercialReference":"075804","id":3636,"longName":"Pompe à Chaleur Hybride HYBEA","name":"Hybea","productId":0,"productRange":null}
 {"commercialReference":"024357","id":3637,"longName":"Pompe à Chaleur Hybride HYBRELLIA","name":"Hybrellia","productId":0,"productRange":null}
+{"commercialReference":"232522","id":3647,"longName":"CALYPSO SPLIT TRINEO VM 150L","name":"CALYPSO 150L TRINEO","productId":0,"productRange":null}
+{"commercialReference":"232523","id":3648,"longName":"CALYPSO SPLIT TRINEO VM 200L","name":"CALYPSO 200L TRINEO","productId":0,"productRange":null}
 {"commercialReference":"396012","id":3652,"longName":"Saturnia 200L","name":"Saturnia 200L","productId":0,"productRange":null}
+{"commercialReference":"157219","id":3658,"longName":"FLAT EVO CONNECT MP 040L BLC 2500M","name":"LINEO+ 40L","productId":0,"productRange":null}
+{"commercialReference":"157220","id":3659,"longName":"FLAT EVO CONNECT MP 065L BLC 2500M","name":"LINEO+ 65L","productId":0,"productRange":null}
+{"commercialReference":"157221","id":3660,"longName":"FLAT EVO CONNECT MP 080L BLC 2500M","name":"LINEO+ 80L","productId":0,"productRange":null}
+{"commercialReference":"157225","id":3661,"longName":"LINEO CONNECTE MP COMPACT 80L BLC 2500M","name":"LINEO+ 80L","productId":0,"productRange":null}
+{"commercialReference":"157222","id":3662,"longName":"FLAT EVO CONNECT MP 100L BLC 2500M","name":"LINEO+ 100L","productId":0,"productRange":null}
+{"commercialReference":"231114","id":3663,"longName":"MALICIO 4 MP 040L BLC 2500M","name":"MALICIO 4 40L","productId":0,"productRange":null}
+{"commercialReference":"231115","id":3664,"longName":"MALICIO 4 MP 065L BLC 2500M","name":"MALICIO 4 65L","productId":0,"productRange":null}
+{"commercialReference":"231116","id":3665,"longName":"MALICIO 4 MP 080L BLC 2500M","name":"MALICIO 4 80L","productId":0,"productRange":null}
+{"commercialReference":"231118","id":3666,"longName":"MALICIO 4 MP 080L COMP BLC 2500M","name":"MALICIO 4 80L","productId":0,"productRange":null}
+{"commercialReference":"231117","id":3667,"longName":"MALICIO 4 MP 100L BLC 2500M","name":"MALICIO 4 100L","productId":0,"productRange":null}
+{"commercialReference":"341055","id":3668,"longName":"SAU FLAT EVO CO MP 065 BLC 2500M","name":"KIAMA 65L","productId":0,"productRange":null}
+{"commercialReference":"341056","id":3669,"longName":"SAU FLAT EVO CO MP 080L BLC 2500M","name":"KIAMA  80L","productId":0,"productRange":null}
+{"commercialReference":"341090","id":3670,"longName":"SAUTER GUELMA CO COMPACT 080L BLC","name":"KIAMA 80L","productId":0,"productRange":null}
+{"commercialReference":"341067","id":3671,"longName":"SAU FLAT EVO CO MP 100L BLC 2500M","name":"KIAMA  100L","productId":0,"productRange":null}
+{"commercialReference":"831321","id":3672,"longName":"APE VERTIGO ST WIFI MP 040L W 2500M PE","name":"VERTIGO WIFI 50","productId":0,"productRange":null}
+{"commercialReference":"831322","id":3673,"longName":"APE VERTIGO ST WIFI MP 065L W 2500M PE","name":"VERTIGO WIFI 80","productId":0,"productRange":null}
+{"commercialReference":"831323","id":3674,"longName":"APE VERTIGO ST WIFI MP 080L W 2500M PE","name":"VERTIGO WIFI 100","productId":0,"productRange":null}
+{"commercialReference":"831325","id":3675,"longName":"APE VERTIGO ST WIFI MP 100L W 2500M PE","name":"VERTIGO WIFI 120","productId":0,"productRange":null}
+{"commercialReference":"831326","id":3676,"longName":"ATG VERTIGO ST WIFI MP 040L W 2500M PE","name":"VERTIGO WIFI 50","productId":0,"productRange":null}
+{"commercialReference":"831327","id":3677,"longName":"ATG VERTIGO ST WIFI MP 065L W 2500M PE","name":"VERTIGO WIFI 80","productId":0,"productRange":null}
+{"commercialReference":"831328","id":3678,"longName":"ATG VERTIGO ST WIFI MP 080L W 2500M PE","name":"VERTIGO WIFI 100","productId":0,"productRange":null}
+{"commercialReference":"831329","id":3679,"longName":"ATG VERTIGO ST WIFI MP 100L W 2500M PE","name":"VERTIGO WIFI 120","productId":0,"productRange":null}
+{"commercialReference":"831331","id":3680,"longName":"THE ONIX CONNECT MP 040L W 2500M PE","name":"ONIX CONNECT 50","productId":0,"productRange":null}
+{"commercialReference":"831332","id":3681,"longName":"THE ONIX CONNECT MP 065L W 2500M PE","name":"ONIX CONNECT 80","productId":0,"productRange":null}
+{"commercialReference":"831333","id":3682,"longName":"THE ONIX CONNECT MP 080L W 2500M PE","name":"ONIX CONNECT 100","productId":0,"productRange":null}
+{"commercialReference":"831334","id":3683,"longName":"THE ONIX CONNECT MP 100L W 2500M PE","name":"ONIX CONNECT 120","productId":0,"productRange":null}
+{"commercialReference":"831335","id":3684,"longName":"EDE FLAT WIFI MP 040L 2500M PE","name":"FLAT WIFI 50","productId":0,"productRange":null}
+{"commercialReference":"831337","id":3685,"longName":"EDE FLAT WIFI MP 065L 2500M PE","name":"FLAT WIFI 80","productId":0,"productRange":null}
+{"commercialReference":"831340","id":3686,"longName":"APE VERTIGO ST WIFI MP 040L S 2500M PE","name":"VERTIGO WIFI 50","productId":0,"productRange":null}
+{"commercialReference":"831341","id":3687,"longName":"APE VERTIGO ST WIFI MP 065L S 2500M PE","name":"VERTIGO WIFI 80","productId":0,"productRange":null}
+{"commercialReference":"831342","id":3688,"longName":"APE VERTIGO ST WIFI MP 080L S 2500M PE","name":"VERTIGO WIFI 100","productId":0,"productRange":null}
+{"commercialReference":"831343","id":3689,"longName":"APE VERTIGO ST WIFI MP 100L S 2500M PE","name":"VERTIGO WIFI 120","productId":0,"productRange":null}
+{"commercialReference":"831344","id":3690,"longName":"ATG VERTIGO ST WIFI MP 040L S 2500M PE","name":"VERTIGO WIFI 50","productId":0,"productRange":null}
+{"commercialReference":"831346","id":3691,"longName":"ATG VERTIGO ST WIFI MP 065L S 2500M PE","name":"VERTIGO WIFI 80","productId":0,"productRange":null}
+{"commercialReference":"831347","id":3692,"longName":"ATG VERTIGO ST WIFI MP 080L S 2500M PE","name":"VERTIGO WIFI 100","productId":0,"productRange":null}
+{"commercialReference":"831348","id":3693,"longName":"ATG VERTIGO ST WIFI MP 100L S 2500M PE","name":"VERTIGO WIFI 120","productId":0,"productRange":null}
+{"commercialReference":"831349","id":3694,"longName":"THE ONIX CONNECT MP 040L S 2500M PE","name":"ONIX CONNECT 50","productId":0,"productRange":null}
+{"commercialReference":"831350","id":3695,"longName":"THE ONIX CONNECT MP 065L S 2500M PE","name":"ONIX CONNECT 80","productId":0,"productRange":null}
+{"commercialReference":"831351","id":3696,"longName":"THE ONIX CONNECT MP 080L S 2500M PE","name":"ONIX CONNECT 100","productId":0,"productRange":null}
+{"commercialReference":"831352","id":3697,"longName":"THE ONIX CONNECT MP 100L S 2500M PE","name":"ONIX CONNECT 120","productId":0,"productRange":null}
+{"commercialReference":"NULL","id":3701,"longName":"WATERDROP 2 DEFAULT","name":"WATER HEATER","productId":0,"productRange":null}
