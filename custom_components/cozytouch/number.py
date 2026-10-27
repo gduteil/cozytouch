@@ -94,9 +94,12 @@ class CozytouchAdjustmentNumber(NumberEntity, CozytouchSensor):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor from the hub."""
-        value = float(
-            self.coordinator.get_capability_value(self._capability.capabilityId)
-        )
+        raw = self.coordinator.get_capability_value(self._capability.capabilityId)
+        if raw is None:
+            # Device missing from the poll, or the value left empty : hold the
+            # last value rather than raise, as the sensors do.
+            return
+        value = float(raw)
         self._read_bounds()
 
         self._native_value = clamp(
