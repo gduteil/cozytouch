@@ -17,7 +17,8 @@ compte + appareil à la première ouverture ; les entités gardent leurs identif
 et leur historique. Faites une **sauvegarde complète** avant : la conversion ne se
 défait pas en recopiant l'ancienne version.
 
-Testé sur un Sauter Pagosa 270 L.
+Testé sur un Sauter Pagosa 270 L (Home Assistant 2026.11.0, mise à jour depuis
+`pagosa-1.4` le 08/11/2026 : entités, absence et commandes vérifiées).
 
 ---
 

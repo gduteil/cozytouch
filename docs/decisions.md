@@ -4586,3 +4586,10 @@ package rather than the code edited to satisfy them.
 Checked on a test Home Assistant 2026.11.0 replaying the heater's real
 Overkiz setup : a 1.4-pagosa entry with the user's 53 entity ids migrates
 with every entity id, state and attribute unchanged, through two restarts.
+
+Then installed on that Home Assistant (2026.11.0) over the running
+pagosa-1.4, with an Absence under way : the 53 entities came back with the
+same ids and states, the Absence end moved two hours later and back, read
+back from `setupviewv2` each time with the Absence still on, Eco was refused
+while absent without a request sent, and `setOperatingRange` written with
+its current value ended COMPLETED in the Overkiz execution history.
