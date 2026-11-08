@@ -37,13 +37,17 @@ class PagosaCloudConnectivity(CoordinatorEntity[PagosaHub], BinarySensorEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return the device info."""
+        """The heater's device, which every other Pagosa entity is on.
+
+        1.4 put this one alone on a device of its own, keyed on the entry ;
+        its unique id is unchanged, so moving it keeps its entity id.
+        """
+        device = self.coordinator.get_overkiz_device() or {}
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device_uniq_id)},
-            manufacturer="Atlantic",
-            name=self._title,
-            model=self.coordinator.get_model_infos()["name"],
-            serial_number=self.coordinator.get_serial_number(),
+            identifiers={(DOMAIN, str(device.get("deviceURL", self._device_uniq_id)))},
+            manufacturer="Sauter",
+            name=device.get("label") or self._title,
+            model="Pagosa 270L",
         )
 
     @property

@@ -131,6 +131,16 @@ def test_every_platform_builds_the_unique_ids_of_1_4():
         assert got == sorted(u.format(sub=SUBENTRY) for u in expected), platform
 
 
+def test_every_entity_is_on_the_heater_device():
+    for platform in UNIQUE_IDS_14:
+        for entity in built(platform):
+            info = entity.device_info
+            identifiers = info["identifiers"]
+            assert identifiers == {("cozytouch", "io://0000-1111-2222/1234567#1")}, (
+                entity.unique_id
+            )
+
+
 def test_no_platform_builds_more_than_1_4_did():
     assert set(pagosa._PLATFORMS) == set(UNIQUE_IDS_14)
 

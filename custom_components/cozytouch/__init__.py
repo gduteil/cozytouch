@@ -304,6 +304,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: CozytouchConfigEntry) ->
     return True
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device: dr.DeviceEntry
+) -> bool:
+    """Let a device that carries no entity be deleted from its page.
+
+    1.4 left devices behind that nothing claims any more -- an "Unknown
+    product (-1)" and, for the Pagosa, the entry's own device. A device that
+    still carries an entity is refused, so nothing in use can go.
+    """
+    return not er.async_entries_for_device(
+        er.async_get(hass), device.id, include_disabled_entities=True
+    )
+
+
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Close the 1.4 notice when the last entry it is about goes."""
     async_clear_legacy_entry(hass, entry)
