@@ -64,6 +64,7 @@ FAKE_URL = f"http://127.0.0.1:{FAKE_PORT}"
 CLIENT_ID = HA_URL + "/"
 
 REAL_API = "https://apis.groupe-atlantic.com"
+REAL_OVERKIZ = "https://ha110-1.overkiz.com"
 
 OWNER = {"name": "Test", "username": "test", "password": "test-password"}
 
@@ -198,6 +199,12 @@ def copy_integration():
     if REAL_API not in text:
         raise SystemExit("const.py no longer names the API address this replaces")
     const.write_text(text.replace(REAL_API, FAKE_URL))
+    # The Pagosa's Overkiz plane, which the fake serves too.
+    pagosa = target / "pagosa" / "hub.py"
+    text = pagosa.read_text()
+    if REAL_OVERKIZ not in text:
+        raise SystemExit("pagosa/hub.py no longer names the Overkiz address")
+    pagosa.write_text(text.replace(REAL_OVERKIZ, FAKE_URL))
 
 
 def start_ha(onboarded=False):

@@ -4539,3 +4539,50 @@ Navizone's air conditioners (557-559) and the dump attached to #157 :
 
 All four rows are shared, so every device reporting the id moves with them.
 Only the Navizone's rooms were looked at.
+
+## The Pagosa through Overkiz
+
+A Sauter Pagosa is not in the setup view : its account's `setupviewv2` holds a
+setup and no device, and the heater is on the Overkiz plane only
+(`docs/api-surface.md`, *An IO water heater is on it*). The fork that first
+drove it (Daelle84/Pagosa, branch `pagosa-1.4`) was built on 1.4 ; this is
+that code carried onto the account/subentry layout, in `pagosa/`.
+
+### How a subentry is told to be a Pagosa
+
+By its `deviceId` : an Overkiz device URL (`io://…`) where every other
+subentry holds a Cozytouch integer. That is what 1.4-pagosa stored in its
+entry, so `migrate_1_4.py` turns it into a Pagosa subentry with nothing
+added. The config flow offers the Overkiz plane's Pagosas when the setup view
+lists no device, as 1.4-pagosa fell back to Overkiz in the same case ; an
+account with Cozytouch devices and a Pagosa is not handled yet.
+
+### Its own hub, session and clock
+
+`PagosaHub` is not a `Hub` : it reads no capability and the account's
+coordinator never pushes to it. It keeps 1.4-pagosa's own `ClientSession`,
+because the Overkiz login answers with a session cookie that must not land in
+Home Assistant's shared one, and its 300 s poll with a 30 s floor and the
+Retry-After it honours. An account holding nothing but Pagosas is never asked
+for its setup view by the account at all ; the hub reads it once on
+connecting, for the Absence period it carries, as 1.4-pagosa did.
+
+### Why the entities are carried rather than rewritten
+
+1.4-pagosa's entities were tuned against the Pagosa's execution history (what
+it refuses, how long it takes to confirm, what the app sends and in which
+order), on one heater. Rewriting them into capability rows would re-derive
+all of that without the heater to check it on. And `migrate_1_4.py` deletes,
+once Home Assistant has started, every entity whose rewritten unique id
+nothing claims : a unique id moved by one character costs the user the
+entity id, its history and every automation reading it. So the entity
+classes are 1.4-pagosa's, built with a `PagosaContext` whose `entry_id` is the
+subentry id -- exactly what the migration puts where 1.4 had the entry id.
+`tests/test_pagosa.py` pins the 53 unique ids. The modules that patched 1.4's
+classes (`absence.py`, `controls.py`, `select_fix.py`, `sensor_fix.py`) still
+do, on the package's classes, and ruff's style rules are relaxed for the
+package rather than the code edited to satisfy them.
+
+Checked on a test Home Assistant 2026.11.0 replaying the heater's real
+Overkiz setup : a 1.4-pagosa entry with the user's 53 entity ids migrates
+with every entity id, state and attribute unchanged, through two restarts.

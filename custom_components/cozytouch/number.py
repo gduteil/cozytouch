@@ -9,6 +9,7 @@ from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import pagosa
 from .const import DOMAIN
 from .hub import CozytouchConfigEntry, Hub, add_capability_entities
 from .infos import CapabilityType
@@ -24,6 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
+    await pagosa.async_setup_platform("number", config_entry, async_add_entities)
     add_capability_entities(
         config_entry,
         async_add_entities,

@@ -23,11 +23,13 @@ from .hub import (
     device_info_for,
 )
 from .migrate_1_4 import async_migrate_from_1_4
+from .pagosa import PagosaHub, is_overkiz_device_id
 from .repairs import async_clear_legacy_entry, async_raise_legacy_entry
 from .services import async_register_services
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CALENDAR,
     Platform.CLIMATE,
     Platform.DATETIME,
@@ -36,6 +38,7 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -226,14 +229,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: CozytouchConfigEntry) ->
     async_register_services(hass)
     await _async_serve_card(hass)
 
+    # A Pagosa is reached through Overkiz, by a hub of its own : see pagosa/.
+    pagosa_subentries = {
+        subentry_id: subentry
+        for subentry_id, subentry in entry.subentries.items()
+        if is_overkiz_device_id(subentry.data.get("deviceId"))
+    }
+    cozytouch_subentries = {
+        subentry_id: subentry
+        for subentry_id, subentry in entry.subentries.items()
+        if subentry_id not in pagosa_subentries
+    }
+
     # Retried with backoff until the network is back ; a refused password
     # comes out as ConfigEntryAuthFailed instead. See docs/decisions.md.
-    if not await account.connect_or_auth_failed():
+    # An account holding nothing but a Pagosa is not asked : its setup view
+    # has no device, and the Pagosa logs in on its own.
+    if (
+        cozytouch_subentries or not pagosa_subentries
+    ) and not await account.connect_or_auth_failed():
         raise ConfigEntryNotReady("Cannot connect to Atlantic Cozytouch API")
+
+    pagosa_hubs: dict[str, PagosaHub] = {}
+    for subentry_id, subentry in pagosa_subentries.items():
+        pagosa_hub = PagosaHub(
+            hass,
+            entry.data["username"],
+            entry.data["password"],
+            subentry.data["deviceId"],
+            config_entry=entry,
+            subentry_id=subentry_id,
+        )
+        entry.async_on_unload(pagosa_hub.async_close)
+        if not await pagosa_hub.connect():
+            raise ConfigEntryNotReady("Cannot reach the Pagosa through Overkiz")
+        pagosa_hubs[subentry_id] = pagosa_hub
 
     create_unknown = _setting(entry, "create_unknown")
     hubs: dict[str, Hub] = {}
-    for subentry_id, subentry in entry.subentries.items():
+    for subentry_id, subentry in cozytouch_subentries.items():
         hub = Hub(
             hass,
             account,
@@ -244,13 +278,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: CozytouchConfigEntry) ->
         hub.set_create_entities_for_unknown_entities(create_unknown)
         hubs[subentry_id] = hub
 
-    coordinator = AccountCoordinator(hass, account, entry, hubs)
-    entry.runtime_data = CozytouchRuntimeData(account, hubs, coordinator)
+    poll_account = bool(hubs) or not pagosa_hubs
+    coordinator = AccountCoordinator(hass, account, entry, hubs, poll=poll_account)
+    entry.runtime_data = CozytouchRuntimeData(
+        account, hubs, coordinator, pagosa_hubs
+    )
 
-    # async_refresh, not async_config_entry_first_refresh : connect() has
-    # already read the capabilities, so a failing poll must not fail a setup
-    # that has what it needs. See docs/decisions.md.
-    await coordinator.async_refresh()
+    if poll_account:
+        # async_refresh, not async_config_entry_first_refresh : connect() has
+        # already read the capabilities, so a failing poll must not fail a
+        # setup that has what it needs. See docs/decisions.md.
+        await coordinator.async_refresh()
+
+    for pagosa_hub in pagosa_hubs.values():
+        await pagosa_hub.async_config_entry_first_refresh()
 
     # Before the platforms, not as a side effect of their first entity. See
     # docs/decisions.md.

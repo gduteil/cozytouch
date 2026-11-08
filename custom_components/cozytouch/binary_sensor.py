@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import pagosa
 from .const import DOMAIN
 from .hub import CozytouchConfigEntry, CozytouchDeviceEntity, Hub, device_info_for
 
@@ -25,10 +26,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up entry."""
+    await pagosa.async_setup_platform("binary_sensor", config_entry, async_add_entities)
     # Per device rather than per account : it is the device page it shows up
     # on. See docs/decisions.md.
     for subentry_id, subentry in config_entry.subentries.items():
-        hub = config_entry.runtime_data.hubs[subentry_id]
+        hub = config_entry.runtime_data.hubs.get(subentry_id)
+        if hub is None:
+            continue  # a Pagosa : pagosa/ sets it up
         async_add_entities(
             [
                 CloudConnectivity(hub, subentry.title, subentry_id),

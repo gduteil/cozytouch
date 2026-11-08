@@ -1,3 +1,26 @@
+# Cozytouch — fork Sauter Pagosa
+
+**En bref :** ce fork de [gduteil/cozytouch](https://github.com/gduteil/cozytouch)
+(version 2026.10) ajoute le **chauffe-eau thermodynamique Sauter / Atlantic Pagosa**,
+que l'intégration d'origine ne voit pas : il n'est pas dans la partie Cozytouch du
+compte, mais sur la plateforme **Overkiz** d'Atlantic, accessible avec les mêmes
+identifiants. Le code Pagosa est dans `custom_components/cozytouch/pagosa/` ; le reste
+est l'intégration d'origine, inchangée pour les autres appareils.
+
+Fonctions : mode automatique ou manuel, consigne et mode Eco (en manuel), Boost de
+1 à 7 jours, absence de 48 h minimum avec calendrier et date de fin modifiable,
+programmation, date et heure, capteurs (températures, temps de fonctionnement,
+consommation d'énergie pour le tableau Énergie), boutons d'actualisation.
+
+**Mise à jour depuis la branche `pagosa-1.4` :** l'entrée est convertie au format
+compte + appareil à la première ouverture ; les entités gardent leurs identifiants
+et leur historique. Faites une **sauvegarde complète** avant : la conversion ne se
+défait pas en recopiant l'ancienne version.
+
+Testé sur un Sauter Pagosa 270 L.
+
+---
+
 # 🏠 Atlantic Cozytouch
 
 A Home Assistant integration for Atlantic's Cozytouch cloud: boilers, heat

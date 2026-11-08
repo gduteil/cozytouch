@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -78,6 +79,8 @@ class CozytouchRuntimeData:
     account: CozytouchAccount
     hubs: dict[str, Hub]
     coordinator: AccountCoordinator
+    # The Pagosas, which Atlantic serves through Overkiz : see pagosa/.
+    pagosa_hubs: dict[str, Any] = field(default_factory=dict)
 
 # The firmware version, which the device registry wants as a string on the
 # device rather than as an entity somewhere in the list.
@@ -134,15 +137,22 @@ class AccountCoordinator(DataUpdateCoordinator):
         account: CozytouchAccount,
         config_entry: ConfigEntry,
         hubs: dict[str, Hub],
+        poll: bool = True,
     ) -> None:
-        """Init the account coordinator."""
+        """Init the account coordinator.
+
+        poll is False for an account whose devices are all Pagosas, which
+        nothing in the setup view describes : see pagosa/.
+        """
         super().__init__(
             hass,
             _LOGGER,
             # Not the username : this name reaches every debug line written.
             config_entry=config_entry,
             name="Cozytouch_" + config_entry.entry_id,
-            update_interval=poll_interval(config_entry, account.rate_limit),
+            update_interval=(
+                poll_interval(config_entry, account.rate_limit) if poll else None
+            ),
         )
         self._account = account
         self._hubs = hubs
@@ -983,7 +993,9 @@ def add_capability_entities(
     A type absent from the map belongs to another platform.
     """
     for subentry_id, subentry in config_entry.subentries.items():
-        hub = config_entry.runtime_data.hubs[subentry_id]
+        hub = config_entry.runtime_data.hubs.get(subentry_id)
+        if hub is None:
+            continue  # a Pagosa : pagosa/ sets it up
 
         entities = []
         for capability in hub.get_capabilities_for_device():

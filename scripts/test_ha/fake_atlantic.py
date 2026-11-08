@@ -24,6 +24,15 @@ carries, moved forward whole so its latest day is today : a dump taken last
 month would otherwise show last month's day as today's. A dump without it
 answers an empty list, which is what a setup with no meter is assumed to get.
 
+A Pagosa capture (`{"setupviewv2": [...], "overkiz_setup": {...}}`, as
+`pagosa.json` beside this file) is served too : the setup view without a
+device, and the Overkiz plane the Pagosa lives on -- the JWT, the login, the
+setup and `exec/apply`. A command lands on the state it names, as the setup
+reads once the heater has confirmed it ; the Absence flag of
+setCurrentOperatingMode is refused, as the real Pagosa refuses it
+(ERRORCOMMAND, see pagosa/), and the cloud applying the setup's period an
+hour later is not played.
+
 Anything else -- a programmed absence turning on at its start, a 429 --
 is not simulated. This tests the integration's reading of the API, not the
 cloud.
@@ -113,6 +122,86 @@ def as_of_today(answer: list, now: float) -> list:
         for period in series.get("consumptionPeriods", []):
             period["date"] += shift
     return moved
+
+
+# What an Overkiz command writes, as (state, how the parameter becomes it).
+OVERKIZ_COMMANDS = {
+    "setDHWMode": ("io:DHWModeState", lambda p: p[0]),
+    "setTargetTemperature": ("core:TargetTemperatureState", lambda p: p[0]),
+    "setBoostModeDuration": ("core:BoostModeDurationState", lambda p: p[0]),
+    "setAwayModeDuration": ("io:AwayModeDurationState", lambda p: p[0]),
+    "setOperatingRange": ("io:OperatingRangeState", lambda p: p[0]),
+    "setProgrammingSlots": ("io:ProgrammingSlotsState", lambda p: p[0]),
+    "setDateTime": ("core:DateTimeState", lambda p: p[0]),
+}
+
+
+def is_pagosa_capture(dump: dict) -> bool:
+    """A Pagosa capture rather than a diagnostics dump."""
+    return "overkiz_setup" in dump
+
+
+class FakeOverkiz:
+    """The Overkiz plane : the Pagosa and its meter."""
+
+    def __init__(self, setup: dict, log: list[str]) -> None:
+        self.setup = setup
+        self.log = log
+        self.executions = itertools.count(1)
+
+    def device(self, deviceURL: str) -> dict | None:
+        return next(
+            (d for d in self.setup["devices"] if d["deviceURL"] == deviceURL), None
+        )
+
+    def store(self, device: dict, name: str, value) -> None:
+        for state in device.setdefault("states", []):
+            if state["name"] == name:
+                state["value"] = value
+                return
+        device["states"].append({"name": name, "type": 3, "value": value})
+
+    def state(self, device: dict, name: str):
+        return next(
+            (s["value"] for s in device.get("states", []) if s["name"] == name), None
+        )
+
+    async def jwt(self, request: web.Request) -> web.Response:
+        return web.json_response("fake-jwt")
+
+    async def login(self, request: web.Request) -> web.Response:
+        self.log.append("overkiz login")
+        return web.json_response({"success": True, "roles": []})
+
+    async def get_setup(self, request: web.Request) -> web.Response:
+        return web.json_response(self.setup)
+
+    async def apply(self, request: web.Request) -> web.Response:
+        body = await request.json()
+        for action in body.get("actions", []):
+            device = self.device(action["deviceURL"])
+            for command in action.get("commands", []):
+                name, params = command["name"], command.get("parameters", [])
+                outcome = self.run(device, name, params) if device else "no device"
+                self.log.append(f"overkiz {name} {json.dumps(params)} : {outcome}")
+        return web.json_response({"execId": f"exec-{next(self.executions)}"})
+
+    def run(self, device: dict, name: str, params: list) -> str:
+        if name in OVERKIZ_COMMANDS:
+            state, value = OVERKIZ_COMMANDS[name]
+            self.store(device, state, value(params))
+            return "applied"
+        if name == "setCurrentOperatingMode":
+            current = dict(self.state(device, "core:OperatingModeState") or {})
+            wanted = params[0] if params else {}
+            if wanted.get("absence", current.get("absence")) != current.get(
+                "absence"
+            ):
+                return "ERRORCOMMAND (the Pagosa refuses the Absence flag)"
+            current["relaunch"] = wanted.get("relaunch", current.get("relaunch"))
+            self.store(device, "core:OperatingModeState", current)
+            return "applied"
+        return "accepted, no effect simulated"
 
 
 class FakeAtlantic:
@@ -217,9 +306,22 @@ class FakeAtlantic:
         return web.json_response(self.log)
 
 
-def application(setup: dict, consumptions=(200, [])) -> web.Application:
+def application(
+    setup: dict, consumptions=(200, []), overkiz_setup: dict | None = None
+) -> web.Application:
     fake = FakeAtlantic(setup, consumptions)
     app = web.Application()
+    if overkiz_setup is not None:
+        overkiz = FakeOverkiz(overkiz_setup, fake.log)
+        api = "/enduser-mobile-web/enduserAPI"
+        app.add_routes(
+            [
+                web.get("/magellan/accounts/jwt", overkiz.jwt),
+                web.post(api + "/login", overkiz.login),
+                web.get(api + "/setup", overkiz.get_setup),
+                web.post(api + "/exec/apply", overkiz.apply),
+            ]
+        )
     app.add_routes(
         [
             web.post("/users/token", fake.token),
@@ -246,8 +348,15 @@ def main() -> None:
     args = parser.parse_args()
 
     dump = json.loads(args.dump.read_text())
+    if is_pagosa_capture(dump):
+        app = application(
+            copy.deepcopy(dump["setupviewv2"][0]),
+            overkiz_setup=copy.deepcopy(dump["overkiz_setup"]),
+        )
+    else:
+        app = application(setup_from_dump(dump), consumptions_from_dump(dump))
     web.run_app(
-        application(setup_from_dump(dump), consumptions_from_dump(dump)),
+        app,
         host="127.0.0.1",
         port=args.port,
     )

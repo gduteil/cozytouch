@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import consumption, faults
+from . import consumption, faults, pagosa
 from .capability import describe_capability_value, read_setpoint
 from .const import DOMAIN, CozytouchCapabilityVariableType
 from .hub import (
@@ -70,6 +70,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Modern (thru config entry) sensors setup."""
+    await pagosa.async_setup_platform("sensor", config_entry, async_add_entities)
     _LOGGER.debug("%s: setting up sensor plateform", config_entry.title)
     # SENSOR_BUILDERS is at the foot of this module, because it names the
     # classes below.
@@ -83,7 +84,9 @@ async def async_setup_entry(
     # there in production, since connect() reads the setup view before any
     # platform loads.
     for subentry_id in config_entry.subentries:
-        hub = config_entry.runtime_data.hubs[subentry_id]
+        hub = config_entry.runtime_data.hubs.get(subentry_id)
+        if hub is None:
+            continue  # a Pagosa : pagosa/ sets it up
 
         dates = []
         if hub.get_last_modification_date() is not None:
