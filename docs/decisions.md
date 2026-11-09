@@ -4562,10 +4562,37 @@ account with Cozytouch devices and a Pagosa is not handled yet.
 `PagosaHub` is not a `Hub` : it reads no capability and the account's
 coordinator never pushes to it. It keeps 1.4-pagosa's own `ClientSession`,
 because the Overkiz login answers with a session cookie that must not land in
-Home Assistant's shared one, and its 300 s poll with a 30 s floor and the
-Retry-After it honours. An account holding nothing but Pagosas is never asked
-for its setup view by the account at all ; the hub reads it once on
-connecting, for the Absence period it carries, as 1.4-pagosa did.
+Home Assistant's shared one, and its 30 s floor and the Retry-After it
+honours. Its poll is 240 s, where 1.4-pagosa's was 300 (next entry). An
+account holding nothing but Pagosas is never asked for its setup view by the
+account at all ; the hub reads it once on connecting, for the Absence period
+it carries, as 1.4-pagosa did.
+
+### 240 s, under the session's five idle minutes
+
+At 1.4-pagosa's 300 s, most polls found the session gone : 168 warnings
+*Overkiz session expired during setup refresh* in the first 18 hours of the
+port on the user's Home Assistant (2026.11.0), about three polls in four.
+Each one is a token request, a JWT, an Overkiz login and the setup again,
+and a command sent in that state goes through the same 401 first.
+
+A probe on the same account, with a session of its own and nothing but
+`GET /setup/gateways`, told the causes apart. Asked every 30 s, its session
+still answered at 301 s, so a request keeps a session open. It also went on
+answering after the hub logged in again in between, so a second login does
+not end the first. What is left is an idle limit of about five minutes, and
+the coordinator schedules the next poll 300 s after the last one ended :
+the poll lands on the limit, and sub-second jitter decides which side.
+
+At 240 s, after a restart, four polls in a row (14:29 to 14:41) needed no
+new login.
+
+The limits : the idle limit was not measured directly. The probe's second
+half, a fresh session left idle 120, 180, 240 and 290 s, never ran, because
+`/setup/gateways` started answering 429 after ten calls in five minutes and
+the probe was stopped there ; the hub's own `/setup` never did. One account,
+one heater, on `ha110-1`. 240 leaves a minute of margin, rather than probing
+the limit closer on the user's account.
 
 ### Why the entities are carried rather than rewritten
 

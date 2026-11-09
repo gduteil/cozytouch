@@ -23,6 +23,10 @@ overturn one, edit the line here in the same pull request.
   routes answer 401 at `enduserAPI/login` for the Navizone account and 200
   for an account with a Sauter Pagosa (IO water heater), whose heater is on
   Overkiz only. `docs/api-surface.md`.
+- **An Overkiz session closes after about five idle minutes** ; a request
+  keeps it open, and a second login does not end the first. The Pagosa hub
+  polls at 240 s for that. 2026-11-09, one Pagosa account, `docs/decisions.md`,
+  *The Pagosa through Overkiz*.
 - **`productId` classifies a device, not `modelId`** -- the vendor app resolves
   on the pair (own `productId`, parent's `productId`). `docs/decisions.md`.
 - **100022 is the firmware family's mode mask, not the device's** ; 166 narrows
