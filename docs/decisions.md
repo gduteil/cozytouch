@@ -1335,9 +1335,10 @@ says which. A row setting both fails
   corpus has 18/19/18/26/24/26 on ten models each; 103199 appears in no
   capture at all and is typed on the app's word alone.
 - **Flags** (157, 381, 100078, 100102, 100103, 103150, 104050, 104051):
-  each has a reader returning `boolean`. Every one of them reads 0 on
-  every capture, which is why the corpus could not settle them and the app
-  can: constant is not the same as false.
+  each has a reader returning `boolean`. All but 103150 read 0 on every
+  capture, which is why the corpus could not settle them and the app can:
+  constant is not the same as false. 103150 reads 1 on all fifteen
+  readings of the corpus, and 0 only on issue #161's dump.
 
 Left as raw strings on purpose:
 
@@ -3577,26 +3578,30 @@ switch keeps the reading that was there before, so the name needs an entry
 in the `switch` section *and* the `sensor` one -- which is what
 `test_every_switch_key_is_also_a_sensor_key` is for.
 
-### 103150 says whether the ambient reading means anything
+### 103150 does not hide the ambient reading
 
 `ROOM_AMBIENT_TEMPERATURE` (117) is what the climate entity shows as the
-current temperature, and it was shown whenever the model declared
-`currentTemperatureAvailable` -- a static flag, decided once per model id.
-The app asks the device instead: `isCurrentTemperatureAvailable()` reads
-capability 103150 at each poll, and shows no temperature when it is false.
+current temperature, whatever 103150 says.
 
-The difference shows up on hardware whose sensor stops reporting. The static
-flag cannot know, so the entity keeps the last good number for good, which
-on a dashboard is indistinguishable from a live one. `_climate_entity` now
-wires `currentAvailableCapabilityId = 103150` where the device reports it,
-and `current_temperature` reads None while it says no.
+103150 is `ROOM_AmbientTemperature_Status`, which the catalogue describes as
+"the temperature information of the thermal zone valid (case of sensor
+failure)". From PR #120 on, the climate hid 117 while it read 0, on the
+strength of the Android app's `isCurrentTemperatureAvailable()`. Reading
+the app again (3.31.0) showed that only the detail screen of a room calls
+it. The home screen tile shows 117 whenever it parses as a number and the
+`TEMPERATURE` bit is set in both 100002 and 100024, and never reads 103150.
+The Darwin thermostat view does not read it either.
 
-Silence is not a no, deliberately, and twice : a device that does not report
-103150 at all is believed, which is every device that predates it, and a
-poll that carries the id with no value is believed too. Only an explicit
-`"0"` hides the reading. The alternative -- treating absence as unavailable
--- would blank the temperature on every device in the fleet the day the
-capability were mistyped.
+Issue #161 is what that cost: four rooms of six behind one Navizone (559,
+560, 561, 1734) read 103150 at 0 and 117 at 26.3-27.7, refreshed within the
+same quarter-hour as the two rooms reading 1, with all six off. The climate
+showed no temperature at all, which breaks a thermostat card, for a value
+the vendor's own main screen displays. Whether 0 means a failed sensor or a
+flag the hub sets wrongly is not known ; in the corpus it reads 1 on every
+other room captured.
+
+103150 stays a diagnostic binary sensor, disabled by default, for whoever
+wants to see it.
 
 ### The third one, not taken
 

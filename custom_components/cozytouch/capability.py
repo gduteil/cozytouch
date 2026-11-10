@@ -165,10 +165,6 @@ def _climate_entity(
         and 117 in availableCapabilityIds
     ):
         capability.currentValueCapabilityId = 117
-        # The device says, at each poll, whether that reading means anything.
-        # See docs/decisions.md.
-        if 103150 in availableCapabilityIds:
-            capability.currentAvailableCapabilityId = 103150
 
     # 181 carries the mode the device is really running, which is not always
     # the one it was asked for

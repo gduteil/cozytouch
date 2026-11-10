@@ -177,7 +177,6 @@ class CapabilityInfos(AttributeDict):
     targetCapabilityId: int
     targetCoolCapabilityId: int
     currentValueCapabilityId: int | None
-    currentAvailableCapabilityId: int
     lowestValueCapabilityId: int
     highestValueCapabilityId: int
     lowestCoolValueCapabilityId: int
