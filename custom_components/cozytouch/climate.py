@@ -36,6 +36,9 @@ FAN_QUIET = "quiet"
 # built with. See docs/decisions.md.
 SUPPORTED_HVAC_MODES_CAPABILITY_ID = 100022
 
+# Home Assistant 2026.11 reads the temperatures as native_*. See docs/decisions.md.
+_NATIVE_TEMPERATURES = hasattr(ClimateEntity, "native_current_temperature")
+
 
 def _bound(entity, coolKey, key) -> float | None:
     """The setpoint bound in force : the cooling one while cooling, if any."""
@@ -130,7 +133,10 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             if step is not None and float(step) > 0:
                 self._attr_native_step = float(step)
 
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        if _NATIVE_TEMPERATURES:
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+        else:
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_min_temp = 0
         self._attr_max_temp = 30
         self._attr_supported_features = (
@@ -462,15 +468,20 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         value = self.coordinator.get_capability_value(availableId)
         return value is None or str(value) != "0"
 
-    @property
-    def current_temperature(self):
+    def _current_temperature(self):
         """Return current temperature."""
         return self._current_value
 
-    @property
-    def target_temperature(self):
+    def _target_temperature(self):
         """Return target temperature."""
         return self._native_value
+
+    if _NATIVE_TEMPERATURES:
+        native_current_temperature = property(_current_temperature)
+        native_target_temperature = property(_target_temperature)
+    else:
+        current_temperature = property(_current_temperature)
+        target_temperature = property(_target_temperature)
 
     def _air_circulation_active(self) -> bool:
         """Tell whether air circulation is currently running."""

@@ -1005,6 +1005,36 @@ caller, and the setpoint asks for one refresh once both writes are done.
 Choosing a preset on its own still refreshes as before.
 `tests/test_setpoint_writes.py` pins the order.
 
+### The temperatures, under the names the running Home Assistant reads
+
+Home Assistant 2026.11 renamed the temperatures a climate entity provides,
+the way sensor and number already name theirs : `current_temperature`,
+`target_temperature` and `_attr_temperature_unit` became
+`native_current_temperature`, `native_target_temperature` and
+`_attr_native_temperature_unit`. The old names still answer, through aliases
+on `ClimateEntity`, but a class that provides them is reported in the log at
+every start, and they stop working in 2027.11. On 2026.11.0, over the
+Navizone dump, that was three warnings each start : `CozytouchClimate
+provides the deprecated current_temperature` and `target_temperature` when
+the module is imported, then `writes the deprecated
+CozytouchClimate._attr_temperature_unit` once the rooms are built.
+
+Before 2026.11 only the old names exist, and the floor is 2025.12, so both
+have to be reachable. `_NATIVE_TEMPERATURES` asks `ClimateEntity` for
+`native_current_temperature` rather than comparing versions, as
+`_VIA_DEVICE_ID_SUPPORTED` does, and the class declares one set or the other.
+Never both : providing an old name at all is what the report is about. The
+branch goes when the floor reaches 2026.11.
+
+`tests/test_temperature_names.py` pins the set on whichever release the job
+installed. CI's two releases both predate the rename, so the native branch
+is not covered there ; it was run by hand. The suite passes on 2026.11.0
+but for `test_topology.py`'s cloud-sensor test, which fails there with or
+without this change : it merges a `DeviceInfo` with `|`, which the 2026.11
+dataclass no longer supports. `scripts/test_ha` over the Navizone dump shows
+the three rooms at 23.2, 23.9 and 24.3 with a setpoint of 24 on 2026.8.3 and
+on 2026.11.0 alike, and logs none of the three warnings on either.
+
 ## `custom_components/cozytouch/select.py`
 
 ### The air-circulation duration is a select on the device's own grid
@@ -1617,8 +1647,9 @@ the lookup find something, so the two halves are one mechanism.
 wheels, since the field is a TypedDict key and no release note names it: 2026.7.0
 does not have it, 2026.8.0 does. The declared floor is well below that, so both
 spellings have to be reachable; `_VIA_DEVICE_ID_SUPPORTED` reads `DeviceInfo.__annotations__`
-rather than comparing versions, and it is the only compatibility branch in the
-integration. It goes when the floor passes 2026.8.0, which is not a floor worth
+rather than comparing versions, as the integration's other compatibility
+branches do (`_NATIVE_TEMPERATURES` in `climate.py`, the `ToolResult` import
+in `llm.py`). It goes when the floor passes 2026.8.0, which is not a floor worth
 having for it -- Home Assistant removes `via_device` in 2027.8 and the branch
 expires on its own.
 
