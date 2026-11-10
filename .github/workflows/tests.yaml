@@ -58,7 +58,7 @@ jobs:
       matrix:
         include:
           - python: "3.14.2"
-            homeassistant: "2026.8.3"
+            homeassistant: "2026.11.1"
             requirements: "requirements_test.txt"
           - python: "3.13.7"
             homeassistant: "2025.12.0"

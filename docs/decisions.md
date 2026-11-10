@@ -133,7 +133,7 @@ and the point of this one is to always report something.
 
 ### Python is pinned down to the patch
 
-Not `"3.14"`. Home Assistant pins its Python floor that precisely — 2026.8.3
+Not `"3.14"`. Home Assistant pins its Python floor that precisely — 2026.11.1
 needs >= 3.14.2 — so a floating minor would let the runner image decide which
 Home Assistant is installable, which is the drift the pinned requirements
 exist to remove.
@@ -1044,6 +1044,26 @@ caller, and the setpoint asks for one refresh once both writes are done.
 Choosing a preset on its own still refreshes as before.
 `tests/test_setpoint_writes.py` pins the order.
 
+### The temperatures go under the names the running release reads
+
+Home Assistant 2026.11 moved the climate temperatures to `native_*` names :
+`native_current_temperature`, `native_target_temperature`,
+`_attr_native_temperature_unit`. A class that still provides the old ones
+keeps working through a shim that logs, at import, that it stops in 2027.11
+-- seen on a live 2026.11.1 install (2026-11-10), with the `temperature_unit`
+write reported on top. 2026.8.3 has no `native_*` name on `ClimateEntity` at
+all, and the floor `hacs.json` declares is older still, so a straight rename
+would have the floor read no temperature.
+
+`_NATIVE_TEMPERATURES` reads `ClimateEntity` for the native property and the
+class declares one set or the other, never both, because the shim reads the
+native names first and two sets would leave the old ones as code nothing
+reads. The unit moves from `__init__` to the class body : writing
+`_attr_temperature_unit` on an instance is what the 2026.11 setter reports,
+whatever the class declares. The branch goes when the floor reaches 2026.11.
+`tests/test_climate_temperatures.py` pins both sides on whichever release the
+job installed.
+
 ## `custom_components/cozytouch/select.py`
 
 ### The air-circulation duration is a select on the device's own grid
@@ -1653,14 +1673,27 @@ where the deprecated key merely warned; `via_device_info` answers with no link
 at all in that case. Setup registering gateways first (above) is what makes
 the lookup find something, so the two halves are one mechanism.
 
+The lookup names the entry as well as the identifiers :
+`async_get_device_by_identifier(via_device, entry_id)`. The plain
+`async_get_device(identifiers=…)` warns from 2026.9 and stops in 2027.8,
+because identifiers are no longer unique across config entries -- logged on
+a live 2026.11.1 install (2026-11-10). The gateway is a subentry of the same
+account entry as the rooms that name it, so the entry is the coordinator's.
+The keyed lookup arrived in 2026.8.0 with `via_device_id`, so it sits inside
+the same branch and needs no second one.
+
 `DeviceInfo` gained `via_device_id` in **2026.8.0** -- bisected over the PyPI
 wheels, since the field is a TypedDict key and no release note names it: 2026.7.0
 does not have it, 2026.8.0 does. The declared floor is well below that, so both
 spellings have to be reachable; `_VIA_DEVICE_ID_SUPPORTED` reads `DeviceInfo.__annotations__`
-rather than comparing versions, and it is the only compatibility branch in the
-integration. It goes when the floor passes 2026.8.0, which is not a floor worth
-having for it -- Home Assistant removes `via_device` in 2027.8 and the branch
-expires on its own.
+rather than comparing versions, as the climate temperatures and the LLM
+tools' answer now do too (their sections, above and below). It goes when the
+floor passes 2026.8.0, which is not a floor worth having for it -- Home
+Assistant removes `via_device` in 2027.8 and the branch expires on its own.
+
+In 2026.11 `DeviceInfo` became a dataclass. It still reads and writes as a
+mapping and keeps `via_device_id` in its annotations, so the check holds
+there ; only a test that merged one into a dict with `|` had to change.
 
 The lookup that resolves the gateway follows the same flag. HA 2026.10 warns
 on `async_get_device(identifiers=...)`, since identifiers are no longer
@@ -3129,6 +3162,34 @@ so the assistant reports what was set rather than what it asked for.
 They are offered where an away switch is exposed to Assist, found by its
 translation key, and not otherwise : a room reports the absence but has
 nothing to set it with, and a switch kept from Assist is not a tool either.
+
+### The tools carry the domain, twice : in their name and as their integration
+
+Home Assistant 2026.11 asks three things of a tool an integration provides,
+and logged all three on a live 2026.11.1 install (2026-11-10) :
+
+- its name starts with the domain and two underscores, `cozytouch__…` ;
+  unprefixed names stop being accepted in 2027.3, the first of the three
+- it says which integration provides it, `integration = "cozytouch"`, from
+  2027.10
+- it answers with a `ToolResult` rather than a bare object, from 2027.11
+
+The names were `cozytouch_get_schedule` and the like, so the rename is the
+one visible change : a conversation agent, or an MCP client reaching Assist,
+sees `cozytouch__get_schedule`. It was agreed with the maintainer before
+being made. Nothing in the prompts names a tool, so they did not move.
+
+`integration` is a class attribute on a base the five tools share, which an
+older `Tool` simply ignores. `ToolResult` does not exist on 2026.8.3, so
+`_TOOL_RESULT` reads it off the module and `_result` answers with the bare
+object where it is absent -- the shape those releases expect. That branch
+goes when the floor passes the release that added it. `_read` stays a plain
+dictionary : the period tool reads the day through it before writing, and
+only what a tool hands back to the agent is wrapped.
+
+`tests/test_llm_tools.py` checks the name and the integration the way
+`homeassistant.components.llm` does, and unwraps every answer, asserting it
+is a `ToolResult` wherever the release has one.
 
 ## `custom_components/cozytouch/www/cozytouch-schedule-card.js`
 

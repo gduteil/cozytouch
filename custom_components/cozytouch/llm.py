@@ -36,15 +36,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    llm as llm_helper,
 )
 from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
-
-try:
-    from homeassistant.helpers.llm import ToolResult
-except ImportError:  # before 2026.10 a tool returns the object. See docs/decisions.md.
-    ToolResult = None
 
 from .const import DOMAIN, PROGRAM_DAYS, WRITABLE_PROGRAM_BLOCKS
 from .services import (
@@ -188,11 +184,25 @@ def _away_status(hass: HomeAssistant, llm_context: LLMContext) -> JsonObjectType
     return status
 
 
-class ReadAway(Tool):
+# see docs/decisions.md
+_TOOL_RESULT = getattr(llm_helper, "ToolResult", None)
+
+
+def _result(data: JsonObjectType) -> Any:
+    """What a tool answers, in the form the running Home Assistant expects."""
+    return data if _TOOL_RESULT is None else _TOOL_RESULT(data=data)
+
+
+class CozytouchTool(Tool):
+    """A tool that says which integration provides it."""
+
+    integration = DOMAIN
+
+
+class ReadAway(CozytouchTool):
     """Say whether the home is away, and from when to when."""
 
-    name = "cozytouch__get_away_mode"
-    integration = DOMAIN
+    name = f"{DOMAIN}__get_away_mode"
     description = (
         "Read the Cozytouch absence of the home : off, programmed (its start "
         "is still to come) or on, with when it starts and ends."
@@ -206,11 +216,10 @@ class ReadAway(Tool):
         return _result(_away_status(hass, llm_context))
 
 
-class SetAway(Tool):
+class SetAway(CozytouchTool):
     """Set the home's absence, from a start to an end."""
 
-    name = "cozytouch__set_away_mode"
-    integration = DOMAIN
+    name = f"{DOMAIN}__set_away_mode"
     description = (
         "Put the home in absence on Cozytouch, from a start to an end, in the "
         "home's local time. Without a start it begins in a minute. The heating "
@@ -243,11 +252,10 @@ class SetAway(Tool):
         return _result(_away_status(hass, llm_context))
 
 
-class ClearAway(Tool):
+class ClearAway(CozytouchTool):
     """End the home's absence."""
 
-    name = "cozytouch__clear_away_mode"
-    integration = DOMAIN
+    name = f"{DOMAIN}__clear_away_mode"
     description = (
         "End the Cozytouch absence of the home, or cancel a programmed one."
     )
@@ -267,11 +275,10 @@ class ClearAway(Tool):
         return _result(_away_status(hass, llm_context))
 
 
-class ReadSchedule(Tool):
+class ReadSchedule(CozytouchTool):
     """Read a device's weekly program back."""
 
-    name = "cozytouch__get_schedule"
-    integration = DOMAIN
+    name = f"{DOMAIN}__get_schedule"
     description = (
         "Read the weekly program a Cozytouch heater or air conditioner keeps in "
         "its own memory. Answers with each day's slots: when each one starts and "
@@ -290,11 +297,10 @@ class ReadSchedule(Tool):
         return _result(await _read(hass, llm_context, entity_id, args["program"]))
 
 
-class SetPeriod(Tool):
+class SetPeriod(CozytouchTool):
     """Hold one temperature over a stretch of a day, on the days asked for."""
 
-    name = "cozytouch__set_schedule_period"
-    integration = DOMAIN
+    name = f"{DOMAIN}__set_schedule_period"
     description = (
         "Have a Cozytouch heater or air conditioner hold one temperature between "
         "two times of day, on the days given, leaving the rest of each day as it "
@@ -370,11 +376,6 @@ class SetPeriod(Tool):
         # The program as it now stands, so the assistant reports what the
         # device holds rather than what it asked for.
         return _result(await _read(hass, llm_context, entity_id, program))
-
-
-def _result(data: JsonObjectType) -> Any:
-    """A tool's answer, in the shape the running Home Assistant takes."""
-    return data if ToolResult is None else ToolResult(data=data)
 
 
 async def _read(

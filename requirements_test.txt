@@ -12,5 +12,5 @@
 # CLAUDE.md explains how to build the venv. requirements_test_min.txt is the
 # same file for the oldest release hacs.json claims to support; keep the pytest
 # pin here and there in step.
-homeassistant==2026.8.3
+homeassistant==2026.11.1
 pytest==9.1.1

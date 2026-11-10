@@ -51,11 +51,14 @@ def bus(hass):
 
 
 def call(tool, hass, **args):
-    result = asyncio.run(
+    """What the tool answers, unwrapped from the result where there is one."""
+    answer = asyncio.run(
         tool.async_call(hass, ToolInput(tool.name, args), CONTEXT)
     )
-    # A ToolResult from 2026.10 on, the bare object before it.
-    return getattr(result, "data", result)
+    if llm._TOOL_RESULT is None:
+        return answer
+    assert isinstance(answer, llm._TOOL_RESULT)
+    return answer.data
 
 
 class WritingHub(FakeHub):
@@ -120,6 +123,19 @@ def test_assist_is_offered_the_two_tools(hass):
         "cozytouch__get_schedule",
         "cozytouch__set_schedule_period",
     ]
+
+
+def test_every_tool_says_it_is_ours_the_way_home_assistant_checks_it(away):
+    """Home Assistant 2026.11 wants the integration on the tool and its domain,
+    then two underscores, in front of the name: it logs both now and stops
+    accepting them in 2027.3 and 2027.10. See docs/decisions.md.
+    """
+    tools = llm.async_get_tools(away[0], CONTEXT, LLM_API_ASSIST)
+
+    assert tools.tools
+    for tool in tools.tools:
+        assert tool.integration == "cozytouch"
+        assert tool.name.startswith("cozytouch__")
 
 
 def test_another_api_is_offered_nothing(hass):
