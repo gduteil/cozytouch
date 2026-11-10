@@ -181,14 +181,27 @@ def test_a_slot_runs_until_the_next_one():
 
 
 def test_the_last_slot_of_the_day_runs_to_midnight():
-    """Where the next day's first slot takes over -- set_schedule refuses a day
-    that does not start at 00:00, so nothing is left uncovered.
-    """
+    """Where the next day's first slot takes over, at 00:00 here."""
     calendar = calendar_over({0: stored((0, 17), (1320, 21))})
 
     day = events(calendar, at(MONDAY, 0), at(TUESDAY, 0))
 
     assert day[-1].end == at(TUESDAY, 0)
+
+
+def test_the_last_slot_runs_until_the_next_day_starts():
+    """The Cozytouch app writes days starting at 00:15 or 05:00 (#210) : the
+    night is the previous day's last slot, not a gap.
+    """
+    calendar = calendar_over(
+        {0: stored((300, 20.5), (1260, 17)), 1: stored((300, 20.5), (1260, 17))}
+    )
+
+    night = events(calendar, at(TUESDAY, 1), at(TUESDAY, 2))
+
+    assert [(event.start, event.end, event.summary) for event in night] == [
+        (at(MONDAY, 21), at(TUESDAY, 5), "17 °C")
+    ]
 
 
 def test_the_setpoint_is_the_summary():
@@ -454,10 +467,20 @@ def test_a_deleted_event_drops_its_slot():
     assert json.loads(written[HEATING_MONDAY])[:3] == [[0, 17], [1320, 18], [0, 0]]
 
 
-def test_the_midnight_slot_cannot_be_deleted():
-    """It is what gives the beginning of the day a setpoint."""
+def test_the_midnight_slot_can_be_deleted():
+    """The previous day's last slot then holds until the next one (#210)."""
     calendar, written = writable({0: stored((0, 17), (420, 21))})
     uid = events(calendar, at(MONDAY, 0), at(TUESDAY, 0))[0].uid
+
+    asyncio.run(calendar.async_delete_event(uid))
+
+    assert json.loads(written[HEATING_MONDAY])[:2] == [[420, 21], [0, 0]]
+
+
+def test_the_only_slot_of_a_day_cannot_be_deleted():
+    """A day keeps one setpoint ; change it instead."""
+    calendar, written = writable({0: stored((300, 17))})
+    uid = events(calendar, at(MONDAY, 5), at(TUESDAY, 0))[0].uid
 
     with pytest.raises(HomeAssistantError):
         asyncio.run(calendar.async_delete_event(uid))
@@ -533,22 +556,39 @@ def test_only_a_writable_block_offers_editing():
     ).supported_features
 
 
-def test_a_day_that_would_not_begin_at_midnight_is_refused():
-    """build_matrix's rule, reached from the card rather than from the service."""
+def test_a_day_that_does_not_begin_at_midnight_is_written():
+    """The app writes such days (#210) ; the night before carries over."""
     calendar, written = writable({0: stored()})
 
-    with pytest.raises(HomeAssistantError):
-        asyncio.run(
-            calendar.async_create_event(
-                dtstart=at(MONDAY, 10), dtend=at(TUESDAY, 0), summary="21"
-            )
+    asyncio.run(
+        calendar.async_create_event(
+            dtstart=at(MONDAY, 10), dtend=at(TUESDAY, 0), summary="21"
         )
+    )
 
-    assert written == {}
+    assert json.loads(written[HEATING_MONDAY])[:2] == [[600, 21], [0, 0]]
 
 
-def test_the_midnight_slot_cannot_be_moved_to_another_day():
-    """Moving is a delete on the old day, and that day still has to start."""
+def test_an_event_before_a_late_first_slot_puts_back_the_night():
+    """Before 05:00 Sunday's last setpoint holds, so that is what 03:00 restores."""
+    calendar, written = writable({0: stored((300, 20.5)), 6: stored((1260, 17))})
+
+    asyncio.run(
+        calendar.async_create_event(
+            dtstart=at(MONDAY, 1), dtend=at(MONDAY, 3), summary="22"
+        )
+    )
+
+    assert json.loads(written[HEATING_MONDAY])[:4] == [
+        [60, 22],
+        [180, 17],
+        [300, 20.5],
+        [0, 0],
+    ]
+
+
+def test_the_only_slot_cannot_be_moved_to_another_day():
+    """Moving is a delete on the old day, and that day still keeps one."""
     calendar, written = writable({0: stored((0, 17)), 1: stored((0, 17))})
     uid = events(calendar, at(MONDAY, 0), at(TUESDAY, 0))[0].uid
 

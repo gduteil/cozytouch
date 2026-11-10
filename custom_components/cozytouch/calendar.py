@@ -130,12 +130,13 @@ class CozytouchProgramCalendar(CozytouchDeviceEntity, CalendarEntity):
     ) -> list[CalendarEvent]:
         """Expand the seven stored days over a range of real dates.
 
-        Each slot becomes an event running until the next one, or until
-        midnight for the last of a day. Local time throughout. See
+        Each slot becomes an event running until the next one, the last of a
+        day until the next day's first. Local time throughout. See
         docs/decisions.md.
         """
         zone = dt_util.DEFAULT_TIME_ZONE
-        day = dt_util.as_local(start_date).date()
+        # A day before the range, whose last slot may run into it.
+        day = dt_util.as_local(start_date).date() - timedelta(days=1)
         last = dt_util.as_local(end_date).date()
 
         # Once, not once per date : a card can ask for a year.
@@ -150,9 +151,13 @@ class CozytouchProgramCalendar(CozytouchDeviceEntity, CalendarEntity):
                 if index + 1 < len(slots):
                     end = datetime.combine(day, slots[index + 1]["time"], tzinfo=zone)
                 else:
-                    # Held until the day runs out. See docs/decisions.md.
+                    # Held until the next day's first slot. See
+                    # docs/decisions.md.
+                    following = programs[(day.weekday() + 1) % 7]
                     end = datetime.combine(
-                        day + timedelta(days=1), time(0, 0), tzinfo=zone
+                        day + timedelta(days=1),
+                        following[0]["time"] if following else time(0, 0),
+                        tzinfo=zone,
                     )
 
                 # Overlapping, not contained. See docs/decisions.md.
@@ -195,6 +200,11 @@ class CozytouchProgramCalendar(CozytouchDeviceEntity, CalendarEntity):
 
         return sorted(slots, key=lambda slot: slot["time"])
 
+    def _carried_into(self, weekday: int) -> float | None:
+        """What the previous day ends on, which holds before this one's first slot."""
+        previous = self._slots_for((weekday - 1) % 7)
+        return previous[-1]["temperature"] if previous else None
+
     def _uid(self, weekday: int, start: time) -> str:
         """Which slot an event is, which is a weekday and a start time."""
         return f"{self._program}-{weekday}-{start.hour * 60 + start.minute}"
@@ -222,7 +232,7 @@ class CozytouchProgramCalendar(CozytouchDeviceEntity, CalendarEntity):
         stored = self._slots_for(weekday)
         # Read before the edit : it is what the day held where this event
         # stops, and what the next slot has to put back.
-        after = in_charge_at(stored, end.time())
+        after = in_charge_at(stored, end.time(), self._carried_into(weekday))
 
         slots = [slot for slot in stored if slot["time"] != start.time()]
         slots.append({"time": start.time(), "temperature": temperature})
@@ -247,17 +257,16 @@ class CozytouchProgramCalendar(CozytouchDeviceEntity, CalendarEntity):
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
     ) -> None:
-        """Drop a slot. The day keeps the one at 00:00. See docs/decisions.md."""
+        """Drop a slot. A day keeps at least one. See docs/decisions.md."""
         weekday, start = self._slot_of(uid)
-        if start == time(0, 0):
-            raise HomeAssistantError(
-                "The slot at 00:00 is what gives the beginning of the day a "
-                "setpoint; change its temperature rather than deleting it"
-            )
-
         slots = [
             slot for slot in self._slots_for(weekday) if slot["time"] != start
         ]
+        if not slots:
+            raise HomeAssistantError(
+                "This is the day's only slot; change its temperature rather "
+                "than deleting it"
+            )
         await self._write(weekday, slots)
 
     async def async_update_event(
@@ -289,8 +298,8 @@ class CozytouchProgramCalendar(CozytouchDeviceEntity, CalendarEntity):
             )
 
         capabilityId = self._first_capability + weekday
-        # build_matrix is set_schedule's, checks included : a first slot at
-        # 00:00, no two slots at the same time.
+        # build_matrix is set_schedule's, checks included : at least one
+        # slot, no two at the same time.
         await self.coordinator.set_capability_value(
             capabilityId, build_matrix(slots)
         )

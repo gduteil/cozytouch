@@ -804,7 +804,7 @@
             "fields": {
                 "program":  { "name": "Programma", "description": "Riscaldamento o raffrescamento." },
                 "days":     { "name": "Giorni", "description": "I giorni che riceveranno questo programma. Tutti i giorni, Giorni feriali e Fine settimana valgono per i giorni che nominano." },
-                "slots":    { "name": "Fasce", "description": "Elenco di coppie ora/temperatura. La prima fascia deve iniziare alle 00:00, dieci al massimo." }
+                "slots":    { "name": "Fasce", "description": "Elenco di coppie ora/temperatura. Fino alla prima fascia vale l'ultima del giorno prima. Dieci al massimo." }
             }
         }
     }

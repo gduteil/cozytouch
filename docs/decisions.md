@@ -2473,9 +2473,8 @@ there — which is exactly the block that was drawn, and leaves the rest of the
 day as it was. An event ending at midnight, or running into the next day, adds
 nothing: the last slot of a day already runs to the end of it.
 
-Deleting an event removes its slot, except the one at 00:00 : `build_matrix`
-refuses a day that does not begin at midnight, so that slot is retitled, never
-deleted. Moving an event off its weekday deletes it on the old day and creates
+Deleting an event removes its slot, unless it is the day's only one : a day
+keeps one setpoint, so that slot is retitled, never deleted. Moving an event off its weekday deletes it on the old day and creates
 it on the new one — two writes, and two capabilities, which is what a weekday
 is here.
 
@@ -2493,6 +2492,32 @@ The entity's state is not the useful part : a program that covers the whole day
 means `event` is never None, so the entity sits at `on` for good. What is
 useful is the current event and the next one, which is what the card shows and
 what an automation reads.
+
+### A day need not start at 00:00 (issue #210)
+
+`build_matrix` used to refuse a day whose first slot was not at 00:00, on the
+reasoning that the hours before it would have no setpoint. Nothing measured it,
+and the Cozytouch app disagrees : it writes such days and the devices run them.
+Two programs, both written in the app :
+
+| account | device | day | first slot |
+| ------- | ------ | --- | ---------- |
+| maintainer | Navizone room, Chambre enfant (heating) | monday | 00:15 |
+| #210 | Naema 2 Duo 35 (heating) | every day | 05:00 |
+
+So the rule was ours, and it locked those days out : the card refused any edit
+to them, and the calendar could neither write them nor delete the midnight
+slot of the others.
+
+What holds before the first slot is read as the previous day's last setpoint,
+carried over. That is what a week that repeats implies, and it is the only
+reading under which the app's own programs are complete ; no capture has
+timed the device across such a midnight to confirm it. `in_charge_at` and
+`apply_period` take it as `carried`, the calendar runs a day's last event into
+the next day's first slot, and the card's head and new slots use it too.
+
+The rules that remain : a day keeps at least one slot, and no two slots start
+at the same time.
 
 ### A calendar exists only for a block the device reports in full
 
@@ -2518,9 +2543,10 @@ ever tied that offset to the program. Home Assistant's zone is the reading that
 matches what the app shows for anyone whose house and hub agree, which is
 everybody until somebody reports otherwise.
 
-A slot runs until the next one, and the last of the day until midnight : the
-next day's first slot starts at 00:00 — `set_schedule` refuses a day that does
-not — so nothing is left uncovered. Events are selected by overlapping the
+A slot runs until the next one, and the last of the day until the next day's
+first slot, which need not be at 00:00 (see below), so nothing is left
+uncovered. Expansion starts a day before the range asked for, since that day's
+last slot may run into it. Events are selected by overlapping the
 range rather than by being contained in it, because an event that started
 before the window is the one running at its beginning.
 
@@ -3277,6 +3303,16 @@ while the card is closed, so redrawing on a Home Assistant state update keeps
 the head current without the card owning an interval. A card left open on a
 dirty day stays open whatever the caret says, since a hidden Save is a lost
 edit.
+
+### Its fields are sized to what they hold (issue #210)
+
+The time and setpoint fields had fixed widths, 44 and 24 px, measured on a
+desktop browser. Android's time field keeps padding of its own, and #210's
+screenshot showed `05` for `05:00` and `20,5` run into its degree sign. The
+fields now size to their content where `field-sizing` exists, and fall back
+to widths in `em` that hold `00:00` and `20,5` where it does not. The default
+title also comes from the card's own strings (`Programme chauffage`), where it
+was the program's English key with `text-transform: capitalize`.
 
 ### Why it ships inside the integration
 

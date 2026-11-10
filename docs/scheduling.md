@@ -14,9 +14,9 @@ entity from an automation.
 
 `Cozytouch: Set a day program` writes one day program to as many days as you
 pick. Days can be named one by one or through `Every day`, `Weekdays` and
-`Weekend`. The first slot has to start at `00:00` -- the device has no target
-temperature for the hours before the first one -- and a day holds ten slots at
-most, fewer if the device says so.
+`Weekend`. A day need not start at `00:00` : until its first slot, the
+previous day's last setpoint holds, which is how the Cozytouch app writes some
+programs. A day holds ten slots at most, fewer if the device says so.
 
 `Cozytouch: Read a week's program` returns the seven days of a program in the
 shape the other action takes, so a program can be read, edited and written
@@ -98,9 +98,9 @@ it moves, delete one and it goes. The title is the target temperature -- "19",
 
 Two things follow from a slot having only a start. An event that ends before
 the end of the day adds a second slot there, putting back whatever the day held
-after it, so the block drawn is the block that runs. And the slot at 00:00
-cannot be deleted, since the beginning of a day must have a setpoint : retitle
-it instead.
+after it, so the block drawn is the block that runs. And a day's last slot runs
+until the next day's first one, which need not be at midnight ; a day's only
+slot cannot be deleted, so retitle it instead.
 
 Every edit lands on that weekday for good -- the week repeats, there is no
 "only this occurrence". The hot water calendar stays read-only until somebody
@@ -162,8 +162,8 @@ whatever was already in charge there. Nothing is sent until **Save**, which
 writes only the days that changed.
 
 The same rules the service has apply : a day holds ten slots at most, no two
-start at the same time, and the slot at 00:00 cannot be removed -- only given
-another setpoint. Heating and cooling only, for the same reason `set_schedule`
+start at the same time, and a day keeps at least one slot -- the last one can
+only be given another setpoint. Heating and cooling only, for the same reason `set_schedule`
 covers those two.
 
 ## Changing the program by voice

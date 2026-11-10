@@ -188,6 +188,25 @@ def test_a_period_is_merged_into_the_day_rather_than_replacing_it(hass):
     ]
 
 
+def test_a_period_before_a_late_first_slot_puts_back_the_night(monkeypatch):
+    """Before 05:00 Sunday's last setpoint holds (#210), so that is what the
+    end of a night-time period restores.
+    """
+    late = json.dumps([[300, 20.5], [1260, 17]] + [[0, 0]] * 8)
+    hub = WritingHub({FIRST + index: late for index in range(7)})
+    registries(monkeypatch)
+    home = bus(make_hass(monkeypatch, hub))
+
+    call(llm.SetPeriod(), home, entity_id="climate.salon", program="cooling",
+         days=["monday"], start="01:00", end="03:00", temperature=22)
+
+    capabilityId, value = hub.written[0]
+    assert capabilityId == FIRST
+    assert json.loads(value)[:5] == [
+        [60, 22], [180, 17], [300, 20.5], [1260, 17], [0, 0]
+    ]
+
+
 def test_a_shortcut_writes_every_day_it_stands_for(hass):
     hub = hass[1]
     call(llm.SetPeriod(), hass[0], entity_id="climate.salon", program="cooling",

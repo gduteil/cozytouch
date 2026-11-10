@@ -804,7 +804,7 @@
             "fields": {
                 "program":  { "name": "Programme", "description": "Chauffage ou refroidissement." },
                 "days":     { "name": "Jours", "description": "Les jours qui recevront ce programme. Tous les jours, Jours de semaine et Week-end désignent les jours qu'ils nomment." },
-                "slots":    { "name": "Créneaux", "description": "Liste de paires heure/température. Le premier créneau doit commencer à 00:00, dix au maximum." }
+                "slots":    { "name": "Créneaux", "description": "Liste de paires heure/température. Jusqu'au premier créneau, le dernier de la veille s'applique. Dix au maximum." }
             }
         }
     }

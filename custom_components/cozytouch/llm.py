@@ -349,8 +349,15 @@ class SetPeriod(CozytouchTool):
         for day in expand_days(args["days"]):
             if day not in stored:
                 continue
+            previous = stored.get(
+                PROGRAM_DAYS[(PROGRAM_DAYS.index(day) - 1) % len(PROGRAM_DAYS)]
+            )
             slots = apply_period(
-                stored[day], args["start"], args["end"], args["temperature"]
+                stored[day],
+                args["start"],
+                args["end"],
+                args["temperature"],
+                previous[-1]["temperature"] if previous else None,
             )
             written = [
                 {"time": slot["time"].isoformat(timespec="minutes"),

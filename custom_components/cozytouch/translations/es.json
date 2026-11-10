@@ -804,7 +804,7 @@
             "fields": {
                 "program":  { "name": "Programa", "description": "Calefacción o refrigeración." },
                 "days":     { "name": "Días", "description": "Los días que recibirán este programa. Todos los días, Días laborables y Fin de semana valen por los días que nombran." },
-                "slots":    { "name": "Franjas", "description": "Lista de pares hora/temperatura. La primera franja debe empezar a las 00:00, diez como máximo." }
+                "slots":    { "name": "Franjas", "description": "Lista de pares hora/temperatura. Hasta la primera franja se mantiene la última del día anterior. Diez como máximo." }
             }
         }
     }

@@ -804,7 +804,7 @@
             "fields": {
                 "program":  { "name": "Programm", "description": "Heizen oder Kühlen." },
                 "days":     { "name": "Tage", "description": "Die Tage, die dieses Programm erhalten. Jeden Tag, Wochentage und Wochenende stehen für die Tage, die sie benennen." },
-                "slots":    { "name": "Abschnitte", "description": "Liste von Uhrzeit/Temperatur-Paaren. Der erste Abschnitt muss um 00:00 beginnen, höchstens zehn." }
+                "slots":    { "name": "Abschnitte", "description": "Liste von Uhrzeit/Temperatur-Paaren. Bis zum ersten Abschnitt gilt der letzte des Vortags. Höchstens zehn." }
             }
         }
     }

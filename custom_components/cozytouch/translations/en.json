@@ -793,7 +793,7 @@
             "fields": {
                 "program":  { "name": "Program", "description": "Heating or cooling." },
                 "days":     { "name": "Days", "description": "The days that will receive this program. Every day, Weekdays and Weekend stand for the days they name." },
-                "slots":    { "name": "Slots", "description": "List of time/temperature pairs. The first slot must start at 00:00, ten at most." }
+                "slots":    { "name": "Slots", "description": "List of time/temperature pairs. Until the first slot, the previous day's last one holds. Ten at most." }
             }
         }
     }
