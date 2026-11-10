@@ -32,12 +32,12 @@ AIR_CONDITIONERS = {557, 558, 559, 560, 561}
 SECOND_BLOCK_AIR_CONDITIONERS = set(range(1734, 1749))
 
 # Every model id the table maps, as opposed to the ones it sends to UNKNOWN.
-# The span reaches past the vendor's highest catalogued model (3652) rather
+# The span reaches past the vendor's highest catalogued model (3734) rather
 # than stopping at the 2500 a one-by-one sweep once reached: a branch added
 # above the old bound would have been walked by nothing.
 MAPPED_MODEL_IDS = frozenset(
     modelId
-    for modelId in range(1, 3702)
+    for modelId in range(1, 3800)
     if get_model_infos(modelId)["type"] is not CozytouchDeviceType.UNKNOWN
 )
 

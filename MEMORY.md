@@ -43,6 +43,9 @@ overturn one, edit the line here in the same pull request.
 - **153 stays 0 on the Navizone rooms while cooling**, so it is no running
   signal there. **Absence timestamps are plain unix time** ; 315 is not
   added. Both from the 2026-09-25 dump, `docs/decisions.md`.
+- **A model the catalogue drops keeps its name** and its productId, listed in
+  `DROPPED_FROM_CATALOGUE` ; the sync test subtracts it. Maintainer's call
+  on #198 (180 ids, 2026-11-10). `docs/decisions.md`.
 - **Atlantic named eleven hot-water ids once**, on gduteil/cozytouch#129
   (234-288). Check that list before reverse-engineering an id in that range.
 

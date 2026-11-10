@@ -47,7 +47,7 @@ fails with the ids each table is missing.
 - `model_product_ids.py` : a non-zero `productId` goes into `PRODUCT_ID_RUNS`,
   extending a neighbouring run when it is contiguous and the same, a new
   `(id, id, productId)` tuple otherwise. A 0 is absent, not written.
-- An id above 3699 : widen `MODEL_ID_RANGE` in `tests/test_snapshot.py` and
+- An id above 3799 : widen `MODEL_ID_RANGE` in `tests/test_snapshot.py` and
   the range in `tests/test_capability.py`.
 - Regenerate snapshots ; `models.json` should change by the new ids only.
 

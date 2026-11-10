@@ -473,6 +473,29 @@ spelling a readable name where the catalogue has an internal reference
 Nothing here touches a type, a mode or a flag -- the seven are names on
 hardware nobody here owns, and the evidence is a name.
 
+### A model the catalogue drops keeps its name (issue #198)
+
+The 2026-11-10 read of `/magellan/productmodels/models` came back without
+180 ids the previous one listed : radiators between 595 and 1037 (Agilia,
+Divali, Oniris, Ipala, Bilbao 3, Ovation 3, Emotion 3/4, Equateur 3/4,
+Galapagos, Tatou, Hekla, Gyali, Kenya, Nirvana Neo, Maradja, Malao…) and
+the TAHUAL towel racks 1636-1638, productId 53. Nothing says why ; a range
+taken off sale is the likeliest reading, and none of it says the hardware
+stopped answering.
+
+They stay in `model_catalogue.py` and `model_product_ids.py`, listed in
+`DROPPED_FROM_CATALOGUE`. Taking them out would turn a radiator already on
+somebody's wall back into `Unknown product (…)`, and take the TAHUAL off the
+towel-rack branch wherever no `productId` comes with the model id -- for
+nothing the device itself changed. `tests/test_model_catalogue_sync.py`
+holds the tables to the file minus that set, checks every dropped id is
+still named, and fails if the catalogue lists one again, so the set cannot
+outlive the drop. The maintainer's call, made for #198.
+
+Limits. One read, one list : whether these ids will come back, or whether a
+productId will be reassigned under them, is unknown. A changed `productId`
+on an id still listed is not covered by this and stays the maintainer's.
+
 ### A room slot is whatever its gateway drives, not an air conditioner (issue #172)
 
 `557-561` was read as "air conditioner room unit" from the accounts that had
