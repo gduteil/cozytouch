@@ -1847,14 +1847,12 @@ CAPABILITIES: dict[int, Entity] = {
         enabled_by_default=True,
     ),
     278: Entity(
-        # Atlantic names it "puissance electrique instantanee du ballon". One
-        # corpus reading, and it is 0, so the unit is not claimed yet. See
-        # docs/decisions.md.
+        # Watts, from a reading of 1681 on model 1658. See docs/decisions.md.
         name="dhw_instant_power",
-        type=CapabilityType.STRING,
-        category=CapabilityCategory.DIAG,
-        enabled_by_default=False,
+        type=CapabilityType.POWER,
+        enabled_by_default=True,
         icon="mdi:flash",
+        extra={"displayed_unit_of_measurement": UnitOfPower.WATT},
     ),
     280: Entity(
         name="cold_water_temperature",

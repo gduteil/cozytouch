@@ -33,7 +33,7 @@ jobs:
 
   pyright:
     name: pyright
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04"  # see docs/decisions.md
     steps:
       - uses: "actions/checkout@v4"
       - uses: "actions/setup-python@v5"
@@ -52,7 +52,7 @@ jobs:
 
   pytest-matrix:
     name: pytest (HA ${{ matrix.homeassistant }} on Python ${{ matrix.python }})
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-24.04"  # see docs/decisions.md
     strategy:
       fail-fast: false
       matrix:

@@ -138,6 +138,22 @@ needs >= 3.14.2 — so a floating minor would let the runner image decide which
 Home Assistant is installable, which is the drift the pinned requirements
 exist to remove.
 
+### The jobs that pin a patch pin their runner too
+
+`actions/setup-python` installs from a manifest built per Ubuntu release,
+and a patch it never built for that release is not installable there. When
+`ubuntu-latest` moved to 26.04 (November 2026), every job asking for 3.14.2
+or 3.13.7 failed at setup, before any test ran : the manifest carries both
+for 22.04 and 24.04 only, and its 26.04 builds start at 3.14.6. `main` went
+red on the push for #170 and the next pull request with it.
+
+So `pyright` and the pytest matrix run on `ubuntu-24.04`. The patch pin is
+the point (the section above), so the runner follows it rather than the pin
+following the runner. `ruff` asks for `"3.14"`, which any image resolves,
+and stays on `ubuntu-latest`. Moving these jobs to 26.04 means raising the
+pins past what it was built for, which for the floor job is raising the
+floor -- the maintainer's call (CLAUDE.md, *Tests*).
+
 ### pyright, on the typed core
 
 The declared fields on `ModelInfos`/`CapabilityInfos` are only worth what
@@ -3656,6 +3672,26 @@ kilowatts from deciwatts. Naming a unit off a single zero is the failure this
 project has a rule against, so the row carries the name and waits for a
 reading. 281 and 288 are a demand and a state whose encodings nobody has
 seen; one corpus reading each, `0` and `2`.
+
+### 278 is watts
+
+The zero the row was waiting on has a reading now. This repository's #185
+reports 278 at `1681` on a Calypso Connecté 240 L, model 1658, sold as TD
+240 VS AT 1200M -- a heat pump tank whose name carries its 1200 W element.
+1681 W is that element with the compressor running beside it. As kilowatts
+it is a power station; as deciwatts it is 168 W, less than the compressor
+alone draws. Only watts survives the hardware.
+
+So the row is `POWER` in W, out of `DIAG` and on by default: it is the tank's
+live draw, which is what an energy dashboard wants, and a device that does not
+report 278 gets no entity either way. Unique ids are built from the capability
+id, so an install that had turned the string on keeps the entity and gains a
+unit.
+
+The limits. It is one non-zero reading on one model, not set beside a meter,
+and Atlantic's own name for it, `DHW_pwrElecTankEstimation`, says it is an
+estimate -- the catalogue gives no unit. Other water heaters that report 278
+are typed by the same row on the strength of this one.
 
 ### What was read and not taken
 
