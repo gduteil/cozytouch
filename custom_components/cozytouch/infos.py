@@ -137,6 +137,8 @@ class ModelInfos(AttributeDict):
     currentTemperatureAvailableZ2: bool
     exhaustTemperatureAvailable: bool
     quietModeAvailable: bool
+    swingModeAvailable: bool
+    coolingAvailable: bool
     awayModeTemperatureAvailable: bool
     ecoModeAvailable: bool
     overrideModeAvailable: bool

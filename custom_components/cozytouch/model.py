@@ -18,6 +18,8 @@ Optional :
     * fanModes : list of value/mode pairs
     * swingModes : list of value/mode pairs
     * quietModeAvailable : enable quiet mode availability (default : False)
+    * swingModeAvailable : enable the swing switch (default : True)
+    * coolingAvailable : enable the cooling setpoint (default : True)
     * awayModeTemperatureAvailable : enable the absence setpoint (default : True)
     * ecoModeAvailable : enable eco mode availability (default : True)
 
@@ -255,8 +257,9 @@ DERIVED_FLAGS: dict[str | None, dict] = {
 # What a room is, given the interface it hangs off. Only the heating circuit
 # of an Alfea is told apart : behind every gateway a room is a room, which is
 # what the vendor's own client does -- one class for the lot, and the
-# capabilities decide what it offers. Nothing a slot reports says whether the
-# room holds a radiator or an air conditioner. See docs/decisions.md.
+# capabilities decide what it offers. The gateway does not say whether the
+# room holds a radiator or an air conditioner ; the room's 103026 does, and
+# `apply_capabilities` reads it. See docs/decisions.md.
 ROOM_BEHIND: dict[str | None, tuple[CozytouchDeviceType, dict, str, dict]] = {
     "CESA_V2_MAIN_COMPONENT": (
         CozytouchDeviceType.THERMOSTAT,
@@ -466,6 +469,24 @@ MODEL_NAMES: dict[int, str] = {
 }
 
 
+# The generators of 103026 that are electric heaters, I2G variants included.
+# A room declaring nothing else has no compressor, fan or louver to drive.
+# See docs/decisions.md.
+ELECTRIC_GENERATORS = 16 | 32 | 64 | 128 | 256
+_HEATER_MODES = frozenset({HVACMode.OFF, HVACMode.HEAT})
+
+
+def heated_only(thermalGenerator: str | None) -> bool:
+    """Whether a room's 103026 names electric heaters and nothing else."""
+    if thermalGenerator is None:
+        return False
+    try:
+        mask = int(float(thermalGenerator))
+    except ValueError:
+        return False
+    return mask > 0 and not mask & ~ELECTRIC_GENERATORS
+
+
 def apply_capabilities(
     modelInfos: ModelInfos, capabilities: dict[int, str]
 ) -> None:
@@ -494,6 +515,21 @@ def apply_capabilities(
         if capabilities.get(106000) == "0":
             modelInfos.type = CozytouchDeviceType.THERMOSTAT
         return
+
+    if modelInfos.type is CozytouchDeviceType.ROOM and heated_only(
+        capabilities.get(103026)
+    ):
+        # A room is a room, until it says what heats it. See docs/decisions.md.
+        modelInfos.HVACModes = {
+            value: mode
+            for value, mode in modelInfos.HVACModes.items()
+            if mode in _HEATER_MODES
+        }
+        modelInfos.pop("fanModes", None)
+        modelInfos.pop("swingModes", None)
+        modelInfos.quietModeAvailable = False
+        modelInfos.swingModeAvailable = False
+        modelInfos.coolingAvailable = False
 
     if not modelInfos.HVACModes:
         return

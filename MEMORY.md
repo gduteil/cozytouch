@@ -46,6 +46,13 @@ overturn one, edit the line here in the same pull request.
 - **A model the catalogue drops keeps its name** and its productId, listed in
   `DROPPED_FROM_CATALOGUE` ; the sync test subtracts it. Maintainer's call
   on #198 (180 ids, 2026-11-10). `docs/decisions.md`.
+- **103026 says whether a room is a heater** : 128 on the CozyBox radiators
+  (gduteil#172), 8 on every split (#61, Navizone), absent on 2024 Takao. A
+  room naming only electric heaters loses the air conditioner's modes and
+  controls (#190). `docs/decisions.md`.
+- **The CozyBox drives air conditioners too** (Murao, Takao), so a room's
+  gateway never says what is in it ; and 100004 is no swing signal, since
+  Takao rooms read 9 and swing. `docs/decisions.md`, *issue #190*.
 - **Atlantic named eleven hot-water ids once**, on gduteil/cozytouch#129
   (234-288). Check that list before reverse-engineering an id in that range.
 
@@ -55,9 +62,6 @@ overturn one, edit the line here in the same pull request.
 - An `OVERRIDES` entry typing LORIA 416-425 as a heat pump : deduced from the
   catalogue, not measured. Wait for a dump ; if it carries `modelFamily`, there
   is nothing to map.
-- Rewiring `_room_entity` on capability 103026 : one observation, on air
-  conditioners only. A room behind a *radiator* gateway reading 16/32/64 there
-  is what would settle it.
 - A "house" climate entity on the HUB carrying the system's modes, with the
   rooms cut down to off and the current mode : declined by the maintainer
   (2026-09-28), with five other shapes the same day. The answer, as the app

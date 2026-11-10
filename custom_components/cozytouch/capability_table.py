@@ -1265,6 +1265,7 @@ CAPABILITIES: dict[int, Entity] = {
         type=CapabilityType.TEMPERATURE_ADJUSTMENT_NUMBER,
         enabled_by_default=True,
         absent_on=(CozytouchDeviceType.GAZ_BOILER,),
+        needs_flag="coolingAvailable",
         extra={"lowestValueCapabilityId": 162, "highestValueCapabilityId": 163},
     ),
     178: Entity(
@@ -2944,6 +2945,7 @@ CAPABILITIES: dict[int, Entity] = {
         type=CapabilityType.SWITCH,
         enabled_by_default=True,
         icon="mdi:fan-minus",
+        needs_flag="quietModeAvailable",
     ),
     100803: Entity(
         # Six flap positions on a Fujitsu indoor unit, plus a zero the vendor
@@ -2967,6 +2969,7 @@ CAPABILITIES: dict[int, Entity] = {
         type=CapabilityType.SWITCH,
         enabled_by_default=True,
         icon="mdi:arrow-oscillating",
+        needs_flag="swingModeAvailable",
     ),
     101302: Entity(
         name="outside_temperature_available",

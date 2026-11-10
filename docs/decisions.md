@@ -911,6 +911,61 @@ The device name follows: `Radiator (Chambre)` and `Air Conditioner (Chambre)`
 both become `Room (Chambre)`. A rename changes what Home Assistant displays
 and nothing else, since the unique ids are keyed on the capability id.
 
+### A room driven by an electric heater is no air conditioner (issue #190)
+
+The room above was given the air conditioner's flags because nothing it
+reported told the two apart -- which stopped being true the day 103026 was
+named (*103026 says what drives a room*, below). Issue #190 (a Sauter
+OROSI 2), its comment (Sauter Taluha) and gduteil/cozytouch#205 (an Adélis
+towel rail) are one complaint : a radiator with a cool mode, a fan, a swing
+switch, a quiet switch and a cooling setpoint, none of which the Cozytouch
+app shows for it.
+
+What each room reports, read off the public captures :
+
+| capture | `thermal_generator` 103026 | `ventilation_controls_available` 100004 | `system_operating_mode` 166 |
+| ------- | -- | -- | -- |
+| Taluha radiators behind a CozyBox (gduteil#172) | 128 | 1 | 17 |
+| Fujitsu splits behind a HUB Cozytouch 1457 (#61) | 8 | 197 | 411 |
+| Navizone rooms (`navizone.json`) | 8 | 0 | 9 |
+| Takao M3 behind a Naviclim (gduteil#1, #12, 2024) | absent | 9 | 411 |
+
+So a room whose 103026 names electric heaters and nothing else -- 16, 32, 64,
+128, 256 or a sum of them -- is read in `apply_capabilities` as having no
+compressor, fan or louver : its modes are cut to off and heat, `fanModes` and
+`swingModes` go, and `quietModeAvailable`, `swingModeAvailable` and
+`coolingAvailable` are false. The last three gate the `quiet_mode` (100802),
+`swing_mode` (100804) and `target_cool_temperature` (177) rows through
+`needs_flag`, and the climate's cooling wiring. Measured on the #172 room :
+those five things go and nothing else moves.
+
+Two signals were tried first and dropped.
+
+*The gateway.* The CozyBox and the HUB Cozytouch send the same `productId`
+(63) and the same family, so only the box's model id would separate them --
+and the separation is false anyway : Atlantic sells the CozyBox for its
+Murao and Takao air conditioners as well as for radiators, towel rails and
+floor heaters. A room behind one is whatever the room is.
+
+*100004.* The splits of #61 set the two blade bits there and the radiators
+do not, which looked like the swing's own switch. The Takao rooms read 9 --
+no blade bit -- and have a swing their owner drives (gduteil#1). It would
+have removed a working control.
+
+166 does separate radiator from split in the table, but it is the mode
+*currently* permitted and moves with the season (9 under a Navizone summer
+lock), which is why the mode list was never built from it.
+
+Limits. One account's rooms are the whole of the radiator evidence, all four
+reading 128 ; 16, 32, 64 and 256 are taken because the catalogue lists them
+beside it, not because a room was seen with one. 2 and 4 -- an air-to-water
+heat pump, a boiler -- are left alone : no room behind one has been seen
+reporting 103026, and what such a room offers is not known. A room that
+reports no 103026 keeps today's answer, which covers the 2024 Takao captures
+and anything older. Nothing here was checked on hardware : the maintainer's
+rooms read 8, and the change was seen in a test Home Assistant against the
+#172 values.
+
 ### The dump carries every device, the config flow still chooses (issue #110)
 
 A zone was left out of both the dump and the device list on one argument: a
@@ -4049,6 +4104,10 @@ nothing" would find it just as well.
 So it stays a diagnostic. If a dump from a room behind a radiator ever shows
 16, 32 or 64 on it, the change is to skip those flags in `apply_capabilities`,
 where 100022 and 106000 are already read, and nothing else moves.
+
+That dump was gduteil/cozytouch#172 all along : four radiator rooms reading
+128, the I2G panel heater. The change is *A room driven by an electric
+heater is no air conditioner (issue #190)*, above.
 
 ### A capability the chain steers on still needs a row
 
