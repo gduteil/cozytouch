@@ -484,6 +484,7 @@
             "boost_total_time":         { "name": "Boost Total Time" },
             "boost_remaining_time":     { "name": "Boost Remaining Time" },
             "central_heating":          { "name": "Central Heating" },
+            "central_heating_enable":   { "name": "Central Heating Enable" },
             "ch_power_consumption":     { "name": "CH Power consumption" },
             "cold_water_temperature":   { "name": "Cold Water Temperature" },
             "connectivity_display_capabilities": { "name": "Connectivity Display Capabilities" },

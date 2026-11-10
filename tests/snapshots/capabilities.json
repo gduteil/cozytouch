@@ -705,6 +705,14 @@
     "name": "boost_duration_max",
     "type": "time"
    },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1381,
+    "name": "central_heating_enable",
+    "type": "string"
+   },
    "103118": {
     "capabilityId": 103118,
     "category": "diag",
@@ -3959,6 +3967,14 @@
     "name": "boost_duration_max",
     "type": "time"
    },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1457,
+    "name": "central_heating_enable",
+    "type": "string"
+   },
    "103118": {
     "capabilityId": 103118,
     "category": "diag",
@@ -7186,6 +7202,14 @@
     "modelId": 1505,
     "name": "boost_duration_max",
     "type": "time"
+   },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1505,
+    "name": "central_heating_enable",
+    "type": "string"
    },
    "103118": {
     "capabilityId": 103118,
@@ -10428,6 +10452,14 @@
     "modelId": 1641,
     "name": "boost_duration_max",
     "type": "time"
+   },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1641,
+    "name": "central_heating_enable",
+    "type": "string"
    },
    "103118": {
     "capabilityId": 103118,
@@ -13673,6 +13705,14 @@
     "modelId": 1734,
     "name": "boost_duration_max",
     "type": "time"
+   },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1734,
+    "name": "central_heating_enable",
+    "type": "string"
    },
    "103118": {
     "capabilityId": 103118,
@@ -16949,6 +16989,14 @@
     "name": "boost_duration_max",
     "type": "time"
    },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 211,
+    "name": "central_heating_enable",
+    "type": "string"
+   },
    "103118": {
     "capabilityId": 103118,
     "category": "diag",
@@ -20174,6 +20222,14 @@
     "modelId": 2374,
     "name": "boost_duration_max",
     "type": "time"
+   },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 2374,
+    "name": "central_heating_enable",
+    "type": "string"
    },
    "103118": {
     "capabilityId": 103118,
@@ -23427,6 +23483,14 @@
     "name": "boost_duration_max",
     "type": "time"
    },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 418,
+    "name": "central_heating_enable",
+    "type": "string"
+   },
    "103118": {
     "capabilityId": 103118,
     "category": "diag",
@@ -26669,6 +26733,14 @@
     "modelId": 557,
     "name": "boost_duration_max",
     "type": "time"
+   },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 557,
+    "name": "central_heating_enable",
+    "type": "string"
    },
    "103118": {
     "capabilityId": 103118,
@@ -29927,6 +29999,14 @@
     "name": "boost_duration_max",
     "type": "time"
    },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 56,
+    "name": "central_heating_enable",
+    "type": "string"
+   },
    "103118": {
     "capabilityId": 103118,
     "category": "diag",
@@ -33170,6 +33250,14 @@
     "modelId": 562,
     "name": "boost_duration_max",
     "type": "time"
+   },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 562,
+    "name": "central_heating_enable",
+    "type": "string"
    },
    "103118": {
     "capabilityId": 103118,
@@ -36421,6 +36509,14 @@
     "name": "boost_duration_max",
     "type": "time"
    },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 76,
+    "name": "central_heating_enable",
+    "type": "string"
+   },
    "103118": {
     "capabilityId": 103118,
     "category": "diag",
@@ -39664,6 +39760,14 @@
     "modelId": 999999,
     "name": "boost_duration_max",
     "type": "time"
+   },
+   "103117": {
+    "capabilityId": 103117,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 999999,
+    "name": "central_heating_enable",
+    "type": "string"
    },
    "103118": {
     "capabilityId": 103118,

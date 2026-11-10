@@ -3116,6 +3116,12 @@ CAPABILITIES: dict[int, Entity] = {
         category=CapabilityCategory.DIAG,
         enabled_by_default=False,
     ),
+    103117: Entity(
+        name="central_heating_enable",
+        type=CapabilityType.STRING,
+        category=CapabilityCategory.DIAG,
+        enabled_by_default=False,
+    ),
     103118: Entity(
         name="boost_without_fan_duration",
         type=CapabilityType.TIME,

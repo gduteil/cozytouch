@@ -484,6 +484,7 @@
             "boost_total_time":         { "name": "Duración total del Boost" },
             "boost_remaining_time":     { "name": "Tiempo restante del Boost" },
             "central_heating":          { "name": "Calefacción" },
+            "central_heating_enable":   { "name": "Activación de la calefacción" },
             "ch_power_consumption":     { "name": "Consumo eléctrico de calefacción" },
             "cold_water_temperature":   { "name": "Temperatura del agua fría" },
             "connectivity_display_capabilities": { "name": "Capacidades de visualización de conectividad" },

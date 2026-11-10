@@ -41,7 +41,7 @@ SNAPSHOT_DIR = pathlib.Path(__file__).parent / "snapshots"
 
 # The whole span test_capability.py walks, so a model added inside it joins
 # the snapshot on its own.
-MODEL_ID_RANGE = range(1, 3700)
+MODEL_ID_RANGE = range(1, 3702)
 
 # Names change what the table answers: a zone is recognised by deviceName
 # before any id, and the air conditioner branches print zoneName into the

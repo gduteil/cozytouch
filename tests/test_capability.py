@@ -37,7 +37,7 @@ SECOND_BLOCK_AIR_CONDITIONERS = set(range(1734, 1749))
 # above the old bound would have been walked by nothing.
 MAPPED_MODEL_IDS = frozenset(
     modelId
-    for modelId in range(1, 3700)
+    for modelId in range(1, 3702)
     if get_model_infos(modelId)["type"] is not CozytouchDeviceType.UNKNOWN
 )
 
