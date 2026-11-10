@@ -2413,6 +2413,12 @@ CAPABILITIES: dict[int, Entity] = {
         category=CapabilityCategory.DIAG,
         enabled_by_default=False,
     ),
+    371: Entity(
+        name="boost_duration_supported",
+        type=CapabilityType.BINARY,
+        category=CapabilityCategory.DIAG,
+        enabled_by_default=False,
+    ),
     380: Entity(
         name="outdoor_unit_error_code_cesa",
         type=CapabilityType.INT,

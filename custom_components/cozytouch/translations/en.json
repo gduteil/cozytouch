@@ -287,6 +287,7 @@
             "boost_duration_max":             { "name": "Maximum Boost Duration" },
             "boost_duration_min":             { "name": "Minimum Boost Duration" },
             "boost_duration_step":            { "name": "Boost Duration Step" },
+            "boost_duration_supported":       { "name": "Boost Duration Supported" },
             "boost_end_time":                 { "name": "Boost End Time" },
             "boost_with_fan":                 { "name": "Boost With Fan" },
             "boost_with_fan_duration":        { "name": "Boost With Fan Duration" },
