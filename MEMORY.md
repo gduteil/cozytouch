@@ -19,8 +19,10 @@ overturn one, edit the line here in the same pull request.
   implemented from `mmnlfrrr/cozytouch`'s ACI HYB capture and never seen
   answering here. Capability 164 gates it : the Navizone reads 0 and is never
   asked, the fork's Duralis 1040. `docs/decisions.md`, *Consumption*.
-- **The Overkiz plane is empty for us.** The token mints an Overkiz JWT, but
-  `enduserAPI/login` answers 401. `docs/api-surface.md`.
+- **The Overkiz plane depends on the hardware, not the token.** The same
+  routes answer 401 at `enduserAPI/login` for the Navizone account and 200
+  for an account with a Sauter Pagosa (IO water heater), whose heater is on
+  Overkiz only. `docs/api-surface.md`.
 - **`productId` classifies a device, not `modelId`** -- the vendor app resolves
   on the pair (own `productId`, parent's `productId`). `docs/decisions.md`.
 - **100022 is the firmware family's mode mask, not the device's** ; 166 narrows
