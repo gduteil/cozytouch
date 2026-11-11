@@ -1005,6 +1005,28 @@ caller, and the setpoint asks for one refresh once both writes are done.
 Choosing a preset on its own still refreshes as before.
 `tests/test_setpoint_writes.py` pins the order.
 
+### The temperatures are `native_*`, and the old names only below 2026.11
+
+Home Assistant 2026.11 renamed the climate temperatures :
+`current_temperature`, `target_temperature` and `_attr_temperature_unit`
+became `native_current_temperature`, `native_target_temperature` and
+`_attr_native_temperature_unit`. The old names still work, but every start
+logs that they stop working in 2027.11, naming this integration.
+
+The floor is 2025.12, which has no `native_*` on `ClimateEntity` : an entity
+providing only those reads no temperature there. So `NATIVE_TEMPERATURES`
+asks the base class which names it has, the properties are written under the
+new names, and the old ones are bound to them in the class body only when the
+base class lacks the new ones. It has to be the class body : 2026.11 reports
+a subclass that defines an old name when the class is created, so a fallback
+defined unconditionally would still log.
+
+Checked against a climate entity built through `__init__` and read through
+`state_attributes` : 21.5 and 19.0 in °C on 2025.12.0, 2026.8.3 and 2026.11.1,
+and on 2026.11.1 the four deprecation reports the old code logs are gone. The
+suite passes on the three ; on 2026.11.1 `test_topology.py`'s cloud sensor
+test fails before and after this change (`DeviceInfo | dict` in the test).
+
 ## `custom_components/cozytouch/select.py`
 
 ### The air-circulation duration is a select on the device's own grid
