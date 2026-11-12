@@ -4759,3 +4759,71 @@ Navizone's air conditioners (557-559) and the dump attached to #157 :
 
 All four rows are shared, so every device reporting the id moves with them.
 Only the Navizone's rooms were looked at.
+
+## A water heater entity for the tanks
+
+Read on 2026-11-12 from a LINEO CONNECTE VM 120L 2400W (model 1959,
+productId 47, behind a FLAT/S4 IOTHUB) : a diagnostics dump and the
+Cozytouch app's screens beside it. Nothing was written to the tank.
+
+The tanks had a select for the mode (87), a number for the setpoint (231)
+and a sensor per probe, and no entity Home Assistant draws as a water heater
+or offers to Assist and HomeKit as one. The app's main screen is those same
+three things : the setpoint (55 °C on 231), the share of hot water left
+(72 % on 271) and the Manuel / Eco+ / Prog tabs (87 at 0).
+
+- **One `water_heater` per tank, built beside the mode select.** It writes
+  87 and 231 exactly as the select and the number do, so it adds no write of
+  its own. The select and the number stay : automations use them.
+- **Its ids are on row 87, not in `water_heater.py`** : a `per_type` on
+  `WATER_HEATER` names the setpoint (231), the current temperature (265) and
+  the bounds (`_DHW_USER_TARGET_BOUNDS`, 253/252), the way row 102024 names
+  the fan's speed. A tank that keeps its setpoint elsewhere needs a row, not
+  code, and one that does not report its setpoint id gets no entity.
+- **The current temperature is the tank's middle probe (265).** The app
+  shows none ; 265 is the closest to the water drawn, and the bottom probe
+  (264) reads the cold water coming in.
+- **The 22 slider starts off on a tank.** It and 231 both read 55 on the
+  Lineo, side by side as two "Température Consigne" sliders. The entity
+  writes 231, which the catalogue marks writable and calls the manual
+  mode's setpoint ; the app reads 22 and, per its code, never writes it.
+  Which one the app's control moves is #215's question. Turned off by
+  default, so only new installs lose it.
+- **Boost and absence stay switches.** The absence goes through the setup
+  PUT and its dates (see *The setup PUT is what sets an absence*), and an
+  `away_mode` on the entity would be a second way into that path for no gain.
+
+## The hot-water modes come from 105011 (issue #206)
+
+The mode select offered the per-model `HeatingModes` table : manual,
+eco_plus and prog on every tank typed through `DHW` or `HDG2`. The device
+says which modes it has on 105011, and the vendor's app builds its list from
+it ; #206 has the Android reading and the corpus.
+
+The Lineo confirms it on hardware : 105011 reads 7941 (manual, auto, boost,
+absence, antilegionella -- no prog) and the app greys PROG out, while the
+select offered it.
+
+- The options of 87 are the writable masks 105011 sets : 1 manual (0),
+  2 eco_comfort_schedule (2), 4 eco_plus (3), 8 prog (4). Row 87 names 105011
+  as `dhwModesCapabilityId` ; the select and the water heater both read it
+  through `declared_dhw_modes`.
+- Without 105011 (model 211), or with a mask naming none of the four, the
+  table stands.
+- `eco_comfort_schedule` is new, for 1376 reading 87 = 2.
+- A value outside the list reads unknown instead of the last option the
+  select knew. That is every `CozytouchSelect`, not only this one.
+
+### Left alone
+
+- The `OVERRIDES` the mask now reproduces stay until each model's 105011 is
+  seen, 1954-1957 first : no dump of them has it.
+- 230, permanent or scheduled heating, is #207's. The Lineo adds a reading
+  for it : 105012 = 3 (permanently, schedule), a mask the corpus did not
+  have ; 230 = 0, which the app shows as "Chauffe autorisée en permanence"
+  and, on its Prog tab, "Horaires personnalisés : OFF". The prog sensors
+  (245-251) hold the slots of the second choice.
+- 105906/105907, the V40 rows, still read as °C. The catalogue says a state
+  of charge in % (0-100) and the Lineo reports 75 on both, but the app shows
+  no V40 anywhere to check a reading against.
+- Only model 1959 was seen. Other tanks get the entity from row 87.

@@ -3160,6 +3160,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 1381,
     "modelList": "HeatingModes",
@@ -6409,6 +6410,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 1457,
     "modelList": "HeatingModes",
@@ -9658,6 +9660,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 1505,
     "modelList": "HeatingModes",
@@ -11381,6 +11384,7 @@
    "22": {
     "capabilityId": 22,
     "category": "sensor",
+    "enabled_by_default": false,
     "highestValueCapabilityId": 252,
     "lowestValueCapabilityId": 253,
     "modelId": 1641,
@@ -12924,10 +12928,16 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "currentValueCapabilityId": 265,
+    "dhwModesCapabilityId": 105011,
+    "highestValueCapabilityId": 252,
     "icon": "mdi:water-boiler",
+    "lowestValueCapabilityId": 253,
     "modelId": 1641,
     "modelList": "HeatingModes",
     "name": "domestic_hot_water_mode",
+    "setpointCapabilityId": 231,
+    "step": 1,
     "type": "select"
    },
    "88": {
@@ -16188,6 +16198,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 1734,
     "modelList": "HeatingModes",
@@ -19446,6 +19457,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 211,
     "modelList": "HeatingModes",
@@ -21169,6 +21181,7 @@
    "22": {
     "capabilityId": 22,
     "category": "sensor",
+    "enabled_by_default": false,
     "highestValueCapabilityId": 252,
     "lowestValueCapabilityId": 253,
     "modelId": 2374,
@@ -22712,10 +22725,16 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "currentValueCapabilityId": 265,
+    "dhwModesCapabilityId": 105011,
+    "highestValueCapabilityId": 252,
     "icon": "mdi:water-boiler",
+    "lowestValueCapabilityId": 253,
     "modelId": 2374,
     "modelList": "HeatingModes",
     "name": "domestic_hot_water_mode",
+    "setpointCapabilityId": 231,
+    "step": 1,
     "type": "select"
    },
    "88": {
@@ -25976,6 +25995,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 418,
     "modelList": "HeatingModes",
@@ -29240,6 +29260,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 557,
     "modelList": "HeatingModes",
@@ -32498,6 +32519,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 56,
     "modelList": "HeatingModes",
@@ -35762,6 +35784,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 562,
     "modelList": "HeatingModes",
@@ -39020,6 +39043,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 76,
     "modelList": "HeatingModes",
@@ -42284,6 +42308,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 999999,
     "modelList": "HeatingModes",

@@ -249,6 +249,7 @@
                 "state":
                 {
                     "manual": "Manual",
+                    "eco_comfort_schedule": "Eco/Comfort Schedule",
                     "eco_plus": "Eco+",
                     "prog": "Prog"
                 }
@@ -708,6 +709,17 @@
             "quiet_mode":         { "name": "Quiet Mode" },
             "schedule_anticipation": { "name": "Schedule Anticipation" },
             "swing_mode":         { "name": "Swing Mode" }
+        },
+        "water_heater": {
+            "hot_water": {
+                "name": "Hot Water",
+                "state": {
+                    "eco_comfort_schedule": "Eco/Comfort Schedule",
+                    "eco_plus": "Eco+",
+                    "manual":   "Manual",
+                    "prog":     "Prog"
+                }
+            }
         }
     },
     "device_automation": {

@@ -8,7 +8,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SERVICE_VALUES, narrowed_modes
+from .const import DOMAIN, SERVICE_VALUES, declared_dhw_modes, narrowed_modes
 from .hub import (
     CozytouchConfigEntry,
     CozytouchDeviceEntity,
@@ -90,6 +90,14 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
         else:
             self._list = {-1: "Undefined"}
 
+        if "dhwModesCapabilityId" in capability:
+            self._list = declared_dhw_modes(
+                self._list,
+                self.coordinator.get_capability_value(
+                    capability.dhwModesCapabilityId, None
+                ),
+            )
+
         self.options = list(self._list.values())
         self.current_option = self.options[0]
 
@@ -110,8 +118,7 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
             value = int(
                 self.coordinator.get_capability_value(self._capability.capabilityId)
             )
-            if value in self._list:
-                self.current_option = self._list[value]
+            self.current_option = self._list.get(value)
         except ValueError:
             return
 
