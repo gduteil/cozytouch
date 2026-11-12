@@ -1024,8 +1024,7 @@ defined unconditionally would still log.
 Checked against a climate entity built through `__init__` and read through
 `state_attributes` : 21.5 and 19.0 in °C on 2025.12.0, 2026.8.3 and 2026.11.1,
 and on 2026.11.1 the four deprecation reports the old code logs are gone. The
-suite passes on the three ; on 2026.11.1 `test_topology.py`'s cloud sensor
-test fails before and after this change (`DeviceInfo | dict` in the test).
+suite passes on the three.
 
 ## `custom_components/cozytouch/select.py`
 
