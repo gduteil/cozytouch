@@ -13,6 +13,7 @@ import copy
 from datetime import UTC, datetime
 import json
 import logging
+import math
 
 from aiohttp import ClientError, ClientTimeout, ContentTypeError, FormData
 
@@ -256,9 +257,15 @@ class CozytouchAccount:
         async with self._connect_lock:
             if self.online:
                 return True
+            if self.backoff_remaining:
+                return False
 
             try:
-                await self._authenticate()
+                if (
+                    not self._access_token
+                    or datetime.now(UTC).timestamp() >= self._token_expiry
+                ):
+                    await self._authenticate()
                 await self._read_setup()
                 self.online = True
             except CannotConnect:
@@ -303,22 +310,40 @@ class CozytouchAccount:
             },
             timeout=REQUEST_TIMEOUT,
         ) as response:
-            token = await response.json()
+            if response.status == 429:
+                retry_after = self._note_rate_limited(response, "authentication")
+                raise CozytouchRateLimited("Rate limited authenticating", retry_after)
+
+            try:
+                token = await response.json()
+            except ValueError as err:
+                raise CannotConnect("Invalid JSON authenticating") from err
+
+            if not isinstance(token, dict):
+                raise CannotConnect("Token response is not an object")
 
             # The one answer that means the credentials are wrong ; anything
             # else malformed is a bad response. See docs/decisions.md.
             if token.get("error") == "invalid_grant":
                 raise InvalidAuth
 
-            if "token_type" not in token:
+            if response.status != 200 or not token.get("token_type"):
                 raise CannotConnect
 
-            if "access_token" not in token:
+            if (
+                not isinstance(token.get("access_token"), str)
+                or not token["access_token"]
+            ):
                 raise CannotConnect
+
+            try:
+                expires_in = float(token.get("expires_in", 3600))
+            except (TypeError, ValueError) as err:
+                raise CannotConnect("Invalid token lifetime") from err
+            if not math.isfinite(expires_in) or expires_in <= 0:
+                raise CannotConnect("Invalid token lifetime")
 
             self._access_token = token["access_token"]
-            # Track token expiry; fall back to 1 hour if not provided
-            expires_in = token.get("expires_in", 3600)
             self._token_expiry = datetime.now(UTC).timestamp() + expires_in - 60
 
     async def _read_setup(self) -> None:
@@ -336,11 +361,42 @@ class CozytouchAccount:
                     "Rate limited by the setup view", retry_after
                 )
 
-            json_data = await response.json()
+            if response.status == 401:
+                self._token_expiry = 0
+            if response.status != 200:
+                raise CannotConnect(f"Setup view returned HTTP {response.status}")
+
+            try:
+                json_data = await response.json()
+            except ValueError as err:
+                raise CannotConnect("Invalid JSON reading the setup view") from err
 
             # An empty list or an error dict would blow up on json_data[0]
             # below; treat it as a failed connection so setup is retried
-            if not isinstance(json_data, list) or not json_data:
+            if (
+                not isinstance(json_data, list)
+                or not json_data
+                or not isinstance(json_data[0], dict)
+                or not isinstance(json_data[0].get("devices"), list)
+                or any(
+                    not isinstance(device, dict)
+                    or not all(
+                        key in device
+                        for key in (
+                            "deviceId", "name", "gatewaySerialNumber", "modelId",
+                            "productId", "zoneId",
+                        )
+                    )
+                    or not isinstance(device.get("capabilities", []), list)
+                    or any(
+                        not isinstance(capability, dict)
+                        or "capabilityId" not in capability
+                        or "value" not in capability
+                        for capability in device.get("capabilities", [])
+                    )
+                    for device in json_data[0]["devices"]
+                )
+            ):
                 _LOGGER.warning(
                     "connect: unexpected setup payload (%s)",
                     type(json_data).__name__,
@@ -659,6 +715,7 @@ class CozytouchAccount:
             ) as response:
                 # 401 means the token was rejected; force re-auth next poll
                 if response.status == 401:
+                    self._token_expiry = 0
                     self.online = False
                     raise CozytouchApiError(
                         "Token rejected (401), forcing re-authentication next poll"
@@ -681,13 +738,18 @@ class CozytouchAccount:
 
                 try:
                     json_data = await response.json()
-                except ContentTypeError as err:
+                except (ContentTypeError, ValueError) as err:
                     self.online = False
                     raise CozytouchApiError(
                         "Non-JSON response from capabilities endpoint"
                     ) from err
 
-                if not isinstance(json_data, list):
+                if not isinstance(json_data, list) or any(
+                    not isinstance(capability, dict)
+                    or "capabilityId" not in capability
+                    or "value" not in capability
+                    for capability in json_data
+                ):
                     self.online = False
                     raise CozytouchApiError(
                         "Capabilities response is not a list (got"
@@ -744,12 +806,15 @@ class CozytouchAccount:
                     return self._refused(deviceId, capabilityId, value, "HTTP 429")
 
                 if response.status != 201:
+                    if response.status == 401:
+                        self._token_expiry = 0
+                        self.online = False
                     return self._refused(
                         deviceId, capabilityId, value, f"HTTP {response.status}"
                     )
 
                 executionId = await response.json()
-        except (TimeoutError, ClientError) as err:
+        except (TimeoutError, ClientError, ValueError) as err:
             return self._refused(
                 deviceId, capabilityId, value, f"network error: {why(err)}"
             )
@@ -800,11 +865,20 @@ class CozytouchAccount:
                         self._note_rate_limited(response, "an execution poll")
                         return "HTTP 429 polling the execution"
 
+                    if response.status != 200:
+                        if response.status == 401:
+                            self._token_expiry = 0
+                            self.online = False
+                        return f"HTTP {response.status} polling the execution"
+
                     try:
                         execution_data = await response.json()
-                    except ContentTypeError:
+                    except (ContentTypeError, ValueError):
                         self.online = False
                         return "unreadable execution answer"
+
+                    if not isinstance(execution_data, dict):
+                        return "execution answer is not an object"
 
                     execution_state = execution_data.get("state", False)
                     if execution_state == 1:
@@ -851,6 +925,10 @@ class CozytouchAccount:
                 if response.status == 429:
                     self._note_rate_limited(response, "the absence window")
                     return False
+
+                if response.status == 401:
+                    self._token_expiry = 0
+                    self.online = False
 
                 _LOGGER.error(
                     "Set away mode : response %d (%s)",
