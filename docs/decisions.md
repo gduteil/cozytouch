@@ -1005,6 +1005,29 @@ caller, and the setpoint asks for one refresh once both writes are done.
 Choosing a preset on its own still refreshes as before.
 `tests/test_setpoint_writes.py` pins the order.
 
+### The temperatures are served under both names, the native and the old
+
+Home Assistant 2026.11 moved the climate temperature API to `native_*` :
+`native_temperature_unit`, `native_current_temperature` and
+`native_target_temperature`. Providing the old names logs a warning per
+member at startup, and they stop working in 2027.11. Seen on HA 2026.11.1 :
+
+```
+CozytouchClimate provides the deprecated current_temperature, this will stop working in Home Assistant 2027.11
+CozytouchClimate provides the deprecated target_temperature, ...
+Detected that custom integration 'cozytouch' writes the deprecated CozytouchClimate._attr_temperature_unit ...
+```
+
+The `native_*` names do not exist before 2026.11, so moving to them alone
+would leave the 2025.12 floor without a unit or a temperature. The entity
+defines both, the old ones reading the native ones. HA's migration
+(`migrate_deprecated_entity_members`) lets the native member win, silently,
+when the same class provides both ; an older HA never looks at `native_*`.
+
+The unit was `_attr_temperature_unit`, set in `__init__`. It is a property
+now, because writing the old attribute is itself what 2026.11 reports, and
+there is no attribute name both releases read.
+
 ## `custom_components/cozytouch/select.py`
 
 ### The air-circulation duration is a select on the device's own grid

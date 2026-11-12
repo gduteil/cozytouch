@@ -130,7 +130,6 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             if step is not None and float(step) > 0:
                 self._attr_native_step = float(step)
 
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_min_temp = 0
         self._attr_max_temp = 30
         self._attr_supported_features = (
@@ -462,15 +461,39 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         value = self.coordinator.get_capability_value(availableId)
         return value is None or str(value) != "0"
 
+    # Home Assistant 2026.11 renamed these three to native_*, and the old names
+    # stop working in 2027.11. Both are defined here, so 2026.11 on reads the
+    # native ones without a warning and the 2025.12 floor keeps reading the old
+    # ones. See docs/decisions.md.
     @property
-    def current_temperature(self):
+    def native_temperature_unit(self) -> str:
+        """Return the unit temperatures are reported in."""
+        return UnitOfTemperature.CELSIUS
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit temperatures are reported in, before HA 2026.11."""
+        return self.native_temperature_unit
+
+    @property
+    def native_current_temperature(self):
         """Return current temperature."""
         return self._current_value
 
     @property
-    def target_temperature(self):
+    def current_temperature(self):
+        """Return current temperature, before HA 2026.11."""
+        return self.native_current_temperature
+
+    @property
+    def native_target_temperature(self):
         """Return target temperature."""
         return self._native_value
+
+    @property
+    def target_temperature(self):
+        """Return target temperature, before HA 2026.11."""
+        return self.native_target_temperature
 
     def _air_circulation_active(self) -> bool:
         """Tell whether air circulation is currently running."""
