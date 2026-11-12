@@ -144,7 +144,12 @@ class CozytouchAwayModeSwitch(CozytouchSwitch):
         self._nb_ignore = 5
         self._state = True
         try:
-            await self.coordinator.set_away_mode(int(timestampStart), int(timestampEnd))
+            if not await self.coordinator.set_away_mode(
+                int(timestampStart), int(timestampEnd)
+            ):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="write_not_completed"
+                )
         except HomeAssistantError:
             # Refused : the next read is the device's, not this guess.
             self._nb_ignore = 0
@@ -156,7 +161,10 @@ class CozytouchAwayModeSwitch(CozytouchSwitch):
         self._nb_ignore = 5
         self._state = False
         try:
-            await self.coordinator.set_away_mode(None, None)
+            if not await self.coordinator.set_away_mode(None, None):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="write_not_completed"
+                )
         except HomeAssistantError:
             # Refused : the next read is the device's, not this guess.
             self._nb_ignore = 0

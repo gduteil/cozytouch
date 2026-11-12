@@ -4539,3 +4539,29 @@ Navizone's air conditioners (557-559) and the dump attached to #157 :
 
 All four rows are shared, so every device reporting the id moves with them.
 Only the Navizone's rooms were looked at.
+
+
+## Recovery from cloud failures
+
+Scripted responses reproduced four failure paths: False from the away-mode
+PUT was ignored by the switch, authentication HTTP 429 never armed a pause,
+reconnects queued at the lock ignored a newly armed pause, and a read timeout
+forced a new login despite an unexpired token. Invalid JSON and valid JSON of
+the wrong shape also escaped the intended connection-error handling.
+
+The switch now checks the away-mode result and raises the existing translated
+write failure, clearing the optimistic hold on failure. Reconnect checks the
+pause again under the lock and reuses an unexpired token. HTTP 401 on setup
+reads, targeted reads, writes, execution polls and absence writes expires the
+token; the next reconnect obtains another. HTTP 429 on authentication honours
+the same backoff as other requests. Invalid authentication, setup, capability
+and execution responses fail without confirming a command or replacing a
+complete cached setup with a malformed one. No command is automatically
+replayed.
+
+`tests/test_cloud_recovery.py` covers these cases with simulated responses,
+including concurrent reconnects, expiry and rejection of a token, and boolean
+refusal of the absence window. The existing reauth polling test explicitly
+expires its token: offline alone no longer means the token is invalid.
+No real Cozytouch account or hardware was used; this is not a validation on a
+Sauter Kelud.

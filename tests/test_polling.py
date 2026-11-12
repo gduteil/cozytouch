@@ -290,6 +290,7 @@ def test_a_poll_that_finds_the_password_refused_raises_for_reauth(monkeypatch):
     """
     account, session = connected(monkeypatch)
     account.online = False
+    account._token_expiry = 0
     session._answers["/users/token"] = FakeResponse(REFUSED)
 
     with pytest.raises(ConfigEntryAuthFailed):
