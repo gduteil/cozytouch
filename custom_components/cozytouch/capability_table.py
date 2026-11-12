@@ -3270,22 +3270,17 @@ CAPABILITIES: dict[int, Entity] = {
         enabled_by_default=False,
     ),
     105906: Entity(
+        # see docs/decisions.md
         name="v40_applied_setpoint",
-        type=CapabilityType.TEMPERATURE_PERCENT_ADJUSTMENT_NUMBER,
-        enabled_by_default=True,
-        extra={
-            "temperatureMin": 15.0,
-            "temperatureMax": 65.0,
-        },
+        type=CapabilityType.PERCENTAGE,
+        category=CapabilityCategory.DIAG,
+        enabled_by_default=False,
     ),
     105907: Entity(
         name="v40_setpoint_filled_by_user",
-        type=CapabilityType.TEMPERATURE_PERCENT_ADJUSTMENT_NUMBER,
-        enabled_by_default=True,
-        extra={
-            "temperatureMin": 15.0,
-            "temperatureMax": 65.0,
-        },
+        type=CapabilityType.PERCENTAGE,
+        category=CapabilityCategory.DIAG,
+        enabled_by_default=False,
     ),
     # Whether a room slot holds this circuit's setpoint. Named from what it
     # coincides with rather than from anything the vendor says -- see

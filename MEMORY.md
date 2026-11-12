@@ -58,6 +58,9 @@ overturn one, edit the line here in the same pull request.
   autorisée" choice, 0 permanently, 1 during the slots (245-251) ; 105012
   reads 3 there. 2026-11-12, app beside a dump. `docs/decisions.md`, *The
   hot-water modes come from 105011*.
+- **105906/105907 are a charge in %**, the setpoint restated (catalogue),
+  read-only and off : the Lineo 1959 reads 75, its app shows no V40.
+  `docs/decisions.md`, *The V40 setpoints are read-only percentages*.
 - **Atlantic named eleven hot-water ids once**, on gduteil/cozytouch#129
   (234-288). Check that list before reverse-engineering an id in that range.
 
@@ -76,9 +79,6 @@ overturn one, edit the line here in the same pull request.
 
 ## Parked — each needs one specific piece of evidence
 
-- 105906/105907 read as °C ; the catalogue says % (V40 charge). Needs a V40
-  app screenshot. The Lineo 1959 reports 75 on both and its app shows no V40
-  (2026-11-12).
 - 100004/100021 bits 1 and 2 : catalogue and Android app disagree on hygro vs
   temperature. Needs a unit reporting one without the other.
 - Whether the cloud turns a programmed absence (152 = 2) to 1 at its start.

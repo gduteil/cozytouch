@@ -73,6 +73,9 @@
         }
     },
     "entity": {
+        "binary_sensor": {
+            "device_availability": { "name": "Disponibile" }
+        },
         "calendar": {
             "heating_program":         { "name": "Programma di riscaldamento" },
             "cooling_program":         { "name": "Programma di raffrescamento" },
@@ -224,9 +227,7 @@
             "target_temperature":         { "name": "Temperatura target" },
             "target_temperature_dhw":     { "name": "Temperatura target ACS" },
             "target_temperature_eco_z1":  { "name": "Temperatura target Eco Z1" },
-            "target_temperature_comfort_z2":{ "name": "Setpoint comfort Z2" },
-            "v40_applied_setpoint":       { "name": "Setpoint V40 applicato" },
-            "v40_setpoint_filled_by_user": { "name": "Setpoint V40 impostato dall'utente" }
+            "target_temperature_comfort_z2":{ "name": "Setpoint comfort Z2" }
         },
         "select": {
             "air_circulation_speed":
@@ -677,6 +678,8 @@
             "timezone":                 { "name": "Fuso orario" },
             "total_power_consumption":  { "name": "Consumo elettrico totale" },
             "unexpected_events":        { "name": "Eventi imprevisti" },
+            "v40_applied_setpoint":     { "name": "Carica V40 obiettivo" },
+            "v40_setpoint_filled_by_user": { "name": "Carica V40 obiettivo dell'utente" },
             "v40_water_available":      { "name": "Acqua V40 disponibile"},
             "v40_water_capacity":       { "name": "Capacità acqua V40"},
             "version":                  { "name": "Versione" },

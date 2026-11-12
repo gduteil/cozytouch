@@ -877,21 +877,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1381,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1381,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -4146,21 +4144,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1457,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1457,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -7389,21 +7385,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1505,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1505,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -10646,21 +10640,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1641,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1641,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -13912,21 +13904,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1734,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1734,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -17201,21 +17191,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 211,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 211,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -20443,21 +20431,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 2374,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 2374,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -23716,21 +23702,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 418,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 418,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -26974,21 +26958,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 557,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 557,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -30246,21 +30228,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 56,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 56,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -33505,21 +33485,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 562,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 562,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -36770,21 +36748,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 76,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 76,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -40029,21 +40005,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 999999,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 999999,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,

@@ -78,7 +78,7 @@ class DeviceAvailability(CozytouchDeviceEntity, BinarySensorEntity):
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Available"
+    _attr_translation_key = "device_availability"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(self, coordinator: Hub, uniq_id: str) -> None:

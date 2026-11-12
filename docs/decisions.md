@@ -4827,3 +4827,29 @@ select offered it.
   of charge in % (0-100) and the Lineo reports 75 on both, but the app shows
   no V40 anywhere to check a reading against.
 - Only model 1959 was seen. Other tanks get the entity from row 87.
+
+## The V40 setpoints are read-only percentages (issue #216)
+
+105906 and 105907 were writable numbers in °C, between 15 and 65 : a raw 75
+became 15 + 75 % × 50 = 52.5 °C. That conversion came with their names, off
+the Android enum, and no capture ever backed it.
+
+Read on 2026-11-12 from a LINEO CONNECTE VM 120L 2400W (model 1959),
+a dump beside the Cozytouch app, nothing written :
+
+- both read 75, and no app screen shows a V40 value, in % or in degrees ;
+- the catalogue names them `DHW_V40StateOfChargeSetpoint` and
+  `DHW_V40StateOfChargeUserSetpoint`, in %, 0-100, "the V40 state of charge
+  linked to the (user) temperature setpoint" : the setpoint restated as a
+  charge, not a setting of its own ;
+- 105906 changed at the same second as 312, the control setpoint ;
+- 271, the charge the app does show (72 %), is the same quantity in %.
+
+So both are percentage sensors, in Diagnostic and off by default. The
+catalogue's `accessType` 7 says the API takes a write ; that is not a
+control (see *`accessType` answers a different question*), the Android app
+only reads 105907, and the app offers none. `TemperaturePercentAdjustmentNumber`
+had no other row and is gone.
+
+Existing installs see the two numbers go unavailable and two sensors appear,
+off. A V40 control on an app screen would make one of them a setting again.

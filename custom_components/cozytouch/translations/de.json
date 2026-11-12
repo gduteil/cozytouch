@@ -73,6 +73,9 @@
         }
     },
     "entity": {
+        "binary_sensor": {
+            "device_availability": { "name": "Verfügbar" }
+        },
         "calendar": {
             "heating_program":         { "name": "Heizprogramm" },
             "cooling_program":         { "name": "Kühlprogramm" },
@@ -224,9 +227,7 @@
             "target_temperature":         { "name": "Solltemperatur" },
             "target_temperature_dhw":     { "name": "Solltemperatur Warmwasser" },
             "target_temperature_eco_z1":  { "name": "Solltemperatur Eco Z1" },
-            "target_temperature_comfort_z2":{ "name": "Komfort-Sollwert Z2" },
-            "v40_applied_setpoint":       { "name": "Angewendeter V40-Sollwert" },
-            "v40_setpoint_filled_by_user": { "name": "Vom Benutzer eingegebener V40-Sollwert" }
+            "target_temperature_comfort_z2":{ "name": "Komfort-Sollwert Z2" }
         },
         "select": {
             "air_circulation_speed":
@@ -677,6 +678,8 @@
             "timezone":                 { "name": "Zeitzone" },
             "total_power_consumption":  { "name": "Gesamtstromverbrauch" },
             "unexpected_events":        { "name": "Unerwartete Ereignisse" },
+            "v40_applied_setpoint":     { "name": "V40-Ladeziel" },
+            "v40_setpoint_filled_by_user": { "name": "V40-Ladeziel vom Benutzer" },
             "v40_water_available":      { "name": "Verfügbares V40-Wasser"},
             "v40_water_capacity":       { "name": "V40-Wasserkapazität"},
             "version":                  { "name": "Version" },

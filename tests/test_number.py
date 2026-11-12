@@ -20,7 +20,6 @@ from custom_components.cozytouch.infos import CapabilityInfos
 from custom_components.cozytouch.number import (
     MinutesAdjustmentNumber,
     TemperatureAdjustmentNumber,
-    TemperaturePercentAdjustmentNumber,
     clamp,
 )
 
@@ -82,7 +81,6 @@ def write(cls, value, **capability_fields):
 
 ALL_CLASSES = (
     TemperatureAdjustmentNumber,
-    TemperaturePercentAdjustmentNumber,
     MinutesAdjustmentNumber,
 )
 
@@ -133,17 +131,6 @@ def test_a_temperature_is_the_value_the_api_reports():
     assert write(TemperatureAdjustmentNumber, 12.0) == ([(CAPABILITY_ID, "12.0")], 1)
 
 
-def test_a_percent_temperature_is_read_across_its_range():
-    """The API reports a percentage of the span between the two bounds, and
-    what belongs on a thermostat is the degrees it stands for: 30% of 0-60.
-    """
-    assert read(TemperaturePercentAdjustmentNumber, "30") == 18.0
-    assert write(TemperaturePercentAdjustmentNumber, 12.0) == (
-        [(CAPABILITY_ID, "20.0")],
-        1,
-    )
-
-
 def test_minutes_are_minutes_but_written_whole():
     assert read(MinutesAdjustmentNumber, "30") == 30.0
     assert write(MinutesAdjustmentNumber, 12.0) == ([(CAPABILITY_ID, "12")], 1)
@@ -156,7 +143,6 @@ def test_minutes_are_minutes_but_written_whole():
     ("cls", "unit", "device_class", "step", "lowest", "highest"),
     [
         (TemperatureAdjustmentNumber, "°C", "temperature", 0.5, 0, 60.0),
-        (TemperaturePercentAdjustmentNumber, "°C", "temperature", 0.5, 0.0, 60.0),
         (MinutesAdjustmentNumber, "min", None, 1, 0, 60),
     ],
 )
@@ -237,31 +223,12 @@ def test_the_other_three_do_not_go_looking_for_bounds():
     those fields on the others, and a base class reading them for everybody
     would be a new behaviour nobody asked for.
     """
-    for cls in (
-        TemperaturePercentAdjustmentNumber,
-        MinutesAdjustmentNumber,
-    ):
+    for cls in (MinutesAdjustmentNumber,):
         hub = FakeHub({CAPABILITY_ID: "30", 2: "16", 3: "24"})
         entity = build(cls, hub, lowestValueCapabilityId=2, highestValueCapabilityId=3)
         entity._handle_coordinator_update()
 
         assert entity._attr_native_min_value in (0, 0.0)
-
-
-def test_the_percent_range_follows_the_capabilitys_own_fields():
-    """`temperatureMin`/`temperatureMax`, not the `lowest_value` the others
-    read: a different spelling for the same idea, and it is the one the
-    mapping writes for this type.
-    """
-    assert (
-        read(
-            TemperaturePercentAdjustmentNumber,
-            "50",
-            temperatureMin=10.0,
-            temperatureMax=30.0,
-        )
-        == 20.0
-    )
 
 
 def test_the_module_still_exposes_one_class_per_capability_type():

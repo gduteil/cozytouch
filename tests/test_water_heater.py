@@ -14,6 +14,7 @@ import asyncio
 from types import SimpleNamespace
 
 from custom_components.cozytouch.capability import get_capability_infos
+from custom_components.cozytouch.infos import CapabilityType
 from custom_components.cozytouch.model import get_model_infos
 from custom_components.cozytouch.water_heater import (
     CozytouchWaterHeater,
@@ -171,3 +172,17 @@ def test_a_tanks_second_setpoint_slider_starts_off():
     capability = get_capability_infos(hub.modelInfos, 22, "55", set(READINGS) | {22})
 
     assert capability.enabled_by_default is False
+
+
+def test_the_v40_setpoints_are_read_only_percentages_and_start_off():
+    """75 on the Lineo is a charge in %, not 52.5 degrees, and no app screen
+    shows it (#216).
+    """
+    hub = coordinator()
+    for capabilityId in (105906, 105907):
+        capability = get_capability_infos(
+            hub.modelInfos, capabilityId, "75", set(READINGS) | {capabilityId}
+        )
+
+        assert capability.type is CapabilityType.PERCENTAGE
+        assert capability.enabled_by_default is False

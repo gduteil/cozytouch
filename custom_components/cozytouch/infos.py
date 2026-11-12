@@ -49,7 +49,6 @@ class CapabilityType(StrEnum):
     SYSTEM_SERVICE = "system_service"
     TEMPERATURE = "temperature"
     TEMPERATURE_ADJUSTMENT_NUMBER = "temperature_adjustment_number"
-    TEMPERATURE_PERCENT_ADJUSTMENT_NUMBER = "temperature_percent_adjustment_number"
     TIME = "time"
     TIMEZONE = "timezone"
     VOLUME = "volume"
@@ -172,8 +171,6 @@ class CapabilityInfos(AttributeDict):
     lowest_value: float
     highest_value: float
     step: float
-    temperatureMin: float
-    temperatureMax: float
 
     # The other capability ids the entity is wired to.
     targetCapabilityId: int
