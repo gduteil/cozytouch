@@ -1005,6 +1005,27 @@ caller, and the setpoint asks for one refresh once both writes are done.
 Choosing a preset on its own still refreshes as before.
 `tests/test_setpoint_writes.py` pins the order.
 
+### The temperatures are `native_*`, and the old names only below 2026.11
+
+Home Assistant 2026.11 renamed the climate temperatures :
+`current_temperature`, `target_temperature` and `_attr_temperature_unit`
+became `native_current_temperature`, `native_target_temperature` and
+`_attr_native_temperature_unit`. The old names still work, but every start
+logs that they stop working in 2027.11, naming this integration.
+
+The floor is 2025.12, which has no `native_*` on `ClimateEntity` : an entity
+providing only those reads no temperature there. So `NATIVE_TEMPERATURES`
+asks the base class which names it has, the properties are written under the
+new names, and the old ones are bound to them in the class body only when the
+base class lacks the new ones. It has to be the class body : 2026.11 reports
+a subclass that defines an old name when the class is created, so a fallback
+defined unconditionally would still log.
+
+Checked against a climate entity built through `__init__` and read through
+`state_attributes` : 21.5 and 19.0 in °C on 2025.12.0, 2026.8.3 and 2026.11.1,
+and on 2026.11.1 the four deprecation reports the old code logs are gone. The
+suite passes on the three.
+
 ## `custom_components/cozytouch/select.py`
 
 ### The air-circulation duration is a select on the device's own grid
@@ -4539,3 +4560,165 @@ Navizone's air conditioners (557-559) and the dump attached to #157 :
 
 All four rows are shared, so every device reporting the id moves with them.
 Only the Navizone's rooms were looked at.
+
+## The Pagosa through Overkiz
+
+A Sauter Pagosa is not in the setup view : its account's `setupviewv2` holds a
+setup and no device, and the heater is on the Overkiz plane only
+(`docs/api-surface.md`, *An IO water heater is on it*). The fork that first
+drove it (Daelle84/Pagosa, branch `pagosa-1.4`) was built on 1.4 ; this is
+that code carried onto the account/subentry layout, in `pagosa/`.
+
+### How a subentry is told to be a Pagosa
+
+By its `deviceId` : an Overkiz device URL (`io://…`) where every other
+subentry holds a Cozytouch integer. That is what 1.4-pagosa stored in its
+entry, so `migrate_1_4.py` turns it into a Pagosa subentry with nothing
+added. The config flow offers the Overkiz plane's Pagosas when the setup view
+lists no device, as 1.4-pagosa fell back to Overkiz in the same case ; an
+account with Cozytouch devices and a Pagosa is not handled yet.
+
+### Its own hub, session and clock
+
+`PagosaHub` is not a `Hub` : it reads no capability and the account's
+coordinator never pushes to it. It keeps 1.4-pagosa's own `ClientSession`,
+because the Overkiz login answers with a session cookie that must not land in
+Home Assistant's shared one, and its 30 s floor and the Retry-After it
+honours. Its poll is 240 s, where 1.4-pagosa's was 300 (next entry). An
+account holding nothing but Pagosas is never asked for its setup view by the
+account at all ; the hub reads it once on connecting, for the Absence period
+it carries, as 1.4-pagosa did.
+
+### 240 s, under the session's five idle minutes
+
+At 1.4-pagosa's 300 s, most polls found the session gone : 168 warnings
+*Overkiz session expired during setup refresh* in the first 18 hours of the
+port on the user's Home Assistant (2026.11.0), about three polls in four.
+Each one is a token request, a JWT, an Overkiz login and the setup again,
+and a command sent in that state goes through the same 401 first.
+
+A probe on the same account, with a session of its own and nothing but
+`GET /setup/gateways`, told the causes apart. Asked every 30 s, its session
+still answered at 301 s, so a request keeps a session open. It also went on
+answering after the hub logged in again in between, so a second login does
+not end the first. What is left is an idle limit of about five minutes, and
+the coordinator schedules the next poll 300 s after the last one ended :
+the poll lands on the limit, and sub-second jitter decides which side.
+
+At 240 s, after a restart, four polls in a row (14:29 to 14:41) needed no
+new login.
+
+The limits : the idle limit was not measured directly. The probe's second
+half, a fresh session left idle 120, 180, 240 and 290 s, never ran, because
+`/setup/gateways` started answering 429 after ten calls in five minutes and
+the probe was stopped there ; the hub's own `/setup` never did. One account,
+one heater, on `ha110-1`. 240 leaves a minute of margin, rather than probing
+the limit closer on the user's account.
+
+### The Pagosa's request quota
+
+The full `/setup` read every 240 s answered 429 about once a day on the
+user's account : 2026-11-11 22:20, 2026-11-12 01:34 (a restart in between
+read it again straight away) and 21:29, each time with a Retry-After of
+about 84 200 s. The hub kept a single deadline for every Overkiz request, so
+for 23 hours it refused every command as well, the Pagosa's Absence included,
+and the states it showed stopped moving. Five minutes after a restart threw
+that deadline away, Overkiz carried out a command (`setAwayModeDuration` 0,
+13/11 12:19) : the quota that ran out was the setup's, not the commands'.
+
+So, since 2026-11-13 :
+
+- A poll reads the heater's states and the meter's,
+  `GET /setup/devices/<device URL>/states`, and the whole setup only once an
+  hour (`OVERKIZ_FULL_SETUP_INTERVAL`) or when that answer is not a list.
+  That is 2 small requests every 240 s and 24 setups a day, where it was 360
+  setups.
+- A 429 holds back only its own kind : the setup and states polls on one
+  deadline, the commands on another.
+- A Retry-After is obeyed up to an hour (`OVERKIZ_MAX_RETRY_DELAY`) : past
+  that the cost of a day without commands is worse than one more refused
+  request an hour.
+
+The limits : one account, one heater, on `ha110-1`. Whether the states
+endpoint has a quota of its own was not measured ; if it answers 429, the
+poll backs off the same way. Whether 84 200 s is a daily window or a ban
+counted from the last refused request is not known either, so the hourly
+retry is what will tell. `tests/test_pagosa_overkiz_limits.py` pins the
+three rules.
+
+### Absence read as over
+
+Eco and the setpoint used to be refused whenever the heater's
+`core:OperatingModeState` read `absence: on`. On 2026-11-13 that flag still
+read `on` for hours after the Absence ended (`setAwayModeDuration` 0
+COMPLETED at 12:19, the Atlantic period empty, the vendor app showing the
+heater in auto mode, the heat pump drawing about 400 W), because the
+heater's states on Overkiz had stopped moving at 04:22 ; Eco was refused
+before any request left. The guard now needs both the flag and an Atlantic
+period whose end is still ahead. Anything less goes to the heater, which
+refuses Eco itself during an Absence.
+
+The states had not frozen, as first read : `core:DateTimeState` is sent
+once a day, about 04:22, every day from 08/11 to 13/11, and the mode and
+Eco did move that afternoon. Only the Absence flag stays behind, because
+`setCurrentOperatingMode` with `absence: off` is always refused
+(ERRORCOMMAND) and `setAwayModeDuration` 0 is what ends it.
+`io:AwayModeDurationState` follows the heater : `always` for the whole
+Absence (06/11 20:24 to 13/11 12:27), then `0`. So a flag at `on` with a
+duration of `0` reads as over, for the switch and for every command that
+carries the flags. One heater, one Absence. `tests/test_pagosa_absence_guard.py`.
+
+### The Pagosa's time slots
+
+The heater keeps two time slots, `io:ProgrammingSlotsState`, written whole
+by `setProgrammingSlots`. Read on the user's account on 2026-11-13 :
+
+- A value holding `slot1` alone is refused before it reaches the heater :
+  HTTP 400, the driver failing on a nil `start` (it reads `slot2`). With
+  `slot2` at 00:00-00:00 beside it, the command is COMPLETED and the heater
+  reports that single slot a few minutes later. 00:00-00:00 is also what
+  other Atlantic water heaters report for an unused slot (the overkiz
+  fixtures of Home Assistant core and python-overkiz-api), where a slot also
+  runs past midnight (22:00-06:00).
+- The heater renumbers its slots, the longer one becoming `slot1` : seen on
+  06/11 (2-7 before 14-18), 09/11 at 04:25 (10-18 moved to `slot1`) and
+  13/11 (2:00-9:30 moved to `slot1` twelve minutes after being written as
+  `slot2`). A time entity changes one boundary of one numbered slot, so an
+  automation going through them can move the wrong slot, and each change is
+  a command of its own, with an odd slot in between.
+- The vendor app asks for eight hours of slots a day, in total. Whether the
+  heater refuses less was not tried, so nothing here checks it.
+
+So the `set_programming_slots` action writes both slots in one command, an
+absent second slot as 00:00-00:00, and the time entities are left as they
+were. `setElectricalExtraManagement deactive` (said to stop the electric
+backup, as one CETHI V4 in the python-overkiz-api fixtures reports) was
+COMPLETED on the same heater and the state stayed `auto` : nothing offers it.
+One heater, one evening. `tests/test_pagosa_slots.py`.
+
+### Why the entities are carried rather than rewritten
+
+1.4-pagosa's entities were tuned against the Pagosa's execution history (what
+it refuses, how long it takes to confirm, what the app sends and in which
+order), on one heater. Rewriting them into capability rows would re-derive
+all of that without the heater to check it on. And `migrate_1_4.py` deletes,
+once Home Assistant has started, every entity whose rewritten unique id
+nothing claims : a unique id moved by one character costs the user the
+entity id, its history and every automation reading it. So the entity
+classes are 1.4-pagosa's, built with a `PagosaContext` whose `entry_id` is the
+subentry id -- exactly what the migration puts where 1.4 had the entry id.
+`tests/test_pagosa.py` pins the 53 unique ids. The modules that patched 1.4's
+classes (`absence.py`, `controls.py`, `select_fix.py`, `sensor_fix.py`) still
+do, on the package's classes, and ruff's style rules are relaxed for the
+package rather than the code edited to satisfy them.
+
+Checked on a test Home Assistant 2026.11.0 replaying the heater's real
+Overkiz setup : a 1.4-pagosa entry with the user's 53 entity ids migrates
+with every entity id, state and attribute unchanged, through two restarts.
+
+Then installed on that Home Assistant (2026.11.0) over the running
+pagosa-1.4, with an Absence under way : the 53 entities came back with the
+same ids and states, the Absence end moved two hours later and back, read
+back from `setupviewv2` each time with the Absence still on, Eco was refused
+while absent without a request sent, and `setOperatingRange` written with
+its current value ended COMPLETED in the Overkiz execution history.

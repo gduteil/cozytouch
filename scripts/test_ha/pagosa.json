@@ -1,0 +1,1074 @@
+{
+ "_comment": "A Sauter Pagosa 270L as Atlantic served it on 2026-11-08 : the setup view (no device) and the Overkiz setup. Ids, serials and addresses replaced ; no absence set.",
+ "setupviewv2": [
+  {
+   "id": 100001,
+   "name": "setup1",
+   "numberOfRooms": 5,
+   "numberOfPersons": 2,
+   "area": 140,
+   "type": 2,
+   "mainHeatingEnergy": 1,
+   "mainDHWEnergy": 1,
+   "setupBuildingDate": 5,
+   "rateLimit": 30,
+   "currency": "EUR",
+   "absence": {},
+   "devices": [],
+   "gateways": [
+    {
+     "id": "100002",
+     "serialNumber": "0000-1111-2222",
+     "isAlive": true,
+     "setupId": 100001,
+     "type": 32
+    }
+   ],
+   "zones": [
+    {
+     "id": 100003,
+     "name": "zoneTechnique",
+     "zoneType": 2,
+     "numberOfDevices": 0
+    }
+   ]
+  }
+ ],
+ "overkiz_setup": {
+  "creationTime": 1618412344000,
+  "lastUpdateTime": 1618412344000,
+  "id": "SETUP-0000-1111-2222",
+  "gateways": [
+   {
+    "gatewayId": "0000-1111-2222",
+    "type": 32,
+    "subType": 0,
+    "placeOID": "00000000-0000-0000-0000-000000000000",
+    "autoUpdateEnabled": false,
+    "alive": true,
+    "timeReliable": true,
+    "connectivity": {
+     "status": "OK",
+     "protocolVersion": "2026.1.3"
+    },
+    "upToDate": true,
+    "updateStatus": "UP_TO_DATE",
+    "syncInProgress": false,
+    "mode": "ACTIVE",
+    "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS"
+   }
+  ],
+  "devices": [
+   {
+    "creationTime": 1618412344000,
+    "lastUpdateTime": 1618412344000,
+    "label": "Box",
+    "deviceURL": "internal://0000-1111-2222/pod/0",
+    "shortcut": false,
+    "controllableName": "internal:PodMiniComponent",
+    "definition": {
+     "commands": [
+      {
+       "commandName": "getName",
+       "nparams": 0
+      },
+      {
+       "commandName": "update",
+       "nparams": 0
+      },
+      {
+       "commandName": "setCountryCode",
+       "nparams": 1
+      },
+      {
+       "commandName": "activateCalendar",
+       "nparams": 0
+      },
+      {
+       "commandName": "deactivateCalendar",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshPodMode",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshUpdateStatus",
+       "nparams": 0
+      },
+      {
+       "commandName": "setCalendar",
+       "nparams": 1
+      },
+      {
+       "commandName": "setLightingLedPodMode",
+       "nparams": 1
+      },
+      {
+       "commandName": "setPodLedOff",
+       "nparams": 0
+      },
+      {
+       "commandName": "setPodLedOn",
+       "nparams": 0
+      }
+     ],
+     "states": [
+      {
+       "type": "DiscreteState",
+       "values": [
+        "offline",
+        "online"
+       ],
+       "qualifiedName": "core:ConnectivityState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "core:CountryCodeState"
+      },
+      {
+       "eventBased": true,
+       "type": "DataState",
+       "qualifiedName": "core:LocalAccessProofState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "core:LocalIPv4AddressState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "core:NameState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "doublePress",
+        "longPress",
+        "simplePress",
+        "triplePress",
+        "veryLongPress"
+       ],
+       "qualifiedName": "internal:LastActionConfigButtonState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "internal:LightingLedPodModeState"
+      }
+     ],
+     "dataProperties": [],
+     "widgetName": "Pod",
+     "uiProfiles": [
+      "UpdatableComponent"
+     ],
+     "uiClass": "Pod",
+     "qualifiedName": "internal:PodMiniComponent",
+     "type": "ACTUATOR"
+    },
+    "states": [
+     {
+      "name": "core:NameState",
+      "type": 3,
+      "value": "Box"
+     },
+     {
+      "name": "internal:LightingLedPodModeState",
+      "type": 2,
+      "value": 1.0
+     },
+     {
+      "name": "core:CountryCodeState",
+      "type": 3,
+      "value": "FR"
+     },
+     {
+      "name": "core:LocalIPv4AddressState",
+      "type": 3,
+      "value": "192.0.2.1"
+     }
+    ],
+    "available": true,
+    "enabled": true,
+    "placeOID": "00000000-0000-0000-0000-000000000000",
+    "widget": "Pod",
+    "type": 1,
+    "oid": "00000000-0000-0000-0000-000000000000",
+    "uiClass": "Pod"
+   },
+   {
+    "creationTime": 1618412441000,
+    "lastUpdateTime": 1618412441000,
+    "label": "Pagosa",
+    "deviceURL": "io://0000-1111-2222/1234567#1",
+    "shortcut": false,
+    "controllableName": "io:AtlanticDomesticHotWaterProductionV3IOComponent",
+    "definition": {
+     "commands": [
+      {
+       "commandName": "addLockLevel",
+       "nparams": 2
+      },
+      {
+       "commandName": "advancedRefresh",
+       "nparams": 2
+      },
+      {
+       "commandName": "delayedStopIdentify",
+       "nparams": 1
+      },
+      {
+       "commandName": "getName",
+       "nparams": 0
+      },
+      {
+       "commandName": "identify",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshManufacturerName",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshTargetTemperature",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshWaterConsumption",
+       "nparams": 0
+      },
+      {
+       "commandName": "removeLockLevel",
+       "nparams": 1
+      },
+      {
+       "commandName": "resetLockLevels",
+       "nparams": 0
+      },
+      {
+       "commandName": "setComfortTargetTemperature",
+       "nparams": 1
+      },
+      {
+       "commandName": "setDateTime",
+       "nparams": 1
+      },
+      {
+       "commandName": "setEcoTargetTemperature",
+       "nparams": 1
+      },
+      {
+       "commandName": "setFrostProtectionTargetTemperature",
+       "nparams": 1
+      },
+      {
+       "commandName": "setName",
+       "nparams": 1
+      },
+      {
+       "commandName": "setTargetTemperature",
+       "nparams": 1
+      },
+      {
+       "commandName": "startIdentify",
+       "nparams": 0
+      },
+      {
+       "commandName": "stopIdentify",
+       "nparams": 0
+      },
+      {
+       "commandName": "wink",
+       "nparams": 1
+      },
+      {
+       "commandName": "pairOneWayController",
+       "nparams": 2
+      },
+      {
+       "commandName": "refreshAntiLegionellosis",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshAwayModeDuration",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshBoilerInstallationOption",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshBoostModeDuration",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshCurrentOperatingMode",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshDHWCapacity",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshDHWError",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshDHWMode",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshElectricalExtraManagement",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshExtractionOption",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshInstallation",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshOperatingModeCapabilities",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshOperatingRange",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshOperatingTime",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshProgrammingSlots",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshRateManagement",
+       "nparams": 0
+      },
+      {
+       "commandName": "refreshSmartGridOption",
+       "nparams": 0
+      },
+      {
+       "commandName": "setAntiLegionellosis",
+       "nparams": 1
+      },
+      {
+       "commandName": "setAwayModeDuration",
+       "nparams": 1
+      },
+      {
+       "commandName": "setBoilerInstallationOption",
+       "nparams": 1
+      },
+      {
+       "commandName": "setBoostModeDuration",
+       "nparams": 1
+      },
+      {
+       "commandName": "setCurrentOperatingMode",
+       "nparams": 1
+      },
+      {
+       "commandName": "setDHWMode",
+       "nparams": 1
+      },
+      {
+       "commandName": "setElectricalExtraManagement",
+       "nparams": 1
+      },
+      {
+       "commandName": "setExtractionOption",
+       "nparams": 1
+      },
+      {
+       "commandName": "setHaltedTargetTemperature",
+       "nparams": 1
+      },
+      {
+       "commandName": "setInstallation",
+       "nparams": 1
+      },
+      {
+       "commandName": "setOperatingRange",
+       "nparams": 1
+      },
+      {
+       "commandName": "setProgrammingSlots",
+       "nparams": 1
+      },
+      {
+       "commandName": "setRateManagement",
+       "nparams": 1
+      },
+      {
+       "commandName": "setSmartGridOption",
+       "nparams": 1
+      },
+      {
+       "commandName": "unpairAllOneWayControllers",
+       "nparams": 0
+      },
+      {
+       "commandName": "unpairOneWayController",
+       "nparams": 2
+      }
+     ],
+     "states": [
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:BoostModeDurationState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ComfortTargetTemperatureState"
+      },
+      {
+       "eventBased": true,
+       "type": "DataState",
+       "qualifiedName": "core:CommandLockLevelsState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "core:DateTimeState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "good",
+        "low",
+        "normal",
+        "verylow"
+       ],
+       "qualifiedName": "core:DiscreteRSSILevelState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:EcoTargetTemperatureState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:FrostProtectionTargetTemperatureState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:HaltedTargetTemperatureState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "core:ManufacturerNameState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "core:NameState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "antifreeze",
+        "auto",
+        "away",
+        "eco",
+        "frostprotection",
+        "manual",
+        "max",
+        "normal",
+        "off",
+        "on",
+        "prog",
+        "program",
+        "boost"
+       ],
+       "qualifiedName": "core:OperatingModeState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:PriorityLockTimerState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:RSSILevelState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:SecuredPositionTemperatureState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "available",
+        "unavailable"
+       ],
+       "qualifiedName": "core:StatusState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:TargetTemperatureState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:TemperatureState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:VersionState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:WaterConsumptionState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "io:AntiLegionellosisState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "io:AwayModeDurationState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "boilerOptimising",
+        "boilerPriority",
+        "heatPumpOptimising",
+        "heatPumpPriority"
+       ],
+       "qualifiedName": "io:BoilerInstallationOptionState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "io:DHWCapacityState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "io:DHWErrorState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "autoMode",
+        "manualEcoActive",
+        "manualEcoInactive"
+       ],
+       "qualifiedName": "io:DHWModeState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "io:ElectricBoosterOperatingTimeState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "auto",
+        "deactive"
+       ],
+       "qualifiedName": "io:ElectricalExtraManagementState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "fastExtractionSpeed",
+        "lowExtractionSpeed",
+        "noExtraction"
+       ],
+       "qualifiedName": "io:ExtractionOptionState"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "io:HeatPumpOperatingTimeState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "extraBoiler",
+        "extraSolar",
+        "onlyThermodynamic"
+       ],
+       "qualifiedName": "io:InstallationState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "io:OperatingModeCapabilitiesState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "pac24h_elec24h",
+        "pacProg_elecProg"
+       ],
+       "qualifiedName": "io:OperatingRangeState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "comfortLevel1",
+        "comfortLevel2",
+        "comfortLevel3",
+        "comfortLevel4",
+        "environmentProtection",
+        "humanProtection",
+        "userLevel1",
+        "userLevel2"
+       ],
+       "qualifiedName": "io:PriorityLockLevelState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "LSC",
+        "SAAC",
+        "SFC",
+        "UPS",
+        "externalGateway",
+        "localUser",
+        "myself",
+        "rain",
+        "security",
+        "temperature",
+        "timer",
+        "user",
+        "wind"
+       ],
+       "qualifiedName": "io:PriorityLockOriginatorState"
+      },
+      {
+       "type": "DataState",
+       "qualifiedName": "io:ProgrammingSlotsState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "forbidden",
+        "no",
+        "recommended",
+        "unsuitable",
+        "wanted"
+       ],
+       "qualifiedName": "io:RateManagementState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "active",
+        "deactive"
+       ],
+       "qualifiedName": "io:SmartGridOptionState"
+      }
+     ],
+     "dataProperties": [
+      {
+       "value": "500",
+       "qualifiedName": "core:identifyInterval"
+      }
+     ],
+     "widgetName": "DomesticHotWaterProduction",
+     "uiProfiles": [
+      "StatefulThermostatWithSensor",
+      "StatefulThermostat",
+      "Thermostat",
+      "WaterConsumption"
+     ],
+     "uiClass": "WaterHeatingSystem",
+     "qualifiedName": "io:AtlanticDomesticHotWaterProductionV3IOComponent",
+     "type": "ACTUATOR"
+    },
+    "states": [
+     {
+      "name": "core:NameState",
+      "type": 3,
+      "value": "Pagosa"
+     },
+     {
+      "name": "core:VersionState",
+      "type": 3,
+      "value": "45363836303038202020"
+     },
+     {
+      "name": "io:PriorityLockOriginatorState",
+      "type": 3,
+      "value": "unknown"
+     },
+     {
+      "name": "core:PriorityLockTimerState",
+      "type": 1,
+      "value": 0
+     },
+     {
+      "name": "core:CommandLockLevelsState",
+      "type": 3,
+      "value": "[]",
+      "lastUpdateTime": 1773155542000
+     },
+     {
+      "name": "core:TargetTemperatureState",
+      "type": 1,
+      "value": 50
+     },
+     {
+      "name": "core:StatusState",
+      "type": 3,
+      "value": "available"
+     },
+     {
+      "name": "core:DiscreteRSSILevelState",
+      "type": 3,
+      "value": "good"
+     },
+     {
+      "name": "core:RSSILevelState",
+      "type": 2,
+      "value": 96.0
+     },
+     {
+      "name": "core:TemperatureState",
+      "type": 1,
+      "value": 52
+     },
+     {
+      "name": "io:RateManagementState",
+      "type": 3,
+      "value": "no"
+     },
+     {
+      "name": "io:OperatingModeCapabilitiesState",
+      "type": 11,
+      "value": {
+       "relaunch": 1,
+       "absence": 1,
+       "rateManagement": 0,
+       "energyDemandStatus": 1
+      }
+     },
+     {
+      "name": "core:OperatingModeState",
+      "type": 11,
+      "value": {
+       "relaunch": "off",
+       "absence": "off"
+      }
+     },
+     {
+      "name": "io:DHWErrorState",
+      "type": 11,
+      "value": {
+       "code": 0,
+       "family": "W",
+       "type": 0
+      }
+     },
+     {
+      "name": "io:HeatPumpOperatingTimeState",
+      "type": 1,
+      "value": 8362
+     },
+     {
+      "name": "io:ElectricBoosterOperatingTimeState",
+      "type": 1,
+      "value": 81
+     },
+     {
+      "name": "io:DHWModeState",
+      "type": 3,
+      "value": "autoMode"
+     },
+     {
+      "name": "io:OperatingRangeState",
+      "type": 3,
+      "value": "pacProg_elecProg"
+     },
+     {
+      "name": "io:ProgrammingSlotsState",
+      "type": 11,
+      "value": {
+       "slot2": {
+        "start": "14:00",
+        "end": "18:00"
+       },
+       "slot1": {
+        "start": "02:00",
+        "end": "07:00"
+       }
+      }
+     },
+     {
+      "name": "io:AntiLegionellosisState",
+      "type": 1,
+      "value": 1
+     },
+     {
+      "name": "io:ElectricalExtraManagementState",
+      "type": 3,
+      "value": "auto"
+     },
+     {
+      "name": "io:InstallationState",
+      "type": 3,
+      "value": "onlyThermodynamic"
+     },
+     {
+      "name": "io:BoilerInstallationOptionState",
+      "type": 3,
+      "value": "heatPumpOptimising"
+     },
+     {
+      "name": "io:SmartGridOptionState",
+      "type": 3,
+      "value": "deactive"
+     },
+     {
+      "name": "io:ExtractionOptionState",
+      "type": 3,
+      "value": "lowExtractionSpeed"
+     },
+     {
+      "name": "core:DateTimeState",
+      "type": 11,
+      "value": {
+       "month": 11,
+       "hour": 4,
+       "year": 2026,
+       "weekday": 6,
+       "day": 8,
+       "minute": 22,
+       "second": 40
+      }
+     },
+     {
+      "name": "core:BoostModeDurationState",
+      "type": 1,
+      "value": 0
+     },
+     {
+      "name": "io:AwayModeDurationState",
+      "type": 3,
+      "value": "0"
+     },
+     {
+      "name": "core:ManufacturerNameState",
+      "type": 3,
+      "value": "Sauter"
+     },
+     {
+      "name": "io:DHWCapacityState",
+      "type": 1,
+      "value": 270
+     }
+    ],
+    "attributes": [
+     {
+      "name": "core:Manufacturer",
+      "type": 3,
+      "value": "Atlantic Group"
+     },
+     {
+      "name": "core:FirmwareRevision",
+      "type": 3,
+      "value": "E686008"
+     }
+    ],
+    "available": true,
+    "enabled": true,
+    "placeOID": "00000000-0000-0000-0000-000000000000",
+    "widget": "DomesticHotWaterProduction",
+    "type": 1,
+    "oid": "00000000-0000-0000-0000-000000000000",
+    "uiClass": "WaterHeatingSystem"
+   },
+   {
+    "creationTime": 1618412441000,
+    "lastUpdateTime": 1618412441000,
+    "label": "IO (1234567#2)",
+    "deviceURL": "io://0000-1111-2222/1234567#2",
+    "shortcut": false,
+    "controllableName": "io:DHWCumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
+    "definition": {
+     "commands": [
+      {
+       "commandName": "refreshElectricEnergyConsumption",
+       "nparams": 0
+      }
+     ],
+     "states": [
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff0State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff1State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff2State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff3State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff4State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff5State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff6State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff7State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff8State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ConsumptionTariff9State"
+      },
+      {
+       "type": "ContinuousState",
+       "qualifiedName": "core:ElectricEnergyConsumptionState"
+      },
+      {
+       "type": "DiscreteState",
+       "values": [
+        "available",
+        "unavailable"
+       ],
+       "qualifiedName": "core:StatusState"
+      }
+     ],
+     "dataProperties": [],
+     "widgetName": "CumulativeElectricPowerConsumptionSensor",
+     "uiProfiles": [
+      "ElectricEnergyConsumption"
+     ],
+     "uiClass": "ElectricitySensor",
+     "qualifiedName": "io:DHWCumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
+     "type": "SENSOR"
+    },
+    "states": [
+     {
+      "name": "core:StatusState",
+      "type": 3,
+      "value": "available"
+     },
+     {
+      "name": "core:ElectricEnergyConsumptionState",
+      "type": 1,
+      "value": 4461402
+     },
+     {
+      "name": "core:ConsumptionTariff1State",
+      "type": 1,
+      "value": 1795505
+     },
+     {
+      "name": "core:ConsumptionTariff2State",
+      "type": 1,
+      "value": 337299
+     }
+    ],
+    "attributes": [
+     {
+      "name": "core:Manufacturer",
+      "type": 3,
+      "value": "Atlantic Group"
+     },
+     {
+      "name": "core:FirmwareRevision",
+      "type": 3,
+      "value": "E686008"
+     },
+     {
+      "name": "core:PowerSourceType",
+      "type": 3,
+      "value": "mainSupply"
+     },
+     {
+      "name": "core:MeasuredValueType",
+      "type": 3,
+      "value": "core:ElectricalEnergyInWh"
+     }
+    ],
+    "available": true,
+    "enabled": true,
+    "placeOID": "00000000-0000-0000-0000-000000000000",
+    "widget": "CumulativeElectricPowerConsumptionSensor",
+    "type": 2,
+    "oid": "00000000-0000-0000-0000-000000000000",
+    "uiClass": "ElectricitySensor"
+   },
+   {
+    "creationTime": 1618412432000,
+    "lastUpdateTime": 1618412432000,
+    "label": "IO (7654321)",
+    "deviceURL": "io://0000-1111-2222/7654321",
+    "shortcut": false,
+    "controllableName": "io:StackComponent",
+    "definition": {
+     "commands": [
+      {
+       "commandName": "advancedSomfyDiscover",
+       "nparams": 1
+      },
+      {
+       "commandName": "discover1WayController",
+       "nparams": 2
+      },
+      {
+       "commandName": "discoverActuators",
+       "nparams": 1
+      },
+      {
+       "commandName": "discoverSensors",
+       "nparams": 1
+      },
+      {
+       "commandName": "discoverSomfyUnsetActuators",
+       "nparams": 0
+      },
+      {
+       "commandName": "joinNetwork",
+       "nparams": 0
+      },
+      {
+       "commandName": "resetNetworkSecurity",
+       "nparams": 0
+      },
+      {
+       "commandName": "shareNetwork",
+       "nparams": 0
+      }
+     ],
+     "states": [],
+     "dataProperties": [],
+     "widgetName": "IOStack",
+     "uiProfiles": [
+      "Specific"
+     ],
+     "uiClass": "ProtocolGateway",
+     "qualifiedName": "io:StackComponent",
+     "type": "PROTOCOL_GATEWAY"
+    },
+    "available": true,
+    "enabled": true,
+    "placeOID": "00000000-0000-0000-0000-000000000000",
+    "widget": "IOStack",
+    "type": 5,
+    "oid": "00000000-0000-0000-0000-000000000000",
+    "uiClass": "ProtocolGateway"
+   }
+  ],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "oid": "00000000-0000-0000-0000-000000000000",
+  "features": []
+ }
+}

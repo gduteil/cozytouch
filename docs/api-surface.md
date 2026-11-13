@@ -485,6 +485,56 @@ this script's own bugs (pyoverkiz's `/token` where ours is `/users/token`, and
 a missing `scope=openid`). Match `account.py` exactly before pointing anything
 at a real account -- repeated failed logins are the one thing that locks one.
 
+## An IO water heater is on it (Sauter Pagosa, 11/2026)
+
+The case the section above left open has turned up: a household with a
+Sauter Pagosa 270 L thermodynamic water heater. Same routes, same client id,
+same JWT step as `scripts/probes/probe_overkiz_plane.py` -- only the account
+differs.
+
+| Step | Route | Navizone account (09/2026) | Pagosa account (11/2026) |
+| ---- | ----- | -------------------------- | ------------------------ |
+| 1 | `POST /users/token` | 200 | 200 |
+| 2 | `GET /magellan/accounts/jwt` | 200 | 200 |
+| 3 | `POST ha110-1.overkiz.com/…/enduserAPI/login` (`jwt=`) | 401 | **200** |
+| 4 | `GET …/enduserAPI/setup` | not reached | the heater, and its meter |
+
+On the Magellan side, `setupviewv2` returns this account's setup -- id,
+`absence` period -- with no device in it. So the integration as it stands sees
+nothing, and the heater exists only on Overkiz, described the Overkiz way:
+
+- `io:AtlanticDomesticHotWaterProductionV3IOComponent` -- the heater: DHW mode,
+  target temperature, boost and away durations, operating mode.
+- `io:DHWCumulatedElectricalEnergyConsumptionIOSystemDeviceSensor` -- its
+  energy meter.
+
+What that settles: **the 401 above belongs to the hardware, not the
+token.** A Magellan-only account is refused at step 3; an account whose
+hardware is IO is let in, with the JWT step 2 mints. That answers what the
+JWT is for.
+
+**Absence uses both planes, and the setup is the one that counts.** The
+Atlantic app writes the period into the setup (`PUT /magellan/v2/setups/<id>`,
+`absence.startDate` / `endDate`) and then sends
+`setCurrentOperatingMode({"absence": "on"|"off", …})` over Overkiz. The
+Pagosa refuses that command every time -- `ERRORCOMMAND` in the Overkiz
+execution history, from Home Assistant and from the official Sauter Android
+app alike (02/11 to 06/11/2026). The absence starts anyway: the cloud applies
+the stored period by itself about an hour later (written 18:13, active 19:15
+on 06/11) and then reports `io:AwayModeDurationState` as `"always"`. Same shape
+as the Navizone finding that the setup PUT is what sets an absence and the
+mirror writes are refused.
+
+Also seen: Overkiz answers 429 with a `Retry-After` when polled or commanded
+too fast, and an expired session answers 401 and is renewed by re-running
+steps 2 and 3 once.
+
+Limits: one account, one Pagosa 270 L; no dump taken, since the diagnostics
+read only Magellan. A working client exists on a fork
+([Daelle84/Pagosa](https://github.com/Daelle84/Pagosa), branch `pagosa-1.4`),
+built on 1.4 before `account.py` and the subentries, with French entity
+names. It is evidence of what the routes do, not a port.
+
 ## A second client hit the same wall (NicolasYDDER/homey-cozytouch)
 
 A Homey app for Cozytouch, JavaScript, dual-plane: Overkiz devices detected by
@@ -606,8 +656,10 @@ minutes, while the hot-water boost is counted in **days**.
 - **Other product families.** Once a boiler or water-heater dump arrives with
   the fields this PR added, the table above can be finished.
 - **An account that lives on both planes.** The Overkiz probe above returned
-  401 for this household; a reporter whose hardware shows up in the `overkiz`
-  integration *and* in this one would be the case that reopens it.
+  401 for this household. A Sauter Pagosa account has since logged in and
+  listed its heater there (see *An IO water heater is on it*). An account
+  with a device on *each* plane would still be worth a dump: whether one
+  login serves both is still unmeasured.
 - **Error messages as a schema leak.** Confirmed, and it needs no write:
   `compatible-rooms` answers 400 naming the parameter it wanted and whether the
   value was valid, which is how `protocol` and `deviceType` were mapped above.

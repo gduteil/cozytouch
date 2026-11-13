@@ -34,6 +34,7 @@ from .hub import (
     MIN_POLL_INTERVAL,
     POLL_INTERVAL_OPTION,
 )
+from .pagosa import CannotConnect as OverkizUnreachable, PagosaHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,8 +57,33 @@ async def validate_input(hass: HomeAssistant, data: dict) -> CozytouchAccount:
     return account
 
 
+async def account_devices(hass: HomeAssistant, data: dict) -> list[dict]:
+    """Every device the account can add : Cozytouch's, else its Pagosas.
+
+    The Pagosa is not in the setup view ; when that holds no device, the
+    Overkiz plane is asked, as 1.4-pagosa did. InvalidAuth for a refused
+    password, CannotConnect when neither answers. See pagosa/.
+    """
+    try:
+        account = await validate_input(hass, data)
+    except CannotConnect:
+        devices = []
+    else:
+        devices = account.device_summaries()
+    if devices:
+        return devices
+
+    hub = PagosaHub(hass, data["username"], data["password"])
+    try:
+        return await hub.pagosa_summaries()
+    except OverkizUnreachable as err:
+        raise CannotConnect from err
+    finally:
+        await hub.async_close()
+
+
 def _device_options(
-    devices: list[dict], taken: set[int]
+    devices: list[dict], taken: set[int | str]
 ) -> list[selector.SelectOptionDict]:
     """The devices left to add, as a picker lists them.
 
@@ -73,7 +99,7 @@ def _device_options(
     ]
 
 
-def _devices_taken(entry: ConfigEntry) -> set[int]:
+def _devices_taken(entry: ConfigEntry) -> set[int | str]:
     """The device ids this entry already has a subentry for."""
     return {
         subentry.data["deviceId"]
@@ -133,7 +159,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                account = await validate_input(self.hass, user_input)
+                devices = await account_devices(self.hass, user_input)
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except CannotConnect:
@@ -155,7 +181,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                     "username": user_input["username"],
                     "password": user_input["password"],
                 }
-                self._devices = account.device_summaries()
+                self._devices = devices
 
                 return await self.async_step_devices()
 
@@ -170,7 +196,8 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
     async def async_step_devices(self, user_input=None):
         """Pick which devices on the account get entities."""
         if user_input is not None:
-            chosen = {int(deviceId) for deviceId in user_input["devices"]}
+            # A string : a Pagosa's id is its Overkiz device URL.
+            chosen = set(user_input["devices"])
 
             return self.async_create_entry(
                 title=self._credentials["username"],
@@ -182,7 +209,7 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 subentries=[
                     _subentry_for(device)
                     for device in self._devices
-                    if device["deviceId"] in chosen
+                    if str(device["deviceId"]) in chosen
                 ],
             )
 
@@ -276,7 +303,7 @@ class DeviceSubentryFlowHandler(ConfigSubentryFlow):
         # Read once and kept across the submit. See docs/decisions.md.
         if self._devices is None:
             try:
-                account = await validate_input(self.hass, dict(entry.data))
+                devices = await account_devices(self.hass, dict(entry.data))
             except InvalidAuth:
                 # The stored password has gone stale. Saying so beats an empty
                 # device list, and the reauth dialog is one poll away.
@@ -284,17 +311,16 @@ class DeviceSubentryFlowHandler(ConfigSubentryFlow):
             except CannotConnect:
                 return self.async_abort(reason="cannot_connect")
 
-            self._devices = account.device_summaries()
+            self._devices = devices
 
         options = _device_options(self._devices, taken=_devices_taken(entry))
         if not options:
             return self.async_abort(reason="no_new_devices")
 
         if user_input is not None:
-            deviceId = int(user_input["device"])
             device = next(
                 device for device in self._devices
-                if device["deviceId"] == deviceId
+                if str(device["deviceId"]) == user_input["device"]
             )
             subentry = _subentry_for(device)
 

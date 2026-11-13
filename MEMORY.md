@@ -19,8 +19,24 @@ overturn one, edit the line here in the same pull request.
   implemented from `mmnlfrrr/cozytouch`'s ACI HYB capture and never seen
   answering here. Capability 164 gates it : the Navizone reads 0 and is never
   asked, the fork's Duralis 1040. `docs/decisions.md`, *Consumption*.
-- **The Overkiz plane is empty for us.** The token mints an Overkiz JWT, but
-  `enduserAPI/login` answers 401. `docs/api-surface.md`.
+- **The Overkiz plane depends on the hardware, not the token.** The same
+  routes answer 401 at `enduserAPI/login` for the Navizone account and 200
+  for an account with a Sauter Pagosa (IO water heater), whose heater is on
+  Overkiz only. `docs/api-surface.md`.
+- **An Overkiz session closes after about five idle minutes** ; a request
+  keeps it open, and a second login does not end the first. The Pagosa hub
+  polls at 240 s for that. 2026-11-09, one Pagosa account, `docs/decisions.md`,
+  *The Pagosa through Overkiz*.
+- **Overkiz rations the Pagosa's full `/setup`, not its commands** : 429
+  with a Retry-After of ~84 200 s once a day at one read every 240 s, and a
+  command accepted five minutes later. The hub polls the device states and
+  keeps one deadline per kind. 2026-11-13, `docs/decisions.md`, *The
+  Pagosa's request quota*.
+- **A Pagosa programming is both slots in one command** : Overkiz refuses
+  `slot1` alone (HTTP 400), a single slot is `slot2` at 00:00-00:00, and the
+  heater renumbers its slots longest first. `setElectricalExtraManagement`
+  is accepted and ignored. 2026-11-13, `docs/decisions.md`, *The Pagosa's
+  time slots*.
 - **`productId` classifies a device, not `modelId`** -- the vendor app resolves
   on the pair (own `productId`, parent's `productId`). `docs/decisions.md`.
 - **100022 is the firmware family's mode mask, not the device's** ; 166 narrows

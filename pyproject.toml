@@ -114,6 +114,10 @@ known-first-party = ["homeassistant", "custom_components", "tests"]
 # A scraped table, kept in the vendor's own spelling. Five of the Alfea names
 # run past 88 columns; wrapping them would be editing the data.
 "custom_components/cozytouch/model_catalogue.py" = ["E501"]
+# The Pagosa package is 1.4-pagosa's code carried as it ran on a real heater,
+# not rewritten to this tree's style : see pagosa/__init__.py. TID252 because
+# a subpackage reaches the integration's constants through its parent.
+"custom_components/cozytouch/pagosa/*" = ["TID252", "E501", "RUF046", "PERF401"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"

@@ -786,6 +786,16 @@
                 "duration": { "name": "Duration", "description": "How long the absence lasts from its start, instead of an end." }
             }
         },
+        "set_programming_slots": {
+            "name": "Set the water heater's time slots",
+            "description": "Writes the Sauter Pagosa's two time slots in one command. Leave the second slot empty for a single slot.",
+            "fields": {
+                "slot1_start":  { "name": "Slot 1 start", "description": "When the first slot begins." },
+                "slot1_end":    { "name": "Slot 1 end", "description": "When the first slot ends. A slot may run past midnight." },
+                "slot2_start":  { "name": "Slot 2 start", "description": "When the second slot begins. Left empty with its end, there is no second slot." },
+                "slot2_end":    { "name": "Slot 2 end", "description": "When the second slot ends." }
+            }
+        },
         "set_schedule": {
             "name": "Set a day program",
             "description": "Writes the same time program to one or more days, for heating or cooling.",

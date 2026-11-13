@@ -797,6 +797,16 @@
                 "duration": { "name": "Durée", "description": "Combien de temps dure l'absence à partir de son début, à la place d'une fin." }
             }
         },
+        "set_programming_slots": {
+            "name": "Régler les plages du chauffe-eau",
+            "description": "Écrit les deux plages horaires du Sauter Pagosa en une seule commande. Laissez la deuxième plage vide pour une plage unique.",
+            "fields": {
+                "slot1_start":  { "name": "Début de la plage 1", "description": "Quand la première plage commence." },
+                "slot1_end":    { "name": "Fin de la plage 1", "description": "Quand la première plage se termine. Une plage peut passer minuit." },
+                "slot2_start":  { "name": "Début de la plage 2", "description": "Quand la deuxième plage commence. Laissée vide avec sa fin, il n'y a pas de deuxième plage." },
+                "slot2_end":    { "name": "Fin de la plage 2", "description": "Quand la deuxième plage se termine." }
+            }
+        },
         "set_schedule": {
             "name": "Programmer une journée",
             "description": "Écrit le même programme horaire sur un ou plusieurs jours, pour le chauffage ou le refroidissement.",

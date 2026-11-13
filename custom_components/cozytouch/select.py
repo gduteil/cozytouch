@@ -8,6 +8,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import pagosa
 from .const import DOMAIN, SERVICE_VALUES, narrowed_modes
 from .hub import (
     CozytouchConfigEntry,
@@ -52,6 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
+    await pagosa.async_setup_platform("select", config_entry, async_add_entities)
     add_capability_entities(
         config_entry,
         async_add_entities,

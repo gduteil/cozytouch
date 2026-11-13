@@ -17,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import pagosa
 from .const import DOMAIN, PROGRAM_BLOCKS, WRITABLE_PROGRAM_BLOCKS
 from .hub import CozytouchConfigEntry, CozytouchDeviceEntity, Hub
 from .services import build_matrix, in_charge_at, parse_slots, slot_limit, where_stored
@@ -35,8 +36,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
+    await pagosa.async_setup_platform("calendar", config_entry, async_add_entities)
     for subentry_id in config_entry.subentries:
-        hub = config_entry.runtime_data.hubs[subentry_id]
+        hub = config_entry.runtime_data.hubs.get(subentry_id)
+        if hub is None:
+            continue  # a Pagosa : pagosa/ sets it up
 
         calendars = [
             CozytouchProgramCalendar(

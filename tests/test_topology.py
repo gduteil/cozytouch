@@ -328,6 +328,7 @@ def test_the_cloud_sensor_describes_the_same_device_as_everything_else():
     sensor._title = "Cozytouch"
     sensor._device_uniq_id = "def456"
 
-    expected = device_info_for(hub, "def456") | {"name": "Cozytouch"}
+    expected = device_info_for(hub, "def456")
+    expected["name"] = "Cozytouch"
 
     assert sensor.device_info == expected

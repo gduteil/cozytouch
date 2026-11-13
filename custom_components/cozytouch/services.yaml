@@ -110,3 +110,28 @@ clear_away_mode:
     entity:
       integration: cozytouch
       domain: switch
+
+set_programming_slots:
+  target:
+    entity:
+      integration: cozytouch
+      domain: time
+  fields:
+    slot1_start:
+      required: true
+      example: "11:00"
+      selector:
+        time:
+    slot1_end:
+      required: true
+      example: "19:00"
+      selector:
+        time:
+    slot2_start:
+      example: "01:56"
+      selector:
+        time:
+    slot2_end:
+      example: "06:56"
+      selector:
+        time:
