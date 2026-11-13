@@ -1,24 +1,99 @@
 # Cozytouch — fork Sauter Pagosa
 
-**En bref :** ce fork de [gduteil/cozytouch](https://github.com/gduteil/cozytouch)
-(version 2026.10) ajoute le **chauffe-eau thermodynamique Sauter / Atlantic Pagosa**,
-que l'intégration d'origine ne voit pas : il n'est pas dans la partie Cozytouch du
-compte, mais sur la plateforme **Overkiz** d'Atlantic, accessible avec les mêmes
-identifiants. Le code Pagosa est dans `custom_components/cozytouch/pagosa/` ; le reste
-est l'intégration d'origine, inchangée pour les autres appareils.
+Ce fork de [gduteil/cozytouch](https://github.com/gduteil/cozytouch) (version
+2026.10) ajoute le **chauffe-eau thermodynamique Sauter / Atlantic Pagosa**.
+L'intégration d'origine ne le voit pas : il n'est pas dans la partie Cozytouch
+du compte, mais sur la plateforme **Overkiz** d'Atlantic, que l'on atteint avec
+les mêmes identifiants. Le code Pagosa est dans
+`custom_components/cozytouch/pagosa/` ; le reste est l'intégration d'origine,
+inchangée pour les autres appareils.
 
-Fonctions : mode automatique ou manuel, consigne et mode Eco (en manuel), Boost de
-1 à 7 jours, absence de 48 h minimum avec calendrier et date de fin modifiable,
-programmation, date et heure, capteurs (températures, temps de fonctionnement,
-consommation d'énergie pour le tableau Énergie), boutons d'actualisation.
+Testé sur un Sauter Pagosa 270 L, Home Assistant 2026.11. Un seul appareil :
+ce qui est écrit ici a été vu sur celui-là.
+
+## 💧 Ce que vous obtenez
+
+Un appareil « chauffe-eau » avec une cinquantaine d'entités :
+
+| | |
+| --- | --- |
+| 🎛️ **Pilotage** | mode automatique ou manuel, mode Eco (pompe à chaleur seule), consigne, Boost de 1 à 7 jours |
+| ✈️ **Absence** | interrupteur, durée, date de fin modifiable, calendrier de l'absence |
+| 🕑 **Plages horaires** | les deux plages de chauffe, et l'action `cozytouch.set_programming_slots` pour les régler d'un coup |
+| 🌡️ **Mesures** | température de l'eau, températures de consigne (confort, éco, hors gel, sécurité) |
+| ⚡ **Énergie** | consommation électrique totale et par tarif (pour le tableau Énergie), consommation d'eau |
+| ⏱️ **Usure** | heures de fonctionnement de la pompe à chaleur et de l'appoint électrique (résistance) |
+| 🔧 **Diagnostic** | erreur en cours, signal radio, date et heure de l'appareil, configuration (extraction, Smart Grid, anti-légionellose) |
+| 🔄 **Boutons** | relire le mode, les températures, la programmation, l'absence, le Boost |
+
+## 🕑 Régler les plages horaires
+
+Le Pagosa chauffe dans deux plages horaires. L'appli Sauter demande **8 h au
+total par jour**. Pour les changer depuis une automatisation, utilisez l'action
+plutôt que les entités « Programmation 1 / 2 » :
+
+```yaml
+action: cozytouch.set_programming_slots
+target:
+  entity_id: time.chauffe_eau_programmation_1_debut   # n'importe quelle entité du Pagosa
+data:
+  slot1_start: "01:56"   # heures creuses de nuit
+  slot1_end: "06:56"
+  slot2_start: "13:56"   # facultatif : sans slot2, une seule plage
+  slot2_end: "16:56"
+```
+
+Pourquoi l'action :
+
+- **Une seule commande.** Les entités changent une heure à la fois : quatre
+  commandes, avec des plages bizarres entre deux.
+- **Le Pagosa renumérote ses plages** : la plus longue devient la plage 1.
+  « Programmation 1 » ne veut donc pas toujours dire la même plage.
+- **Une plage unique** s'écrit avec la deuxième à 00:00-00:00 ; Overkiz refuse
+  une plage envoyée seule. L'action le fait pour vous.
+- Une plage peut passer minuit (22:00-06:00).
+
+Le changement apparaît dans Home Assistant quelques minutes après l'envoi, le
+temps que le chauffe-eau le renvoie.
+
+## ⚠️ Bon à savoir
+
+- **Absence de 48 h minimum.** Le Pagosa refuse une absence plus courte.
+  L'absence est appliquée par le cloud Atlantic à partir de ses dates, avec
+  environ **une heure de décalage** : réglez-la à l'avance. La fin d'absence
+  dans le passé l'arrête.
+- **Mode Eco refusé pendant une absence** : c'est le chauffe-eau qui le refuse.
+- **La résistance n'est pas pilotable.** Le réglage « Gestion appoint
+  électrique » est accepté par Overkiz mais ignoré par le Pagosa. Le chauffe-eau
+  lance la résistance tout seul s'il voit qu'il ne finira pas avant la fin de sa
+  plage (par exemple après une absence, eau froide, plage trop courte). Pour
+  rester en pompe à chaleur seule : des plages assez longues. Le compteur
+  « Temps de fonctionnement appoint électrique » permet de vérifier.
+- **Rythme de lecture : toutes les 4 minutes.** Overkiz ferme une session
+  inactive au bout de 5 minutes et rationne la lecture complète de
+  l'installation : l'intégration lit les états du chauffe-eau à chaque fois et
+  l'installation complète une fois par heure.
+- **Une commande peut échouer en silence** : relisez l'état après une commande
+  importante.
+
+Le détail (mesures, dates, ce qui a été essayé) est dans
+[docs/decisions.md](docs/decisions.md), section *The Pagosa through Overkiz*.
+
+## 📦 Installation du fork
+
+HACS installe la branche par défaut du dépôt, pas celle-ci : installez à la
+main. Copiez `custom_components/cozytouch` de la branche `pagosa-2026.10` dans
+`config/custom_components/cozytouch`, puis redémarrez Home Assistant. Ajoutez
+ensuite l'intégration Cozytouch avec vos identifiants Sauter : le Pagosa est
+trouvé tout seul.
+
+Ne mettez pas à jour cette intégration depuis HACS : la version d'origine
+écraserait le code Pagosa.
 
 **Mise à jour depuis la branche `pagosa-1.4` :** l'entrée est convertie au format
-compte + appareil à la première ouverture ; les entités gardent leurs identifiants
-et leur historique. Faites une **sauvegarde complète** avant : la conversion ne se
-défait pas en recopiant l'ancienne version.
-
-Testé sur un Sauter Pagosa 270 L (Home Assistant 2026.11.0, mise à jour depuis
-`pagosa-1.4` le 08/11/2026 : entités, absence et commandes vérifiées).
+compte + appareil à la première ouverture ; les entités gardent leurs
+identifiants et leur historique. Faites une **sauvegarde complète** avant : la
+conversion ne se défait pas en recopiant l'ancienne version.
 
 ---
 
