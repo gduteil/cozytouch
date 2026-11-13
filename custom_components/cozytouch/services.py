@@ -36,6 +36,7 @@ SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_GET_SCHEDULE = "get_schedule"
 SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_CLEAR_AWAY_MODE = "clear_away_mode"
+SERVICE_SET_PROGRAMMING_SLOTS = "set_programming_slots"
 
 # Shortcuts the day picker offers next to the seven days. Expanded here rather
 # than in the frontend, so a YAML automation gets them too.
@@ -117,6 +118,27 @@ SET_AWAY_MODE_SCHEMA = vol.All(
 )
 
 CLEAR_AWAY_MODE_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_ids})
+
+SET_PROGRAMMING_SLOTS_SCHEMA = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_ids,
+        vol.Required("slot1_start"): cv.time,
+        vol.Required("slot1_end"): cv.time,
+        vol.Inclusive("slot2_start", "slot2"): cv.time,
+        vol.Inclusive("slot2_end", "slot2"): cv.time,
+    }
+)
+
+
+def requested_slots(data: dict) -> list[tuple[str, str]]:
+    """The (start, end) pairs a set_programming_slots call stands for."""
+    names = [("slot1_start", "slot1_end")]
+    if "slot2_start" in data:
+        names.append(("slot2_start", "slot2_end"))
+    return [
+        (data[start].strftime("%H:%M"), data[end].strftime("%H:%M"))
+        for start, end in names
+    ]
 
 # Where a window with no start begins, as the switch does.
 AWAY_MODE_LEAD = timedelta(minutes=1)
@@ -330,8 +352,8 @@ def slot_limit(hub) -> int:
     return min(limit, MAX_SLOTS)
 
 
-def _resolve_hub(hass: HomeAssistant, entity_id: str):
-    """Find the hub behind an entity."""
+def _owning_entry(hass: HomeAssistant, entity_id: str):
+    """The loaded Cozytouch entry behind an entity, with its registry entry."""
     registry_entry = er.async_get(hass).async_get(entity_id)
     if registry_entry is None:
         raise ServiceValidationError(
@@ -354,6 +376,13 @@ def _resolve_hub(hass: HomeAssistant, entity_id: str):
             f"The Cozytouch entry behind {entity_id} is not loaded ({entry.state})"
         )
 
+    return entry, registry_entry
+
+
+def _resolve_hub(hass: HomeAssistant, entity_id: str):
+    """Find the hub behind an entity."""
+    entry, registry_entry = _owning_entry(hass, entity_id)
+
     # A device is a subentry of its account, and the hub that drives it is
     # keyed on that subentry. An entity with no subentry is one this
     # integration did not build under the shape it builds them today.
@@ -362,6 +391,20 @@ def _resolve_hub(hass: HomeAssistant, entity_id: str):
         raise ServiceValidationError(
             f"{entity_id} is not attached to a Cozytouch device this entry "
             "drives; remove it and add the device again"
+        )
+
+    return hub
+
+
+def _resolve_pagosa_hub(hass: HomeAssistant, entity_id: str):
+    """Find the Pagosa hub behind an entity, refusing any other device."""
+    entry, registry_entry = _owning_entry(hass, entity_id)
+    pagosa_hubs = getattr(entry.runtime_data, "pagosa_hubs", {})
+    hub = pagosa_hubs.get(registry_entry.config_subentry_id or "")
+    if hub is None:
+        raise ServiceValidationError(
+            f"{entity_id} is not on a Sauter Pagosa; target one of its time "
+            "slot entities"
         )
 
     return hub
@@ -468,6 +511,19 @@ def async_register_services(hass: HomeAssistant) -> None:
                     "says why"
                 )
 
+    async def async_set_programming_slots(call: ServiceCall) -> None:
+        """Write the Pagosa's time slots in one command."""
+        slots = requested_slots(call.data)
+        hubs = [
+            _resolve_pagosa_hub(hass, entity_id)
+            for entity_id in call.data["entity_id"]
+        ]
+        for hub in {id(hub): hub for hub in hubs}.values():
+            try:
+                await hub.async_set_programming_slots(slots)
+            except ValueError as err:
+                raise ServiceValidationError(str(err)) from err
+
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SCHEDULE, async_set_schedule, schema=SET_SCHEDULE_SCHEMA
     )
@@ -492,4 +548,11 @@ def async_register_services(hass: HomeAssistant) -> None:
         async_get_schedule,
         schema=GET_SCHEDULE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PROGRAMMING_SLOTS,
+        async_set_programming_slots,
+        schema=SET_PROGRAMMING_SLOTS_SCHEMA,
     )

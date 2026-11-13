@@ -480,6 +480,7 @@ def test_the_services_are_registered_once_for_every_config_entry(monkeypatch):
         "clear_away_mode",
         "get_schedule",
         "set_away_mode",
+        "set_programming_slots",
         "set_schedule",
     ]
 

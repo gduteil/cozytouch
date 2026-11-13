@@ -796,6 +796,16 @@
                 "duration": { "name": "Dauer", "description": "Wie lange die Abwesenheit ab ihrem Beginn dauert, anstelle eines Endes." }
             }
         },
+        "set_programming_slots": {
+            "name": "Zeitfenster des Warmwasserbereiters festlegen",
+            "description": "Schreibt die beiden Zeitfenster des Sauter Pagosa in einem Befehl. Das zweite Zeitfenster leer lassen für ein einziges Zeitfenster.",
+            "fields": {
+                "slot1_start":  { "name": "Beginn Zeitfenster 1", "description": "Wann das erste Zeitfenster beginnt." },
+                "slot1_end":    { "name": "Ende Zeitfenster 1", "description": "Wann das erste Zeitfenster endet. Ein Zeitfenster darf über Mitternacht gehen." },
+                "slot2_start":  { "name": "Beginn Zeitfenster 2", "description": "Wann das zweite Zeitfenster beginnt. Zusammen mit seinem Ende leer gelassen, gibt es kein zweites Zeitfenster." },
+                "slot2_end":    { "name": "Ende Zeitfenster 2", "description": "Wann das zweite Zeitfenster endet." }
+            }
+        },
         "set_schedule": {
             "name": "Ein Tagesprogramm festlegen",
             "description": "Schreibt dasselbe Zeitprogramm auf einen oder mehrere Tage, für Heizen oder Kühlen.",

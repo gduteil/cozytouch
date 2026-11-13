@@ -49,6 +49,26 @@ def is_overkiz_device_id(deviceId) -> bool:
     return isinstance(deviceId, str) and "://" in deviceId
 
 
+# Overkiz refuses a programming without slot2, so a single slot is written
+# with this second one ; see docs/decisions.md, *The Pagosa's time slots*.
+NO_SLOT = {"start": "00:00", "end": "00:00"}
+
+
+def programming_slots(slots: list[tuple[str, str]]) -> dict:
+    """The setProgrammingSlots value for one or two (start, end) slots."""
+    if not 1 <= len(slots) <= 2:
+        raise ValueError("The Pagosa takes one or two time slots")
+
+    value: dict = {}
+    for number, (start, end) in enumerate(slots, start=1):
+        if start == end:
+            raise ValueError(f"Time slot {number} starts and ends at {start}")
+        value[f"slot{number}"] = {"start": start, "end": end}
+
+    value.setdefault("slot2", dict(NO_SLOT))
+    return value
+
+
 class CannotConnect(exceptions.HomeAssistantError):
     """The Overkiz plane could not be reached, or holds no Pagosa."""
 
@@ -1074,6 +1094,26 @@ class PagosaHub(DataUpdateCoordinator):
             operation,
             None,
             "Pagosa Absence duration",
+        )
+
+    async def async_set_programming_slots(
+        self, slots: list[tuple[str, str]]
+    ) -> None:
+        """Write both time slots in one command."""
+        value = programming_slots(slots)
+
+        async def operation():
+            await self.async_execute_overkiz_command(
+                "setProgrammingSlots",
+                [value],
+                label="Pagosa programmation",
+                refresh=False,
+            )
+
+        await self.async_run_pagosa_operation(
+            operation,
+            {"io:ProgrammingSlotsState": value},
+            "Pagosa time slots",
         )
 
     # ------------------------------------------------------------------

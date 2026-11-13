@@ -796,6 +796,16 @@
                 "duration": { "name": "Durata", "description": "Quanto dura l'assenza dal suo inizio, al posto di una fine." }
             }
         },
+        "set_programming_slots": {
+            "name": "Impostare le fasce dello scaldacqua",
+            "description": "Scrive le due fasce orarie del Sauter Pagosa in un solo comando. Lasciare vuota la seconda fascia per una fascia unica.",
+            "fields": {
+                "slot1_start":  { "name": "Inizio della fascia 1", "description": "Quando inizia la prima fascia." },
+                "slot1_end":    { "name": "Fine della fascia 1", "description": "Quando finisce la prima fascia. Una fascia può superare la mezzanotte." },
+                "slot2_start":  { "name": "Inizio della fascia 2", "description": "Quando inizia la seconda fascia. Se lasciata vuota con la sua fine, non c'è una seconda fascia." },
+                "slot2_end":    { "name": "Fine della fascia 2", "description": "Quando finisce la seconda fascia." }
+            }
+        },
         "set_schedule": {
             "name": "Impostare un programma giornaliero",
             "description": "Scrive lo stesso programma orario su uno o più giorni, per riscaldamento o raffrescamento.",

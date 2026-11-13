@@ -796,6 +796,16 @@
                 "duration": { "name": "Duración", "description": "Cuánto dura la ausencia desde su inicio, en lugar de un fin." }
             }
         },
+        "set_programming_slots": {
+            "name": "Ajustar las franjas del calentador",
+            "description": "Escribe las dos franjas horarias del Sauter Pagosa en un solo comando. Deje vacía la segunda franja para una franja única.",
+            "fields": {
+                "slot1_start":  { "name": "Inicio de la franja 1", "description": "Cuándo empieza la primera franja." },
+                "slot1_end":    { "name": "Fin de la franja 1", "description": "Cuándo termina la primera franja. Una franja puede pasar la medianoche." },
+                "slot2_start":  { "name": "Inicio de la franja 2", "description": "Cuándo empieza la segunda franja. Si se deja vacía con su fin, no hay segunda franja." },
+                "slot2_end":    { "name": "Fin de la franja 2", "description": "Cuándo termina la segunda franja." }
+            }
+        },
         "set_schedule": {
             "name": "Definir un programa diario",
             "description": "Escribe el mismo programa horario en uno o varios días, para calefacción o refrigeración.",

@@ -4668,6 +4668,34 @@ Absence (06/11 20:24 to 13/11 12:27), then `0`. So a flag at `on` with a
 duration of `0` reads as over, for the switch and for every command that
 carries the flags. One heater, one Absence. `tests/test_pagosa_absence_guard.py`.
 
+### The Pagosa's time slots
+
+The heater keeps two time slots, `io:ProgrammingSlotsState`, written whole
+by `setProgrammingSlots`. Read on the user's account on 2026-11-13 :
+
+- A value holding `slot1` alone is refused before it reaches the heater :
+  HTTP 400, the driver failing on a nil `start` (it reads `slot2`). With
+  `slot2` at 00:00-00:00 beside it, the command is COMPLETED and the heater
+  reports that single slot a few minutes later. 00:00-00:00 is also what
+  other Atlantic water heaters report for an unused slot (the overkiz
+  fixtures of Home Assistant core and python-overkiz-api), where a slot also
+  runs past midnight (22:00-06:00).
+- The heater renumbers its slots, the longer one becoming `slot1` : seen on
+  06/11 (2-7 before 14-18), 09/11 at 04:25 (10-18 moved to `slot1`) and
+  13/11 (2:00-9:30 moved to `slot1` twelve minutes after being written as
+  `slot2`). A time entity changes one boundary of one numbered slot, so an
+  automation going through them can move the wrong slot, and each change is
+  a command of its own, with an odd slot in between.
+- The vendor app asks for eight hours of slots a day, in total. Whether the
+  heater refuses less was not tried, so nothing here checks it.
+
+So the `set_programming_slots` action writes both slots in one command, an
+absent second slot as 00:00-00:00, and the time entities are left as they
+were. `setElectricalExtraManagement deactive` (said to stop the electric
+backup, as one CETHI V4 in the python-overkiz-api fixtures reports) was
+COMPLETED on the same heater and the state stayed `auto` : nothing offers it.
+One heater, one evening. `tests/test_pagosa_slots.py`.
+
 ### Why the entities are carried rather than rewritten
 
 1.4-pagosa's entities were tuned against the Pagosa's execution history (what

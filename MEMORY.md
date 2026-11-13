@@ -32,6 +32,11 @@ overturn one, edit the line here in the same pull request.
   command accepted five minutes later. The hub polls the device states and
   keeps one deadline per kind. 2026-11-13, `docs/decisions.md`, *The
   Pagosa's request quota*.
+- **A Pagosa programming is both slots in one command** : Overkiz refuses
+  `slot1` alone (HTTP 400), a single slot is `slot2` at 00:00-00:00, and the
+  heater renumbers its slots longest first. `setElectricalExtraManagement`
+  is accepted and ignored. 2026-11-13, `docs/decisions.md`, *The Pagosa's
+  time slots*.
 - **`productId` classifies a device, not `modelId`** -- the vendor app resolves
   on the pair (own `productId`, parent's `productId`). `docs/decisions.md`.
 - **100022 is the firmware family's mode mask, not the device's** ; 166 narrows
