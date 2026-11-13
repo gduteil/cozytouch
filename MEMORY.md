@@ -27,6 +27,11 @@ overturn one, edit the line here in the same pull request.
   keeps it open, and a second login does not end the first. The Pagosa hub
   polls at 240 s for that. 2026-11-09, one Pagosa account, `docs/decisions.md`,
   *The Pagosa through Overkiz*.
+- **Overkiz rations the Pagosa's full `/setup`, not its commands** : 429
+  with a Retry-After of ~84 200 s once a day at one read every 240 s, and a
+  command accepted five minutes later. The hub polls the device states and
+  keeps one deadline per kind. 2026-11-13, `docs/decisions.md`, *The
+  Pagosa's request quota*.
 - **`productId` classifies a device, not `modelId`** -- the vendor app resolves
   on the pair (own `productId`, parent's `productId`). `docs/decisions.md`.
 - **100022 is the firmware family's mode mask, not the device's** ; 166 narrows

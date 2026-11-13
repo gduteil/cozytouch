@@ -15,8 +15,9 @@ from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 import logging
 import time
+from urllib.parse import quote
 
-from aiohttp import ClientSession, FormData
+from aiohttp import ClientError, ClientSession, FormData
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +40,8 @@ PAGOSA_MODEL = "Sauter Pagosa 270L"
 OVERKIZ_UPDATE_INTERVAL = 240  # see docs/decisions.md
 OVERKIZ_MIN_REFRESH_INTERVAL = 30
 OVERKIZ_DEFAULT_RETRY_DELAY = 300
+OVERKIZ_MAX_RETRY_DELAY = 3600  # see docs/decisions.md
+OVERKIZ_FULL_SETUP_INTERVAL = 3600  # see docs/decisions.md
 
 
 def is_overkiz_device_id(deviceId) -> bool:
@@ -97,6 +100,8 @@ class PagosaHub(DataUpdateCoordinator):
 
         self._overkiz_last_setup_refresh = 0.0
         self._overkiz_retry_after = 0.0
+        self._overkiz_command_retry_after = 0.0
+        self._overkiz_last_full_setup = 0.0
         self._overkiz_refresh_lock = asyncio.Lock()
         self._overkiz_auth_lock = asyncio.Lock()
 
@@ -335,7 +340,9 @@ class PagosaHub(DataUpdateCoordinator):
             self._is_overkiz = True
             self._deviceId = self._overkiz_device.get("deviceURL")
             self._overkiz_last_setup_refresh = time.monotonic()
+            self._overkiz_last_full_setup = self._overkiz_last_setup_refresh
             self._overkiz_retry_after = 0.0
+            self._overkiz_command_retry_after = 0.0
             self.online = True
 
             _LOGGER.info(
@@ -479,24 +486,79 @@ class PagosaHub(DataUpdateCoordinator):
 
         return OVERKIZ_DEFAULT_RETRY_DELAY
 
-    def _record_overkiz_rate_limit(self, response, context: str) -> int:
-        """Record the server's rate-limit delay."""
-        delay = self._get_retry_delay(response)
-        self._overkiz_retry_after = max(
-            self._overkiz_retry_after,
-            time.monotonic() + delay,
+    def _record_overkiz_rate_limit(
+        self, response, context: str, command: bool = False
+    ) -> int:
+        """Record the server's rate-limit delay, capped, for one kind of request.
+
+        A 429 on the setup only holds back the polls, and one on a command only
+        the commands : Overkiz answers them separately (docs/decisions.md).
+        """
+        asked = self._get_retry_delay(response)
+        delay = min(asked, OVERKIZ_MAX_RETRY_DELAY)
+        attribute = (
+            "_overkiz_command_retry_after" if command else "_overkiz_retry_after"
+        )
+        setattr(
+            self,
+            attribute,
+            max(getattr(self, attribute, 0.0), time.monotonic() + delay),
         )
         _LOGGER.warning(
-            "Overkiz rate limit reached during %s (HTTP 429). "
+            "Overkiz rate limit reached during %s (HTTP 429, Retry-After %s s). "
             "Next request allowed in %s seconds",
             context,
+            asked,
             delay,
         )
         return delay
 
     def _overkiz_rate_limit_remaining(self) -> int:
-        """Return remaining rate-limit delay in seconds."""
+        """Return the remaining delay before the next setup poll, in seconds."""
         return max(0, int(self._overkiz_retry_after - time.monotonic()))
+
+    def _overkiz_command_rate_limit_remaining(self) -> int:
+        """Return the remaining delay before the next command, in seconds."""
+        return max(
+            0,
+            int(getattr(self, "_overkiz_command_retry_after", 0.0) - time.monotonic()),
+        )
+
+    async def _refresh_overkiz_device_states(self) -> bool | None:
+        """Read the heater's and the meter's states without the whole setup.
+
+        Returns True when both were read, False when Overkiz refused (429, the
+        poll backs off) and None when the full setup should be read instead.
+        """
+        devices = [self._overkiz_device, self._overkiz_energy_device]
+        read: list[list] = []
+        for device in devices:
+            if not device or not device.get("deviceURL"):
+                read.append([])
+                continue
+            url = (
+                self._overkiz_host
+                + OVERKIZ_API
+                + "/setup/devices/"
+                + quote(device["deviceURL"], safe="")
+                + "/states"
+            )
+            async with self._session.get(url) as response:
+                if response.status == 429:
+                    self._record_overkiz_rate_limit(response, "states refresh")
+                    return False
+                if response.status != 200:
+                    return None
+                states = await response.json(content_type=None)
+            if not isinstance(states, list):
+                return None
+            read.append(states)
+
+        for device, states in zip(devices, read, strict=True):
+            if device and states:
+                device["states"] = states
+        self._read_overkiz_states_from_setup()
+        return True
 
     async def _refresh_overkiz_setup(
         self,
@@ -522,6 +584,25 @@ class PagosaHub(DataUpdateCoordinator):
                     elapsed,
                 )
                 return False
+
+            if (
+                self._overkiz_device
+                and time.monotonic() - self._overkiz_last_full_setup
+                < OVERKIZ_FULL_SETUP_INTERVAL
+            ):
+                try:
+                    light = await self._refresh_overkiz_device_states()
+                except (ClientError, TimeoutError, ValueError):
+                    _LOGGER.debug(
+                        "Overkiz states refresh failed; reading the setup",
+                        exc_info=True,
+                    )
+                    light = None
+                if light is not None:
+                    if light:
+                        self._overkiz_last_setup_refresh = time.monotonic()
+                        self.online = True
+                    return light
 
             for attempt in range(2):
                 try:
@@ -562,6 +643,7 @@ class PagosaHub(DataUpdateCoordinator):
                         return False
 
                     self._overkiz_last_setup_refresh = time.monotonic()
+                    self._overkiz_last_full_setup = self._overkiz_last_setup_refresh
                     self.online = True
                     return True
 
@@ -635,7 +717,7 @@ class PagosaHub(DataUpdateCoordinator):
                 "The Pagosa Overkiz device is not connected"
             )
 
-        remaining = self._overkiz_rate_limit_remaining()
+        remaining = self._overkiz_command_rate_limit_remaining()
         if remaining:
             raise exceptions.HomeAssistantError(
                 f"Overkiz rate limit is active. Retry in {remaining} seconds"
@@ -678,7 +760,7 @@ class PagosaHub(DataUpdateCoordinator):
         )
 
         for attempt in range(2):
-            remaining = self._overkiz_rate_limit_remaining()
+            remaining = self._overkiz_command_rate_limit_remaining()
             if remaining:
                 raise exceptions.HomeAssistantError(
                     f"Overkiz rate limit is active. Retry in {remaining} seconds"
@@ -707,7 +789,7 @@ class PagosaHub(DataUpdateCoordinator):
 
                     if response.status == 429:
                         delay = self._record_overkiz_rate_limit(
-                            response, f"command {command}"
+                            response, f"command {command}", command=True
                         )
                         raise exceptions.HomeAssistantError(
                             f"Overkiz rate limit reached. Retry in {delay} seconds"

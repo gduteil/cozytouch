@@ -4615,6 +4615,37 @@ the probe was stopped there ; the hub's own `/setup` never did. One account,
 one heater, on `ha110-1`. 240 leaves a minute of margin, rather than probing
 the limit closer on the user's account.
 
+### The Pagosa's request quota
+
+The full `/setup` read every 240 s answered 429 about once a day on the
+user's account : 2026-11-11 22:20, 2026-11-12 01:34 (a restart in between
+read it again straight away) and 21:29, each time with a Retry-After of
+about 84 200 s. The hub kept a single deadline for every Overkiz request, so
+for 23 hours it refused every command as well, the Pagosa's Absence included,
+and the states it showed stopped moving. Five minutes after a restart threw
+that deadline away, Overkiz carried out a command (`setAwayModeDuration` 0,
+13/11 12:19) : the quota that ran out was the setup's, not the commands'.
+
+So, since 2026-11-13 :
+
+- A poll reads the heater's states and the meter's,
+  `GET /setup/devices/<device URL>/states`, and the whole setup only once an
+  hour (`OVERKIZ_FULL_SETUP_INTERVAL`) or when that answer is not a list.
+  That is 2 small requests every 240 s and 24 setups a day, where it was 360
+  setups.
+- A 429 holds back only its own kind : the setup and states polls on one
+  deadline, the commands on another.
+- A Retry-After is obeyed up to an hour (`OVERKIZ_MAX_RETRY_DELAY`) : past
+  that the cost of a day without commands is worse than one more refused
+  request an hour.
+
+The limits : one account, one heater, on `ha110-1`. Whether the states
+endpoint has a quota of its own was not measured ; if it answers 429, the
+poll backs off the same way. Whether 84 200 s is a daily window or a ban
+counted from the last refused request is not known either, so the hourly
+retry is what will tell. `tests/test_pagosa_overkiz_limits.py` pins the
+three rules.
+
 ### Why the entities are carried rather than rewritten
 
 1.4-pagosa's entities were tuned against the Pagosa's execution history (what
