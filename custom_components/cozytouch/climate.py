@@ -24,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SERVICE_OFF, narrowed_modes
-from .hub import CozytouchConfigEntry, Hub, add_capability_entities
+from .hub import CozytouchConfigEntry, Hub, add_capability_entities, device_of
 from .infos import CapabilityType
 from .sensor import CozytouchSensor
 
@@ -264,6 +264,16 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         here is one optional feature, guarded by whether the device reported
         the id behind it.
         """
+        # A poll that comes back without this device, or with its mode left
+        # empty, has nothing to cast : hold the last values rather than raise
+        # on every listener until the entry is reloaded, as the sensors do.
+        if (
+            device_of(self.coordinator) is None
+            or self.coordinator.get_capability_value(self._capability.capabilityId)
+            is None
+        ):
+            return
+
         # HVAC Mode
         if "systemServiceCapabilityId" in self._capability:
             self._attr_hvac_modes = self._offered_modes()
