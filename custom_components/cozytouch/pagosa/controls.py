@@ -42,7 +42,19 @@ def _is_manual(hub: Hub) -> bool:
 
 
 def _is_absent(hub: Hub) -> bool:
-    return hub._get_current_operating_mode().get("absence") == "on"
+    """The heater says absent and Atlantic still holds a period not yet over.
+
+    The heater's own flag alone stayed "on" for hours after the period ended,
+    and Eco was refused for it (docs/decisions.md, *Absence read as over*).
+    """
+    if hub._get_current_operating_mode().get("absence") != "on":
+        return False
+    absence = (getattr(hub, "_setup", None) or {}).get("absence") or {}
+    try:
+        end = int(absence.get("endDate"))
+    except (TypeError, ValueError):
+        return False
+    return end > time.time()
 
 
 def _require_manual(hub: Hub, what: str) -> None:

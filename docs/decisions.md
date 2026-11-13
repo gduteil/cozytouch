@@ -4646,6 +4646,19 @@ counted from the last refused request is not known either, so the hourly
 retry is what will tell. `tests/test_pagosa_overkiz_limits.py` pins the
 three rules.
 
+### Absence read as over
+
+Eco and the setpoint used to be refused whenever the heater's
+`core:OperatingModeState` read `absence: on`. On 2026-11-13 that flag still
+read `on` for hours after the Absence ended (`setAwayModeDuration` 0
+COMPLETED at 12:19, the Atlantic period empty, the vendor app showing the
+heater in auto mode, the heat pump drawing about 400 W), because the
+heater's states on Overkiz had stopped moving at 04:22 ; Eco was refused
+before any request left. The guard now needs both the flag and an Atlantic
+period whose end is still ahead. Anything less goes to the heater, which
+refuses Eco itself during an Absence. One heater, one day ; why its states
+froze is not known. `tests/test_pagosa_absence_guard.py`.
+
 ### Why the entities are carried rather than rewritten
 
 1.4-pagosa's entities were tuned against the Pagosa's execution history (what
