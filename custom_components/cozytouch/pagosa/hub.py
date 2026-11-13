@@ -974,9 +974,17 @@ class PagosaHub(DataUpdateCoordinator):
         if not isinstance(current, dict):
             current = {}
 
+        absence = str(current.get("absence", "off")).lower()
+        # The flag stays "on" after an Absence ended ; the duration does not.
+        # See docs/decisions.md, *Absence read as over*.
+        if absence == "on" and str(
+            self.get_overkiz_state("io:AwayModeDurationState", "")
+        ) == "0":
+            absence = "off"
+
         return {
             "relaunch": str(current.get("relaunch", "off")).lower(),
-            "absence": str(current.get("absence", "off")).lower(),
+            "absence": absence,
         }
 
     async def _set_operating_mode_flag(

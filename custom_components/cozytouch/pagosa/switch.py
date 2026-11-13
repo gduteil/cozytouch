@@ -170,10 +170,7 @@ class PagosaOperatingModeSwitch(PagosaBaseSwitch):
     @property
     def is_on(self) -> bool:
         """Return whether Absence mode is active."""
-        operating_mode = self._hub.get_overkiz_state(
-            "core:OperatingModeState",
-            {},
-        )
+        operating_mode = self._hub._get_current_operating_mode()
 
         if not isinstance(operating_mode, dict):
             return False

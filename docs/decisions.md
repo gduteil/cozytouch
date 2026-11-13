@@ -4656,8 +4656,17 @@ heater in auto mode, the heat pump drawing about 400 W), because the
 heater's states on Overkiz had stopped moving at 04:22 ; Eco was refused
 before any request left. The guard now needs both the flag and an Atlantic
 period whose end is still ahead. Anything less goes to the heater, which
-refuses Eco itself during an Absence. One heater, one day ; why its states
-froze is not known. `tests/test_pagosa_absence_guard.py`.
+refuses Eco itself during an Absence.
+
+The states had not frozen, as first read : `core:DateTimeState` is sent
+once a day, about 04:22, every day from 08/11 to 13/11, and the mode and
+Eco did move that afternoon. Only the Absence flag stays behind, because
+`setCurrentOperatingMode` with `absence: off` is always refused
+(ERRORCOMMAND) and `setAwayModeDuration` 0 is what ends it.
+`io:AwayModeDurationState` follows the heater : `always` for the whole
+Absence (06/11 20:24 to 13/11 12:27), then `0`. So a flag at `on` with a
+duration of `0` reads as over, for the switch and for every command that
+carries the flags. One heater, one Absence. `tests/test_pagosa_absence_guard.py`.
 
 ### Why the entities are carried rather than rewritten
 
