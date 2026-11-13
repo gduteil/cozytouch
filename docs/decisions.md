@@ -1009,6 +1009,10 @@ exactly when something else holds it. So 106000 is named
 to `THERMOSTAT` -- which is to say, offered as a device, since the config flow
 filters on `ZONE` and nothing else.
 
+*Overturned by issue #219* : the setpoint half was wrong (c88 read 20.0 with
+106000 at 1), and every circuit is now offered. See *Every heating circuit is
+a device*, below.
+
 The name is ours. The vendor's app has no capability 106000 in its enum and no
 `ProductType` covering 55-57 at all, so it neither confirms nor contradicts
 this; it builds an unknown device for these circuits and never polls them. The
@@ -1023,6 +1027,75 @@ be written.
 A device with no capabilities yet stays `ZONE`. That is the state between
 setup and the first poll, and a device offered on the strength of nothing is
 worse than one offered a poll later.
+
+### Every heating circuit is a device, driven by a room or not (issue #219)
+
+The entry above kept a circuit a room drives (106000 = 1) out of the device
+list, as the room's double, on the reading that such a circuit holds 0 as its
+setpoint. Issue #219 is an Alfea Excellia S (1691) whose room-driven circuit
+reads 19 = 29.57, then 24.6, then 20.5, each matching the setpoint the heat
+pump's own display showed at the time, while the room's setpoint stayed at
+20.5. The reporter runs Smart Adapt, so 19 there is the water-law flow
+setpoint the heat pump works out -- not a room temperature, and on no room
+slot. They want it for the heat pump's COP against the water asked for.
+
+The corpus already said as much and nobody looked. Every captured circuit,
+read again for this :
+
+| circuit | 106000 | 19 | 109 |
+| ------- | ------ | -- | --- |
+| issue #110, `Chambres` | 1 | 0.0 | 23.07 |
+| issue #93 | 1 | 0.0 | 22.49 |
+| gduteil i63 | 1 | 0.0 | 27.48 |
+| gduteil c125 | 1 | 0.0 | 23.65 |
+| gduteil c88 | 1 | 20.0 | 31.09 |
+| issue #219 | 1 | 29.57 | 30.75 |
+| issue #110, `Pièces de vie` | 0 | 20.0 | 22.28 |
+| gduteil i142 | 0 | 20.0 | 26.49 |
+
+So "0 exactly when something else holds it" was false at c88 already, and
+the double was never one : 109, the circuit's own water temperature, is real
+on all eight and reported by no room. What 19 reads at 0 is most likely a
+circuit with nothing asked of it ; no capture pairs the two to say so.
+
+So a `TESC` circuit is a device as soon as it reports anything, and 106000
+decides nothing. Offered is not added : the config flow still asks, so an
+existing install gains an entry in the list and no entity. A circuit added
+gets 19 and 109 as read-only temperatures and no climate, as above.
+
+Gating on 19 not being 0, as the issue suggests, was not taken : a circuit
+with nothing asked of it reads 0, and the device would come and go with the
+hour it was polled.
+
+The vendor's catalogue says the same in its own words, and had all along :
+19 is `TESC1_NrjFlowSetpointRequest`, *"the NRJ flow setpoint in circuit
+1"*, read-only (`accessType` 3) ; 109 is `GENERATOR_WaterOut1`, the flow
+water temperature. And 106000 is `TESC_RoomPresent`, *"the number of Room
+managed in the Heating Circuit"*, unit `nb` -- a count, not the flag the
+row read it as. Every capture has it at 0 or 1, so nothing displayed was
+wrong yet ; a circuit managing two rooms would have read as off. The row is
+now `circuit_room_count`, an integer, still a diagnostic and off by
+default. Being a new platform, it is a new entity : the old binary sensor
+is left behind in the registry, disabled, as it was.
+
+The circuit is renamed `Water circuit` while it is here. Offered beside the
+room slot that drives it, it would have carried the same name -- the dump
+reads `Heating circuit (#1)` on both, since a room behind an Alfea is
+already called that. The room is the circuit's control and the one people
+have on their dashboards, so it keeps the name ; the circuit is the water
+side, which is what it reports. Renaming changes only what is displayed,
+for the one circuit already added anywhere (#110's `Pièces de vie`) ; the
+unique ids do not move.
+
+The reporter's dump (2026-11-13, integration 2026.11.2) shows the circuit
+the way this change finds it : `TESC_0` reading 19 = 29.66, 109 = 28.82,
+106000 = 1, typed `ZONE`, and absent from the entry's devices. Their app
+draws two tiles, the room (`chauffage`, setpoint and ambient, BASIC / PROG)
+and the water heater, and nothing for the circuit -- so read-only is what
+the app offers too, which is nothing.
+
+Limits. That 19 reads 0 for want of demand is inferred, not measured.
+Nothing here was checked on hardware : the maintainer has no heat pump.
 
 ## `custom_components/cozytouch/climate.py`
 

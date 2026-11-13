@@ -3288,8 +3288,9 @@ CAPABILITIES: dict[int, Entity] = {
     # off by default: it is read to decide whether the circuit is a device of
     # its own, and it is nobody's control.
     106000: Entity(
-        name="circuit_driven_by_room",
-        type=CapabilityType.BINARY,
+        # TESC_RoomPresent : how many rooms the circuit manages, not a flag.
+        name="circuit_room_count",
+        type=CapabilityType.INT,
         category=CapabilityCategory.DIAG,
         enabled_by_default=False,
         icon="mdi:home-thermometer",

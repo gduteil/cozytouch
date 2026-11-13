@@ -695,7 +695,7 @@ MODEL_GROUPS = [
         {
             "modelId": 1388,
             "HVACModesCapabilityId": {7, 8},
-            "name": "Heating circuit (#1)",
+            "name": "Water circuit (#1)",
             "type": CozytouchDeviceType.ZONE,
             "HVACModes": {},
         },
@@ -705,7 +705,7 @@ MODEL_GROUPS = [
         {
             "modelId": 1390,
             "HVACModesCapabilityId": {7, 8},
-            "name": "Heating circuit (#3)",
+            "name": "Water circuit (#3)",
             "type": CozytouchDeviceType.ZONE,
             "HVACModes": {},
         },
@@ -1374,9 +1374,9 @@ def test_a_heating_circuit_slot_is_named_after_its_zone():
     """
     assert (
         get_model_infos(1388, zoneName="Circuit 1")["name"]
-        == "Heating circuit (Circuit 1)"
+        == "Water circuit (Circuit 1)"
     )
-    assert get_model_infos(1389)["name"] == "Heating circuit (#2)"
+    assert get_model_infos(1389)["name"] == "Water circuit (#2)"
 
 
 def test_the_generator_slot_is_the_generator_under_another_name():

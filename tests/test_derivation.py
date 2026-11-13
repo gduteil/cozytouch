@@ -12,6 +12,8 @@ recorded in docs/decisions.md. What matters here is the order of authority :
 the table first, the device second, and never the other way round.
 """
 
+import pytest
+
 from custom_components.cozytouch.model import (
     CozytouchDeviceType,
     get_device_model_infos,
@@ -179,15 +181,17 @@ def test_a_device_the_catalogue_does_not_name_reads_as_the_api_calls_it():
     assert infos["type"] is CozytouchDeviceType.WATER_HEATER
 
 
-def circuit(deviceId, modelId, driven_by_room):
+def circuit(deviceId, modelId, driven_by_room, setpoint=None):
     """A TESC heating circuit slot, as issue #110's account reports one."""
+    if setpoint is None:
+        setpoint = "0.0" if driven_by_room else "20.0"
     return {
         "deviceId": deviceId,
         "modelId": modelId,
         "productId": modelId - 1333,
         "name": "",
         "capabilities": [
-            {"capabilityId": 19, "value": "0.0" if driven_by_room else "20.0"},
+            {"capabilityId": 19, "value": setpoint},
             {"capabilityId": 109, "value": "22.28"},
             {"capabilityId": 106000, "value": "1" if driven_by_room else "0"},
         ],
@@ -200,28 +204,40 @@ def test_a_circuit_that_holds_its_own_setpoint_is_a_device():
     filters, so it was invisible everywhere -- and it is the only control that
     circuit has.
 
-    The device says which it is. 106000 reads 1 on the five circuits in the
-    corpus that have a room slot and 0 on the two that do not, and the
-    setpoint agrees: 0 where a room holds it, a real temperature where the
-    circuit does. See docs/decisions.md.
+    See docs/decisions.md.
     """
     alone = circuit(1, 1389, driven_by_room=False)
 
     assert get_device_model_infos([alone], alone, "Pièces de vie") == {
         **get_device_model_infos([alone], alone, "Pièces de vie"),
         "type": CozytouchDeviceType.THERMOSTAT,
-        "name": "Heating circuit (Pièces de vie)",
+        "name": "Water circuit (Pièces de vie)",
     }
 
 
-def test_a_circuit_a_room_drives_stays_out_of_the_way():
-    """Offering it would put the same circuit on the account twice."""
-    doubled = circuit(1, 1388, driven_by_room=True)
+@pytest.mark.parametrize(
+    "setpoint",
+    [
+        # #110, #93, gduteil/cozytouch#63 and #125 : nothing asked of it.
+        "0.0",
+        # gduteil/cozytouch#88 and issue #219 : the water setpoint the heat
+        # pump works out, which #219 matched to its own display.
+        "29.57",
+    ],
+)
+def test_a_circuit_a_room_drives_is_a_device_too(setpoint):
+    """It was kept out as the room's double. It is not one : its water
+    temperature (109) and the water setpoint the heat pump computes (19) are
+    on no room slot, and issue #219 wants them. Offered is not added -- the
+    config flow still asks. See docs/decisions.md.
+    """
+    driven = circuit(1, 1388, driven_by_room=True, setpoint=setpoint)
 
-    assert (
-        get_device_model_infos([doubled], doubled, "Chambres")["type"]
-        is CozytouchDeviceType.ZONE
-    )
+    infos = get_device_model_infos([driven], driven, "Chambres")
+
+    assert infos["type"] is CozytouchDeviceType.THERMOSTAT
+    assert infos["name"] == "Water circuit (Chambres)"
+    assert infos["HVACModes"] == {}
 
 
 def test_a_circuit_with_no_capabilities_yet_stays_out_of_the_way():
@@ -231,3 +247,26 @@ def test_a_circuit_with_no_capabilities_yet_stays_out_of_the_way():
     infos = get_model_infos(1389)
 
     assert infos["type"] is CozytouchDeviceType.ZONE
+
+
+def test_a_circuit_and_the_room_that_drives_it_are_told_apart():
+    """Issue #219's account : an Alfea Excellia S, its circuit, and the room
+    slot that drives it. The room is the heating circuit's control and keeps
+    that name ; the circuit carries the water, and both were called
+    "Heating circuit (#1)" once the circuit was offered.
+    """
+    alfea = {"deviceId": 6, "modelId": 1691, "productId": 54, "name": "ALFEA"}
+    driven = circuit(7, 1388, driven_by_room=True, setpoint="29.66") | {
+        "masterDeviceId": 6
+    }
+    room = {
+        "deviceId": 8,
+        "modelId": 557,
+        "productId": 26,
+        "masterDeviceId": 6,
+        "name": "ROOM_0",
+    }
+    devices = [alfea, driven, room]
+
+    assert get_device_model_infos(devices, driven)["name"] == "Water circuit (#1)"
+    assert get_device_model_infos(devices, room)["name"] == "Heating circuit (#1)"

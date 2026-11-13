@@ -61,6 +61,12 @@ overturn one, edit the line here in the same pull request.
 - **105906/105907 are a charge in %**, the setpoint restated (catalogue),
   read-only and off : the Lineo 1959 reads 75, its app shows no V40.
   `docs/decisions.md`, *The V40 setpoints are read-only percentages*.
+- **Every heating circuit (TESC) is a device**, room-driven or not : 109 is
+  its own water temperature, on no room ; on a room-driven circuit 19 is the
+  flow setpoint the heat pump computes, 0 when nothing is asked (#219,
+  gduteil c88). 106000 is a count of rooms (`TESC_RoomPresent`) and decides
+  nothing. The circuit is `Water circuit`, the room behind an Alfea keeps
+  `Heating circuit`. `docs/decisions.md`.
 - **Atlantic named eleven hot-water ids once**, on gduteil/cozytouch#129
   (234-288). Check that list before reverse-engineering an id in that range.
 

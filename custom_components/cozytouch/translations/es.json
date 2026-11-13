@@ -479,7 +479,7 @@
             "away_mode_start":          { "name": "Inicio del modo ausencia" },
             "away_mode_stop":           { "name": "Fin del modo ausencia" },
             "ble_pairing_compatibility": { "name": "Compatibilidad de emparejamiento BLE" },
-            "circuit_driven_by_room":   { "name": "Circuito controlado por una habitación" },
+            "circuit_room_count":       { "name": "Habitaciones en el circuito" },
             "product_type":             { "name": "Tipo de producto" },
             "boiler_water_temperature": { "name": "Temperatura del agua de caldera" },
             "boost_mode":               { "name": "Modo Boost" },
