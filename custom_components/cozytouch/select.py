@@ -8,6 +8,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .capability import describe_capability_value
 from .const import DOMAIN, SERVICE_VALUES, declared_dhw_modes, narrowed_modes
 from .hub import (
     CozytouchConfigEntry,
@@ -98,7 +99,8 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
                 ),
             )
 
-        self.options = list(self._list.values())
+        self._choices = list(self._list.values())
+        self.options = self._choices
         self.current_option = self.options[0]
 
     async def async_select_option(self, option: str) -> None:
@@ -118,9 +120,21 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
             value = int(
                 self.coordinator.get_capability_value(self._capability.capabilityId)
             )
-            self.current_option = self._list.get(value)
         except ValueError:
             return
+
+        option = self._list.get(value)
+        if option is None:
+            option = describe_capability_value(self._capability.capabilityId, value)
+        self.current_option = option
+
+        # Home Assistant shows no option it does not list, so a speed the
+        # device runs but does not offer joins the list while it runs. See
+        # docs/decisions.md.
+        if option is None or option in self._choices:
+            self.options = self._choices
+        else:
+            self.options = [*self._choices, option]
 
 
 class CozytouchDurationSelect(SelectEntity, CozytouchSensor):

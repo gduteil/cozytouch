@@ -487,15 +487,48 @@ def heated_only(thermalGenerator: str | None) -> bool:
     return mask > 0 and not mask & ~ELECTRIC_GENERATORS
 
 
+# What 100800 and 350 declare : one value naming a whole set of speeds, the
+# same five sets on both. See docs/decisions.md.
+SPEED_SETS: dict[int, tuple[str, ...]] = {
+    0: ("low", "medium", "high"),
+    1: ("low", "high"),
+    2: ("low", "medium", "high", "auto"),
+    3: ("low", "high", "auto"),
+    4: ("auto",),
+}
+
+# Where each speed table's set is declared.
+_SPEED_SET_IDS = {"fanModes": 100800, "AirCirculationSpeeds": 350}
+
+
+def declared_speeds(table: dict[int, str], speedSet: str | None) -> dict[int, str]:
+    """The speeds of a table that the device's speed set names.
+
+    The table stays the vocabulary -- which value writes which speed -- and the
+    device picks from it. A set the device does not report, or one outside
+    0-4, leaves the table whole.
+    """
+    if speedSet is None:
+        return table
+    try:
+        names = SPEED_SETS.get(int(float(speedSet)))
+    except ValueError:
+        return table
+    if names is None:
+        return table
+    return {value: speed for value, speed in table.items() if speed in names}
+
+
 def apply_capabilities(
     modelInfos: ModelInfos, capabilities: dict[int, str]
 ) -> None:
     """Let the device have the last word about itself.
 
-    Two readings, both of them the device's own. It reports capability 100022
+    Three readings, all of them the device's own. It reports capability 100022
     as a bitmask over the mode values, which is a complete answer and needs no
-    table ; and if it reports none of the capabilities its modes would arrive
-    on, it has no modes at all whatever any table says. See docs/decisions.md.
+    table ; if it reports none of the capabilities its modes would arrive on,
+    it has no modes at all whatever any table says ; and 100800 and 350 say
+    which of the fan and air-circulation speeds it runs. See docs/decisions.md.
     """
     # An empty list is a device whose capabilities have not arrived yet --
     # `account.py` creates one that way and fills it on the first poll -- and
@@ -527,6 +560,15 @@ def apply_capabilities(
         modelInfos.quietModeAvailable = False
         modelInfos.swingModeAvailable = False
         modelInfos.coolingAvailable = False
+
+    for key, capabilityId in _SPEED_SET_IDS.items():
+        if key not in modelInfos:
+            continue
+        speeds = declared_speeds(modelInfos[key], capabilities.get(capabilityId))
+        if speeds:
+            modelInfos[key] = speeds
+        else:
+            modelInfos.pop(key)
 
     if not modelInfos.HVACModes:
         return

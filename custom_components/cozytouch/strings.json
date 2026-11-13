@@ -237,7 +237,9 @@
                 {
                     "low": "Low",
                     "medium": "Medium",
-                    "high": "High"
+                    "high": "High",
+                    "quiet": "Quiet",
+                    "auto": "Auto"
                 }
             },
             "air_circulation_total_time": { "name": "Air Circulation Total Time" },

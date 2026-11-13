@@ -24,7 +24,7 @@ from .infos import (
     ModelInfos,
     TimestampInfos,
 )
-from .model import CozytouchDeviceType
+from .model import SPEED_SETS, CozytouchDeviceType
 
 # Both report the same ids and mean the same things by them, so the rows that
 # differ from the default differ together. See capability.py for why the API
@@ -104,13 +104,7 @@ _VENTILATION_CONTROL_BITS = (
 # The speed selectors name a whole set rather than one speed, so each value
 # spells its set out. A third mechanism next to the two tables above, and the
 # app's own: `buildListFromValue`. See docs/decisions.md.
-_SPEED_SETS = {
-    "0": "low, medium, high",
-    "1": "low, high",
-    "2": "low, medium, high, auto",
-    "3": "low, high, auto",
-    "4": "auto",
-}
+_SPEED_SETS = {str(value): ", ".join(speeds) for value, speeds in SPEED_SETS.items()}
 
 
 def hidden_by_a_calendar(capabilityId: int, availableCapabilityIds: set[int]) -> bool:
@@ -2997,6 +2991,7 @@ CAPABILITIES: dict[int, Entity] = {
         # and arrives switched off. See docs/decisions.md.
         enabled_by_default=False,
         icon="mdi:fan",
+        reads_as={"1": "low", "2": "medium", "3": "high", "4": "quiet", "5": "auto"},
         extra={
             "modelList": "AirCirculationSpeeds",
         },

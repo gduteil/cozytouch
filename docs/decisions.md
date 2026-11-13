@@ -1582,8 +1582,10 @@ thing, and why `reads_as` is not called `values`.
 
 `SpeedAirMixingState` and `VentilationSpeedMode` carry the same table, and
 **`4` returns the auto speed alone** -- it used to read here as "on, auto",
-which no capture contradicted because no capture has ever shown a 4. The
-whole corpus reads 0 on 350 and 2 on 100800.
+which no capture contradicted because no capture has ever shown a 4. Every
+capture that reports them reads 0 on 350 and 2 on 100800. The HUB Navizone
+rooms report 350 but neither 100800 nor 100801, so their climate has no
+fan mode at all (diagnostics of 2026-11-13).
 
 The app also has a fallback : a value outside 0-4 yields the full set, and
 a *different* full set per id (air mixing includes the quiet speed,
@@ -1591,6 +1593,26 @@ ventilation does not). That is not reproduced. An unknown value is left
 undescribed, so the raw number reaches the entity -- on a diagnostic
 sensor whose reason to exist is investigating unknown hardware, the number
 is worth more than a guessed set.
+
+**The sets pick the speeds** (issue #208). The app builds a room's fan
+speeds from 100800 and its air-circulation speeds from 350, with no
+per-model table ; here `apply_capabilities` does the same with
+`SPEED_SETS`. The tables `fanModes` and `AirCirculationSpeeds` stay as the
+vocabulary -- which value writes which speed -- and the set picks from
+them. No set reported, or one outside 0-4, keeps the table whole, which is
+the app's fallback too. Since every capture that reports them reads 2 and
+0, which are the tables exactly, no device seen so far changes.
+
+Air circulation offers low, medium and high only. Its table has no auto
+and no quiet, so a set naming auto (2, 3) does not add it as a choice, and
+4 leaves a fan that runs or does not : there is no capture of a 350 other
+than 0 to say what writing 5 to 102004 does. What 102004 *reads* is wider
+: the catalogue's `THAMB_FanSpeedRecirculationMode` has 4 quiet and 5
+auto, so the row says so in `reads_as`. Home Assistant shows no select
+option it does not list, so the select adds the speed the unit runs to its
+options while it runs it, and drops it when the unit moves back to a
+choice. Picking it rewrites nothing. The fan cannot show it : quiet and
+auto are not a point on a percentage, and its percentage reads unknown.
 
 ### `FAN_MODES` / `SWING_MODES` : global vocabularies, not model data
 

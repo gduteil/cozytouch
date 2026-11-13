@@ -237,7 +237,9 @@
                 {
                     "low": "Baja",
                     "medium": "Media",
-                    "high": "Alta"
+                    "high": "Alta",
+                    "quiet": "Silencioso",
+                    "auto": "Auto"
                 }
             },
             "air_circulation_total_time": { "name": "Duración total de la circulación de aire" },

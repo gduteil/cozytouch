@@ -237,7 +237,9 @@
                 {
                     "low": "Lente",
                     "medium": "Moyenne",
-                    "high": "Rapide"
+                    "high": "Rapide",
+                    "quiet": "Silence",
+                    "auto": "Auto"
                 }
             },
             "air_circulation_total_time": { "name": "Durée Brassage Totale" },
