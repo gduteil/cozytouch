@@ -73,6 +73,9 @@
         }
     },
     "entity": {
+        "binary_sensor": {
+            "device_availability": { "name": "Disponible" }
+        },
         "calendar": {
             "heating_program":         { "name": "Programa de calefacción" },
             "cooling_program":         { "name": "Programa de refrigeración" },
@@ -224,9 +227,7 @@
             "target_temperature":         { "name": "Temperatura de consigna" },
             "target_temperature_dhw":     { "name": "Temperatura de consigna ACS" },
             "target_temperature_eco_z1":  { "name": "Temperatura de consigna Eco Z1" },
-            "target_temperature_comfort_z2":{ "name": "Consigna de confort Z2" },
-            "v40_applied_setpoint":       { "name": "Consigna V40 aplicada" },
-            "v40_setpoint_filled_by_user": { "name": "Consigna V40 introducida por el usuario" }
+            "target_temperature_comfort_z2":{ "name": "Consigna de confort Z2" }
         },
         "select": {
             "air_circulation_speed":
@@ -236,7 +237,9 @@
                 {
                     "low": "Baja",
                     "medium": "Media",
-                    "high": "Alta"
+                    "high": "Alta",
+                    "quiet": "Silencioso",
+                    "auto": "Auto"
                 }
             },
             "air_circulation_total_time": { "name": "Duración total de la circulación de aire" },
@@ -249,6 +252,7 @@
                 "state":
                 {
                     "manual": "Manual",
+                    "eco_comfort_schedule": "Programa Eco/Confort",
                     "eco_plus": "Eco+",
                     "prog": "Prog"
                 }
@@ -287,6 +291,7 @@
             "boost_duration_max":             { "name": "Duración máxima del boost" },
             "boost_duration_min":             { "name": "Duración mínima del boost" },
             "boost_duration_step":            { "name": "Paso de duración del boost" },
+            "boost_duration_supported":       { "name": "Duración del boost ajustable" },
             "boost_end_time":                 { "name": "Hora de fin del boost" },
             "boost_with_fan":                 { "name": "Boost con ventilación" },
             "boost_with_fan_duration":        { "name": "Duración del boost con ventilación" },
@@ -476,7 +481,7 @@
             "away_mode_start":          { "name": "Inicio del modo ausencia" },
             "away_mode_stop":           { "name": "Fin del modo ausencia" },
             "ble_pairing_compatibility": { "name": "Compatibilidad de emparejamiento BLE" },
-            "circuit_driven_by_room":   { "name": "Circuito controlado por una habitación" },
+            "circuit_room_count":       { "name": "Habitaciones en el circuito" },
             "product_type":             { "name": "Tipo de producto" },
             "boiler_water_temperature": { "name": "Temperatura del agua de caldera" },
             "boost_mode":               { "name": "Modo Boost" },
@@ -675,6 +680,8 @@
             "timezone":                 { "name": "Zona horaria" },
             "total_power_consumption":  { "name": "Consumo eléctrico total" },
             "unexpected_events":        { "name": "Eventos inesperados" },
+            "v40_applied_setpoint":     { "name": "Carga V40 objetivo" },
+            "v40_setpoint_filled_by_user": { "name": "Carga V40 objetivo del usuario" },
             "v40_water_available":      { "name": "Agua V40 disponible"},
             "v40_water_capacity":       { "name": "Capacidad de agua V40"},
             "version":                  { "name": "Versión" },
@@ -707,6 +714,17 @@
             "quiet_mode":         { "name": "Modo silencioso" },
             "schedule_anticipation": { "name": "Anticipación de la programación" },
             "swing_mode":         { "name": "Oscilación" }
+        },
+        "water_heater": {
+            "hot_water": {
+                "name": "Agua caliente",
+                "state": {
+                    "eco_comfort_schedule": "Programa Eco/Confort",
+                    "eco_plus": "Eco+",
+                    "manual":   "Manual",
+                    "prog":     "Prog"
+                }
+            }
         }
     },
     "device_automation": {
@@ -803,7 +821,7 @@
             "fields": {
                 "program":  { "name": "Programa", "description": "Calefacción o refrigeración." },
                 "days":     { "name": "Días", "description": "Los días que recibirán este programa. Todos los días, Días laborables y Fin de semana valen por los días que nombran." },
-                "slots":    { "name": "Franjas", "description": "Lista de pares hora/temperatura. La primera franja debe empezar a las 00:00, diez como máximo." }
+                "slots":    { "name": "Franjas", "description": "Lista de pares hora/temperatura. Hasta la primera franja se mantiene la última del día anterior. Diez como máximo." }
             }
         }
     }

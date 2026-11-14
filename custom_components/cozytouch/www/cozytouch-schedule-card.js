@@ -47,33 +47,43 @@ const STRINGS = {
   en: { save: "Save", reload: "Reload", loading: "Loading…",
         writing: "Writing…", written: "Written to the device",
         add: "Add a slot", remove: "Remove this slot",
-        midnight: "A day has to start at 00:00",
+        empty: "A day keeps at least one slot",
         duplicate: "Two slots cannot start at the same time",
-        full: "A day holds %s slots at most" },
+        full: "A day holds %s slots at most",
+        heating: "Heating program", cooling: "Cooling program",
+        hot_water: "Hot water program" },
   fr: { save: "Enregistrer", reload: "Recharger", loading: "Chargement…",
         writing: "Écriture…", written: "Écrit dans l'appareil",
         add: "Ajouter un créneau", remove: "Supprimer ce créneau",
-        midnight: "Une journée doit commencer à 00:00",
+        empty: "Une journée garde au moins un créneau",
         duplicate: "Deux créneaux ne peuvent pas commencer à la même heure",
-        full: "Un jour ne tient que %s créneaux" },
+        full: "Un jour ne tient que %s créneaux",
+        heating: "Programme chauffage", cooling: "Programme refroidissement",
+        hot_water: "Programme eau chaude" },
   es: { save: "Guardar", reload: "Recargar", loading: "Cargando…",
         writing: "Escribiendo…", written: "Escrito en el dispositivo",
         add: "Añadir una franja", remove: "Eliminar esta franja",
-        midnight: "El día tiene que empezar a las 00:00",
+        empty: "Un día conserva al menos una franja",
         duplicate: "Dos franjas no pueden empezar a la misma hora",
-        full: "Un día admite %s franjas como máximo" },
+        full: "Un día admite %s franjas como máximo",
+        heating: "Programa de calefacción", cooling: "Programa de refrigeración",
+        hot_water: "Programa de agua caliente" },
   de: { save: "Speichern", reload: "Neu laden", loading: "Wird geladen…",
         writing: "Wird geschrieben…", written: "Auf das Gerät geschrieben",
         add: "Zeitfenster hinzufügen", remove: "Dieses Zeitfenster entfernen",
-        midnight: "Ein Tag muss um 00:00 beginnen",
+        empty: "Ein Tag behält mindestens ein Zeitfenster",
         duplicate: "Zwei Zeitfenster können nicht gleichzeitig beginnen",
-        full: "Ein Tag fasst höchstens %s Zeitfenster" },
+        full: "Ein Tag fasst höchstens %s Zeitfenster",
+        heating: "Heizprogramm", cooling: "Kühlprogramm",
+        hot_water: "Warmwasserprogramm" },
   it: { save: "Salva", reload: "Ricarica", loading: "Caricamento…",
         writing: "Scrittura…", written: "Scritto sul dispositivo",
         add: "Aggiungi una fascia", remove: "Rimuovi questa fascia",
-        midnight: "Una giornata deve iniziare alle 00:00",
+        empty: "Una giornata tiene almeno una fascia",
         duplicate: "Due fasce non possono iniziare alla stessa ora",
-        full: "Un giorno tiene al massimo %s fasce" },
+        full: "Un giorno tiene al massimo %s fasce",
+        heating: "Programma di riscaldamento", cooling: "Programma di raffrescamento",
+        hot_water: "Programma acqua calda" },
 };
 
 const STYLE = `
@@ -91,8 +101,7 @@ const STYLE = `
   }
   ha-card { padding: 16px; border-radius: var(--radius); }
   h2 { font-size: 15px; font-weight: 600; letter-spacing: .01em;
-       margin: 0; text-transform: capitalize;
-       color: var(--primary-text-color); }
+       margin: 0; color: var(--primary-text-color); }
 
   /* The head is what the card says when it is closed : what the program is
    * asking for right now. The week is the editor behind it. */
@@ -121,13 +130,20 @@ const STYLE = `
   .slot { display: flex; align-items: center; height: var(--chip-height);
           border-radius: var(--chip-radius); padding: 0 2px 0 7px; color: rgba(0, 0, 0, .78);
           font-size: 12px; font-weight: 600; }
+  /* See docs/decisions.md, "Its fields are sized to what they hold". */
   .slot input { appearance: none; border: none; background: transparent;
                 font: inherit; color: inherit; padding: 0; }
-  .slot input[type=time] { width: 44px; min-width: 0; font-weight: 700;
+  .slot input[type=time] { width: 4.6em; min-width: 0; font-weight: 700;
                            opacity: .8; }
   .slot input[type=time]::-webkit-calendar-picker-indicator { display: none; }
-  .slot input[type=number] { width: 24px; min-width: 0; text-align: right;
+  .slot input[type=time]::-webkit-datetime-edit,
+  .slot input[type=time]::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+  .slot input[type=number] { width: 3em; min-width: 0; text-align: right;
                              margin-left: 6px; -moz-appearance: textfield; }
+  @supports (field-sizing: content) {
+    .slot input[type=time], .slot input[type=number] {
+      field-sizing: content; width: auto; }
+  }
   .slot input[type=number]::-webkit-inner-spin-button,
   .slot input[type=number]::-webkit-outer-spin-button { appearance: none; }
   .slot .unit { padding-right: 2px; }
@@ -168,9 +184,10 @@ const toClock = (minutes) =>
 
 const refuse = (code, message) => Object.assign(new Error(message), { code });
 
-/* The setpoint a day holds at a minute, which is the last slot before it. */
-export const inChargeAt = (slots, minute) => {
-  let held = null;
+/* The setpoint a day holds at a minute, which is the last slot before it,
+ * or `carried`, what the previous day ended on. See docs/decisions.md. */
+export const inChargeAt = (slots, minute, carried = null) => {
+  let held = carried;
   for (const slot of slots) {
     if (toMinutes(slot.time) <= minute) held = slot.temperature;
   }
@@ -184,17 +201,17 @@ export const nowInWeek = (date = new Date()) => ({
   minute: date.getHours() * 60 + date.getMinutes(),
 });
 
-/* The three rules build_matrix enforces, enforced here too so a day is
- * refused while it is still on screen rather than after Save has written the
- * six days before it.
+/* The rules build_matrix enforces, enforced here too so a day is refused
+ * while it is still on screen rather than after Save has written the six
+ * days before it.
  */
 const checked = (slots) => {
   const times = slots.map((slot) => slot.time);
+  if (times.length === 0) {
+    throw refuse("empty", "A day keeps at least one slot");
+  }
   if (new Set(times).size !== times.length) {
     throw refuse("duplicate", "Two slots cannot start at the same time");
-  }
-  if (!times.includes("00:00")) {
-    throw refuse("midnight", "A day has to start at 00:00");
   }
   return [...slots].sort((a, b) => toMinutes(a.time) - toMinutes(b.time));
 };
@@ -214,17 +231,21 @@ export const writeSlot = (slots, index, change) => {
 
 /* A new slot lands in the middle of the longest stretch the day leaves
  * empty, holding whatever was already in charge there : adding one should
- * change nothing until somebody sets it to something. */
-export const addSlot = (slots) => {
+ * change nothing until somebody sets it to something. Before the first slot
+ * that is `carried`, the previous day's last setpoint. */
+export const addSlot = (slots, carried = null) => {
   if (slots.length >= MAX_SLOTS) {
     throw refuse("full", `A day holds ${MAX_SLOTS} slots at most`);
   }
 
   const starts = slots.map((slot) => toMinutes(slot.time)).sort((a, b) => a - b);
-  const bounds = [...starts, 24 * 60];
+  // A day that starts later than 00:00 has a morning to fill too, held at
+  // whatever was carried into it.
+  const opens = starts.length && starts[0] > 0 && carried !== null;
+  const bounds = opens ? [0, ...starts, 24 * 60] : [...starts, 24 * 60];
   let widest = 0;
   let at = 0;
-  for (let index = 0; index < starts.length; index++) {
+  for (let index = 0; index < bounds.length - 1; index++) {
     const gap = bounds[index + 1] - bounds[index];
     if (gap > widest) {
       widest = gap;
@@ -239,7 +260,7 @@ export const addSlot = (slots) => {
 
   return checked([
     ...slots,
-    { time: toClock(at), temperature: inChargeAt(slots, at) },
+    { time: toClock(at), temperature: inChargeAt(slots, at, carried) },
   ]);
 };
 
@@ -380,7 +401,8 @@ class CozytouchScheduleCard extends CardBase {
 
     const [kind, message] = this._status.split("|");
     const days = DAYS.filter((day) => this._days[day]);
-    const title = this._config.title || `${this._config.program} program`;
+    const title =
+      this._config.title || this._t[this._config.program] || this._config.program;
     const body =
       days.length === 0 ? this._empty(kind, message) : this._week(days, kind, message);
 
@@ -405,12 +427,18 @@ class CozytouchScheduleCard extends CardBase {
     const { day, minute } = nowInWeek();
     const slots = this._days?.[day];
     if (!slots) return "";
-    const temperature = inChargeAt(slots, minute);
+    const temperature = inChargeAt(slots, minute, this._carriedInto(day));
     if (temperature === null) return "";
     return `<div class="now" style="background:${this._colour(temperature)}">
       <span class="at">${toClock(minute)}</span>
       <span>${temperature.toLocaleString(this._language)}°</span>
     </div>`;
+  }
+
+  /* What the day before `day` ends on, which holds until `day`'s first slot. */
+  _carriedInto(day) {
+    const previous = this._days?.[DAYS[(DAYS.indexOf(day) + 6) % 7]];
+    return previous?.length ? previous[previous.length - 1].temperature : null;
   }
 
   _empty(kind, message) {
@@ -434,9 +462,9 @@ class CozytouchScheduleCard extends CardBase {
     const slots = this._days[day];
     const chips = slots
       .map((slot, index) => {
-        // 00:00 is the one slot build_matrix insists on, so it has no
-        // remove button rather than a button that always refuses.
-        const fixed = slot.time === "00:00";
+        // A day keeps one slot, so the last has no remove button rather
+        // than a button that always refuses.
+        const fixed = slots.length === 1;
         return `<div class="slot ${fixed ? "fixed" : ""}"
                   style="background:${this._colour(slot.temperature)}">
           <input type="time" value="${slot.time}"
@@ -494,7 +522,9 @@ class CozytouchScheduleCard extends CardBase {
 
     root.querySelectorAll("[data-add]").forEach((el) =>
       el.addEventListener("click", () =>
-        this._apply(el.dataset.add, (slots) => addSlot(slots))
+        this._apply(el.dataset.add, (slots) =>
+          addSlot(slots, this._carriedInto(el.dataset.add))
+        )
       )
     );
 

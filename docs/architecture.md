@@ -521,8 +521,8 @@ Two services, and they are the same shape read in either direction.
 reads one back in the shape the first one takes. A day is a
 `[[minutes, temperature], …]` matrix of ten slots, unused ones `[0, 0]`, and
 the days are seven consecutive capability ids — 196 for heating Monday, 203
-for cooling Monday. The write validates that the first slot starts at 00:00,
-since otherwise the start of the day would have no target.
+for cooling Monday. A day need not start at 00:00 : before its first slot the
+previous day's last setpoint holds, as the Cozytouch app writes it (#210).
 
 The padding is the one thing to get right in both directions: `[0, 0]` ends
 the day, but a genuine midnight slot carries a setpoint, so a pair of zeroes

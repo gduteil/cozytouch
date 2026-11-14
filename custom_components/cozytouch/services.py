@@ -194,12 +194,6 @@ def build_matrix(slots: list[dict]) -> str:
     if len(set(minutes)) != len(minutes):
         raise ServiceValidationError("Two slots share the same time")
 
-    if minutes[0] != 0:
-        raise ServiceValidationError(
-            "The first slot must start at 00:00, otherwise the beginning of the "
-            "day would have no target temperature"
-        )
-
     matrix = [
         [minute, int(temperature) if temperature == int(temperature) else temperature]
         for minute, temperature in entries
@@ -239,9 +233,15 @@ def parse_slots(value: str | None, capabilityId: int | None = None) -> list[dict
     return slots
 
 
-def in_charge_at(slots: list[dict], moment: time) -> float | None:
-    """The setpoint a day holds at a time, which is the last slot before it."""
-    held = None
+def in_charge_at(
+    slots: list[dict], moment: time, carried: float | None = None
+) -> float | None:
+    """The setpoint a day holds at a time, which is the last slot before it.
+
+    Before a day's first slot that is `carried`, the previous day's last
+    setpoint : a day need not start at 00:00. See docs/decisions.md.
+    """
+    held = carried
     for slot in slots:
         if _as_time(slot["time"]) <= moment:
             held = slot["temperature"]
@@ -254,6 +254,7 @@ def apply_period(
     start: time | str,
     end: time | str,
     temperature: float,
+    carried: float | None = None,
 ) -> list[dict]:
     """Hold one temperature between two times, leaving the rest of the day.
 
@@ -265,6 +266,9 @@ def apply_period(
 
     Midnight as an end means the end of the day, since a stretch that runs to
     00:00 is the last one and has nothing to put back after it.
+
+    `carried` is what the previous day ended on, which is what holds before
+    a day's first slot when that slot is not at 00:00.
     """
     started, ended = _as_time(start), _as_time(end)
     closes_the_day = ended == time(0, 0)
@@ -275,7 +279,7 @@ def apply_period(
         )
 
     # Read before the edit : it is what the day held where the period stops.
-    held = in_charge_at(slots, ended)
+    held = in_charge_at(slots, ended, carried)
 
     kept = [
         {"time": _as_time(slot["time"]), "temperature": slot["temperature"]}
@@ -299,8 +303,8 @@ def apply_period(
 
     # A day holds ten slots, so a slot asking for what is already running is
     # not free : it is one fewer left for a period that would change
-    # something. The 00:00 slot is never the redundant one -- nothing runs
-    # before it.
+    # something. The first slot is never the redundant one -- the day keeps
+    # at least one.
     return [
         slot
         for index, slot in enumerate(ordered)

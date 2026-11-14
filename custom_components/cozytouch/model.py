@@ -18,6 +18,8 @@ Optional :
     * fanModes : list of value/mode pairs
     * swingModes : list of value/mode pairs
     * quietModeAvailable : enable quiet mode availability (default : False)
+    * swingModeAvailable : enable the swing switch (default : True)
+    * coolingAvailable : enable the cooling setpoint (default : True)
     * awayModeTemperatureAvailable : enable the absence setpoint (default : True)
     * ecoModeAvailable : enable eco mode availability (default : True)
 
@@ -255,8 +257,9 @@ DERIVED_FLAGS: dict[str | None, dict] = {
 # What a room is, given the interface it hangs off. Only the heating circuit
 # of an Alfea is told apart : behind every gateway a room is a room, which is
 # what the vendor's own client does -- one class for the lot, and the
-# capabilities decide what it offers. Nothing a slot reports says whether the
-# room holds a radiator or an air conditioner. See docs/decisions.md.
+# capabilities decide what it offers. The gateway does not say whether the
+# room holds a radiator or an air conditioner ; the room's 103026 does, and
+# `apply_capabilities` reads it. See docs/decisions.md.
 ROOM_BEHIND: dict[str | None, tuple[CozytouchDeviceType, dict, str, dict]] = {
     "CESA_V2_MAIN_COMPONENT": (
         CozytouchDeviceType.THERMOSTAT,
@@ -284,7 +287,7 @@ def product_type(productId: int | None) -> str | None:
 # not here because the interface they hang off decides their word too.
 SLOT_LABELS: dict[str, tuple[str, int]] = {
     "AIR_CONDITIONER_UI": ("Air Conditioner User Interface", 30),
-    "TESC": ("Heating circuit", 54),
+    "TESC": ("Water circuit", 54),
 }
 
 
@@ -466,15 +469,66 @@ MODEL_NAMES: dict[int, str] = {
 }
 
 
+# The generators of 103026 that are electric heaters, I2G variants included.
+# A room declaring nothing else has no compressor, fan or louver to drive.
+# See docs/decisions.md.
+ELECTRIC_GENERATORS = 16 | 32 | 64 | 128 | 256
+_HEATER_MODES = frozenset({HVACMode.OFF, HVACMode.HEAT})
+
+
+def heated_only(thermalGenerator: str | None) -> bool:
+    """Whether a room's 103026 names electric heaters and nothing else."""
+    if thermalGenerator is None:
+        return False
+    try:
+        mask = int(float(thermalGenerator))
+    except ValueError:
+        return False
+    return mask > 0 and not mask & ~ELECTRIC_GENERATORS
+
+
+# What 100800 and 350 declare : one value naming a whole set of speeds, the
+# same five sets on both. See docs/decisions.md.
+SPEED_SETS: dict[int, tuple[str, ...]] = {
+    0: ("low", "medium", "high"),
+    1: ("low", "high"),
+    2: ("low", "medium", "high", "auto"),
+    3: ("low", "high", "auto"),
+    4: ("auto",),
+}
+
+# Where each speed table's set is declared.
+_SPEED_SET_IDS = {"fanModes": 100800, "AirCirculationSpeeds": 350}
+
+
+def declared_speeds(table: dict[int, str], speedSet: str | None) -> dict[int, str]:
+    """The speeds of a table that the device's speed set names.
+
+    The table stays the vocabulary -- which value writes which speed -- and the
+    device picks from it. A set the device does not report, or one outside
+    0-4, leaves the table whole.
+    """
+    if speedSet is None:
+        return table
+    try:
+        names = SPEED_SETS.get(int(float(speedSet)))
+    except ValueError:
+        return table
+    if names is None:
+        return table
+    return {value: speed for value, speed in table.items() if speed in names}
+
+
 def apply_capabilities(
     modelInfos: ModelInfos, capabilities: dict[int, str]
 ) -> None:
     """Let the device have the last word about itself.
 
-    Two readings, both of them the device's own. It reports capability 100022
+    Three readings, all of them the device's own. It reports capability 100022
     as a bitmask over the mode values, which is a complete answer and needs no
-    table ; and if it reports none of the capabilities its modes would arrive
-    on, it has no modes at all whatever any table says. See docs/decisions.md.
+    table ; if it reports none of the capabilities its modes would arrive on,
+    it has no modes at all whatever any table says ; and 100800 and 350 say
+    which of the fan and air-circulation speeds it runs. See docs/decisions.md.
     """
     # An empty list is a device whose capabilities have not arrived yet --
     # `account.py` creates one that way and fills it on the first poll -- and
@@ -483,17 +537,38 @@ def apply_capabilities(
     if not capabilities:
         return
 
-    # A heating circuit whose setpoint is held by a room slot is that room's
-    # business, and offering it as a device of its own would put the same
-    # circuit on the account twice. One that holds its own is the only control
-    # there is, and was invisible until now (issue #110). The device says
-    # which it is on 106000. See docs/decisions.md.
+    # A heating circuit reports its own water side, which no room slot does,
+    # so it is offered as a device whether a room drives it or not (issues
+    # #110, #219). See docs/decisions.md.
     if modelInfos.type is CozytouchDeviceType.ZONE and modelInfos.name.startswith(
-        "Heating circuit"
+        "Water circuit"
     ):
-        if capabilities.get(106000) == "0":
-            modelInfos.type = CozytouchDeviceType.THERMOSTAT
+        modelInfos.type = CozytouchDeviceType.THERMOSTAT
         return
+
+    if modelInfos.type is CozytouchDeviceType.ROOM and heated_only(
+        capabilities.get(103026)
+    ):
+        # A room is a room, until it says what heats it. See docs/decisions.md.
+        modelInfos.HVACModes = {
+            value: mode
+            for value, mode in modelInfos.HVACModes.items()
+            if mode in _HEATER_MODES
+        }
+        modelInfos.pop("fanModes", None)
+        modelInfos.pop("swingModes", None)
+        modelInfos.quietModeAvailable = False
+        modelInfos.swingModeAvailable = False
+        modelInfos.coolingAvailable = False
+
+    for key, capabilityId in _SPEED_SET_IDS.items():
+        if key not in modelInfos:
+            continue
+        speeds = declared_speeds(modelInfos[key], capabilities.get(capabilityId))
+        if speeds:
+            modelInfos[key] = speeds
+        else:
+            modelInfos.pop(key)
 
     if not modelInfos.HVACModes:
         return

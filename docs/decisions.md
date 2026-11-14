@@ -133,10 +133,26 @@ and the point of this one is to always report something.
 
 ### Python is pinned down to the patch
 
-Not `"3.14"`. Home Assistant pins its Python floor that precisely — 2026.8.3
+Not `"3.14"`. Home Assistant pins its Python floor that precisely — 2026.11.1
 needs >= 3.14.2 — so a floating minor would let the runner image decide which
 Home Assistant is installable, which is the drift the pinned requirements
 exist to remove.
+
+### The jobs that pin a patch pin their runner too
+
+`actions/setup-python` installs from a manifest built per Ubuntu release,
+and a patch it never built for that release is not installable there. When
+`ubuntu-latest` moved to 26.04 (November 2026), every job asking for 3.14.2
+or 3.13.7 failed at setup, before any test ran : the manifest carries both
+for 22.04 and 24.04 only, and its 26.04 builds start at 3.14.6. `main` went
+red on the push for #170 and the next pull request with it.
+
+So `pyright` and the pytest matrix run on `ubuntu-24.04`. The patch pin is
+the point (the section above), so the runner follows it rather than the pin
+following the runner. `ruff` asks for `"3.14"`, which any image resolves,
+and stays on `ubuntu-latest`. Moving these jobs to 26.04 means raising the
+pins past what it was built for, which for the floor job is raising the
+floor -- the maintainer's call (CLAUDE.md, *Tests*).
 
 ### pyright, on the typed core
 
@@ -456,6 +472,29 @@ spelling a readable name where the catalogue has an internal reference
 (`Naviclim Hub` against `CLIF Default`), and the readable one is the point.
 Nothing here touches a type, a mode or a flag -- the seven are names on
 hardware nobody here owns, and the evidence is a name.
+
+### A model the catalogue drops keeps its name (issue #198)
+
+The 2026-11-10 read of `/magellan/productmodels/models` came back without
+180 ids the previous one listed : radiators between 595 and 1037 (Agilia,
+Divali, Oniris, Ipala, Bilbao 3, Ovation 3, Emotion 3/4, Equateur 3/4,
+Galapagos, Tatou, Hekla, Gyali, Kenya, Nirvana Neo, Maradja, Malao…) and
+the TAHUAL towel racks 1636-1638, productId 53. Nothing says why ; a range
+taken off sale is the likeliest reading, and none of it says the hardware
+stopped answering.
+
+They stay in `model_catalogue.py` and `model_product_ids.py`, listed in
+`DROPPED_FROM_CATALOGUE`. Taking them out would turn a radiator already on
+somebody's wall back into `Unknown product (…)`, and take the TAHUAL off the
+towel-rack branch wherever no `productId` comes with the model id -- for
+nothing the device itself changed. `tests/test_model_catalogue_sync.py`
+holds the tables to the file minus that set, checks every dropped id is
+still named, and fails if the catalogue lists one again, so the set cannot
+outlive the drop. The maintainer's call, made for #198.
+
+Limits. One read, one list : whether these ids will come back, or whether a
+productId will be reassigned under them, is unknown. A changed `productId`
+on an id still listed is not covered by this and stays the maintainer's.
 
 ### A room slot is whatever its gateway drives, not an air conditioner (issue #172)
 
@@ -872,6 +911,61 @@ The device name follows: `Radiator (Chambre)` and `Air Conditioner (Chambre)`
 both become `Room (Chambre)`. A rename changes what Home Assistant displays
 and nothing else, since the unique ids are keyed on the capability id.
 
+### A room driven by an electric heater is no air conditioner (issue #190)
+
+The room above was given the air conditioner's flags because nothing it
+reported told the two apart -- which stopped being true the day 103026 was
+named (*103026 says what drives a room*, below). Issue #190 (a Sauter
+OROSI 2), its comment (Sauter Taluha) and gduteil/cozytouch#205 (an Adélis
+towel rail) are one complaint : a radiator with a cool mode, a fan, a swing
+switch, a quiet switch and a cooling setpoint, none of which the Cozytouch
+app shows for it.
+
+What each room reports, read off the public captures :
+
+| capture | `thermal_generator` 103026 | `ventilation_controls_available` 100004 | `system_operating_mode` 166 |
+| ------- | -- | -- | -- |
+| Taluha radiators behind a CozyBox (gduteil#172) | 128 | 1 | 17 |
+| Fujitsu splits behind a HUB Cozytouch 1457 (#61) | 8 | 197 | 411 |
+| Navizone rooms (`navizone.json`) | 8 | 0 | 9 |
+| Takao M3 behind a Naviclim (gduteil#1, #12, 2024) | absent | 9 | 411 |
+
+So a room whose 103026 names electric heaters and nothing else -- 16, 32, 64,
+128, 256 or a sum of them -- is read in `apply_capabilities` as having no
+compressor, fan or louver : its modes are cut to off and heat, `fanModes` and
+`swingModes` go, and `quietModeAvailable`, `swingModeAvailable` and
+`coolingAvailable` are false. The last three gate the `quiet_mode` (100802),
+`swing_mode` (100804) and `target_cool_temperature` (177) rows through
+`needs_flag`, and the climate's cooling wiring. Measured on the #172 room :
+those five things go and nothing else moves.
+
+Two signals were tried first and dropped.
+
+*The gateway.* The CozyBox and the HUB Cozytouch send the same `productId`
+(63) and the same family, so only the box's model id would separate them --
+and the separation is false anyway : Atlantic sells the CozyBox for its
+Murao and Takao air conditioners as well as for radiators, towel rails and
+floor heaters. A room behind one is whatever the room is.
+
+*100004.* The splits of #61 set the two blade bits there and the radiators
+do not, which looked like the swing's own switch. The Takao rooms read 9 --
+no blade bit -- and have a swing their owner drives (gduteil#1). It would
+have removed a working control.
+
+166 does separate radiator from split in the table, but it is the mode
+*currently* permitted and moves with the season (9 under a Navizone summer
+lock), which is why the mode list was never built from it.
+
+Limits. One account's rooms are the whole of the radiator evidence, all four
+reading 128 ; 16, 32, 64 and 256 are taken because the catalogue lists them
+beside it, not because a room was seen with one. 2 and 4 -- an air-to-water
+heat pump, a boiler -- are left alone : no room behind one has been seen
+reporting 103026, and what such a room offers is not known. A room that
+reports no 103026 keeps today's answer, which covers the 2024 Takao captures
+and anything older. Nothing here was checked on hardware : the maintainer's
+rooms read 8, and the change was seen in a test Home Assistant against the
+#172 values.
+
 ### The dump carries every device, the config flow still chooses (issue #110)
 
 A zone was left out of both the dump and the device list on one argument: a
@@ -915,6 +1009,10 @@ exactly when something else holds it. So 106000 is named
 to `THERMOSTAT` -- which is to say, offered as a device, since the config flow
 filters on `ZONE` and nothing else.
 
+*Overturned by issue #219* : the setpoint half was wrong (c88 read 20.0 with
+106000 at 1), and every circuit is now offered. See *Every heating circuit is
+a device*, below.
+
 The name is ours. The vendor's app has no capability 106000 in its enum and no
 `ProductType` covering 55-57 at all, so it neither confirms nor contradicts
 this; it builds an unknown device for these circuits and never polls them. The
@@ -929,6 +1027,75 @@ be written.
 A device with no capabilities yet stays `ZONE`. That is the state between
 setup and the first poll, and a device offered on the strength of nothing is
 worse than one offered a poll later.
+
+### Every heating circuit is a device, driven by a room or not (issue #219)
+
+The entry above kept a circuit a room drives (106000 = 1) out of the device
+list, as the room's double, on the reading that such a circuit holds 0 as its
+setpoint. Issue #219 is an Alfea Excellia S (1691) whose room-driven circuit
+reads 19 = 29.57, then 24.6, then 20.5, each matching the setpoint the heat
+pump's own display showed at the time, while the room's setpoint stayed at
+20.5. The reporter runs Smart Adapt, so 19 there is the water-law flow
+setpoint the heat pump works out -- not a room temperature, and on no room
+slot. They want it for the heat pump's COP against the water asked for.
+
+The corpus already said as much and nobody looked. Every captured circuit,
+read again for this :
+
+| circuit | 106000 | 19 | 109 |
+| ------- | ------ | -- | --- |
+| issue #110, `Chambres` | 1 | 0.0 | 23.07 |
+| issue #93 | 1 | 0.0 | 22.49 |
+| gduteil i63 | 1 | 0.0 | 27.48 |
+| gduteil c125 | 1 | 0.0 | 23.65 |
+| gduteil c88 | 1 | 20.0 | 31.09 |
+| issue #219 | 1 | 29.57 | 30.75 |
+| issue #110, `Pièces de vie` | 0 | 20.0 | 22.28 |
+| gduteil i142 | 0 | 20.0 | 26.49 |
+
+So "0 exactly when something else holds it" was false at c88 already, and
+the double was never one : 109, the circuit's own water temperature, is real
+on all eight and reported by no room. What 19 reads at 0 is most likely a
+circuit with nothing asked of it ; no capture pairs the two to say so.
+
+So a `TESC` circuit is a device as soon as it reports anything, and 106000
+decides nothing. Offered is not added : the config flow still asks, so an
+existing install gains an entry in the list and no entity. A circuit added
+gets 19 and 109 as read-only temperatures and no climate, as above.
+
+Gating on 19 not being 0, as the issue suggests, was not taken : a circuit
+with nothing asked of it reads 0, and the device would come and go with the
+hour it was polled.
+
+The vendor's catalogue says the same in its own words, and had all along :
+19 is `TESC1_NrjFlowSetpointRequest`, *"the NRJ flow setpoint in circuit
+1"*, read-only (`accessType` 3) ; 109 is `GENERATOR_WaterOut1`, the flow
+water temperature. And 106000 is `TESC_RoomPresent`, *"the number of Room
+managed in the Heating Circuit"*, unit `nb` -- a count, not the flag the
+row read it as. Every capture has it at 0 or 1, so nothing displayed was
+wrong yet ; a circuit managing two rooms would have read as off. The row is
+now `circuit_room_count`, an integer, still a diagnostic and off by
+default. Being a new platform, it is a new entity : the old binary sensor
+is left behind in the registry, disabled, as it was.
+
+The circuit is renamed `Water circuit` while it is here. Offered beside the
+room slot that drives it, it would have carried the same name -- the dump
+reads `Heating circuit (#1)` on both, since a room behind an Alfea is
+already called that. The room is the circuit's control and the one people
+have on their dashboards, so it keeps the name ; the circuit is the water
+side, which is what it reports. Renaming changes only what is displayed,
+for the one circuit already added anywhere (#110's `Pièces de vie`) ; the
+unique ids do not move.
+
+The reporter's dump (2026-11-13, integration 2026.11.2) shows the circuit
+the way this change finds it : `TESC_0` reading 19 = 29.66, 109 = 28.82,
+106000 = 1, typed `ZONE`, and absent from the entry's devices. Their app
+draws two tiles, the room (`chauffage`, setpoint and ambient, BASIC / PROG)
+and the water heater, and nothing for the circuit -- so read-only is what
+the app offers too, which is nothing.
+
+Limits. That 19 reads 0 for want of demand is inferred, not measured.
+Nothing here was checked on hardware : the maintainer has no heat pump.
 
 ## `custom_components/cozytouch/climate.py`
 
@@ -1004,6 +1171,26 @@ So the preset writes are `_write_preset`, which leaves the read-back to its
 caller, and the setpoint asks for one refresh once both writes are done.
 Choosing a preset on its own still refreshes as before.
 `tests/test_setpoint_writes.py` pins the order.
+
+### The temperatures go under the names the running release reads
+
+Home Assistant 2026.11 moved the climate temperatures to `native_*` names :
+`native_current_temperature`, `native_target_temperature`,
+`_attr_native_temperature_unit`. A class that still provides the old ones
+keeps working through a shim that logs, at import, that it stops in 2027.11
+-- seen on a live 2026.11.1 install (2026-11-10), with the `temperature_unit`
+write reported on top. 2026.8.3 has no `native_*` name on `ClimateEntity` at
+all, and the floor `hacs.json` declares is older still, so a straight rename
+would have the floor read no temperature.
+
+`_NATIVE_TEMPERATURES` reads `ClimateEntity` for the native property and the
+class declares one set or the other, never both, because the shim reads the
+native names first and two sets would leave the old ones as code nothing
+reads. The unit moves from `__init__` to the class body : writing
+`_attr_temperature_unit` on an instance is what the 2026.11 setter reports,
+whatever the class declares. The branch goes when the floor reaches 2026.11.
+`tests/test_climate_temperatures.py` pins both sides on whichever release the
+job installed.
 
 ## `custom_components/cozytouch/select.py`
 
@@ -1335,9 +1522,10 @@ says which. A row setting both fails
   corpus has 18/19/18/26/24/26 on ten models each; 103199 appears in no
   capture at all and is typed on the app's word alone.
 - **Flags** (157, 381, 100078, 100102, 100103, 103150, 104050, 104051):
-  each has a reader returning `boolean`. Every one of them reads 0 on
-  every capture, which is why the corpus could not settle them and the app
-  can: constant is not the same as false.
+  each has a reader returning `boolean`. All but 103150 read 0 on every
+  capture, which is why the corpus could not settle them and the app can:
+  constant is not the same as false. 103150 reads 1 on all fifteen
+  readings of the corpus, and 0 only on issue #161's dump.
 
 Left as raw strings on purpose:
 
@@ -1394,8 +1582,10 @@ thing, and why `reads_as` is not called `values`.
 
 `SpeedAirMixingState` and `VentilationSpeedMode` carry the same table, and
 **`4` returns the auto speed alone** -- it used to read here as "on, auto",
-which no capture contradicted because no capture has ever shown a 4. The
-whole corpus reads 0 on 350 and 2 on 100800.
+which no capture contradicted because no capture has ever shown a 4. Every
+capture that reports them reads 0 on 350 and 2 on 100800. The HUB Navizone
+rooms report 350 but neither 100800 nor 100801, so their climate has no
+fan mode at all (diagnostics of 2026-11-13).
 
 The app also has a fallback : a value outside 0-4 yields the full set, and
 a *different* full set per id (air mixing includes the quiet speed,
@@ -1403,6 +1593,26 @@ ventilation does not). That is not reproduced. An unknown value is left
 undescribed, so the raw number reaches the entity -- on a diagnostic
 sensor whose reason to exist is investigating unknown hardware, the number
 is worth more than a guessed set.
+
+**The sets pick the speeds** (issue #208). The app builds a room's fan
+speeds from 100800 and its air-circulation speeds from 350, with no
+per-model table ; here `apply_capabilities` does the same with
+`SPEED_SETS`. The tables `fanModes` and `AirCirculationSpeeds` stay as the
+vocabulary -- which value writes which speed -- and the set picks from
+them. No set reported, or one outside 0-4, keeps the table whole, which is
+the app's fallback too. Since every capture that reports them reads 2 and
+0, which are the tables exactly, no device seen so far changes.
+
+Air circulation offers low, medium and high only. Its table has no auto
+and no quiet, so a set naming auto (2, 3) does not add it as a choice, and
+4 leaves a fan that runs or does not : there is no capture of a 350 other
+than 0 to say what writing 5 to 102004 does. What 102004 *reads* is wider
+: the catalogue's `THAMB_FanSpeedRecirculationMode` has 4 quiet and 5
+auto, so the row says so in `reads_as`. Home Assistant shows no select
+option it does not list, so the select adds the speed the unit runs to its
+options while it runs it, and drops it when the unit moves back to a
+choice. Picking it rewrites nothing. The fan cannot show it : quiet and
+auto are not a point on a percentage, and its percentage reads unknown.
 
 ### `FAN_MODES` / `SWING_MODES` : global vocabularies, not model data
 
@@ -1613,14 +1823,27 @@ where the deprecated key merely warned; `via_device_info` answers with no link
 at all in that case. Setup registering gateways first (above) is what makes
 the lookup find something, so the two halves are one mechanism.
 
+The lookup names the entry as well as the identifiers :
+`async_get_device_by_identifier(via_device, entry_id)`. The plain
+`async_get_device(identifiers=…)` warns from 2026.9 and stops in 2027.8,
+because identifiers are no longer unique across config entries -- logged on
+a live 2026.11.1 install (2026-11-10). The gateway is a subentry of the same
+account entry as the rooms that name it, so the entry is the coordinator's.
+The keyed lookup arrived in 2026.8.0 with `via_device_id`, so it sits inside
+the same branch and needs no second one.
+
 `DeviceInfo` gained `via_device_id` in **2026.8.0** -- bisected over the PyPI
 wheels, since the field is a TypedDict key and no release note names it: 2026.7.0
 does not have it, 2026.8.0 does. The declared floor is well below that, so both
 spellings have to be reachable; `_VIA_DEVICE_ID_SUPPORTED` reads `DeviceInfo.__annotations__`
-rather than comparing versions, and it is the only compatibility branch in the
-integration. It goes when the floor passes 2026.8.0, which is not a floor worth
-having for it -- Home Assistant removes `via_device` in 2027.8 and the branch
-expires on its own.
+rather than comparing versions, as the climate temperatures and the LLM
+tools' answer now do too (their sections, above and below). It goes when the
+floor passes 2026.8.0, which is not a floor worth having for it -- Home
+Assistant removes `via_device` in 2027.8 and the branch expires on its own.
+
+In 2026.11 `DeviceInfo` became a dataclass. It still reads and writes as a
+mapping and keeps `via_device_id` in its annotations, so the check holds
+there ; only a test that merged one into a dict with `|` had to change.
 
 The lookup that resolves the gateway follows the same flag. HA 2026.10 warns
 on `async_get_device(identifiers=...)`, since identifiers are no longer
@@ -2345,9 +2568,8 @@ there — which is exactly the block that was drawn, and leaves the rest of the
 day as it was. An event ending at midnight, or running into the next day, adds
 nothing: the last slot of a day already runs to the end of it.
 
-Deleting an event removes its slot, except the one at 00:00 : `build_matrix`
-refuses a day that does not begin at midnight, so that slot is retitled, never
-deleted. Moving an event off its weekday deletes it on the old day and creates
+Deleting an event removes its slot, unless it is the day's only one : a day
+keeps one setpoint, so that slot is retitled, never deleted. Moving an event off its weekday deletes it on the old day and creates
 it on the new one — two writes, and two capabilities, which is what a weekday
 is here.
 
@@ -2365,6 +2587,32 @@ The entity's state is not the useful part : a program that covers the whole day
 means `event` is never None, so the entity sits at `on` for good. What is
 useful is the current event and the next one, which is what the card shows and
 what an automation reads.
+
+### A day need not start at 00:00 (issue #210)
+
+`build_matrix` used to refuse a day whose first slot was not at 00:00, on the
+reasoning that the hours before it would have no setpoint. Nothing measured it,
+and the Cozytouch app disagrees : it writes such days and the devices run them.
+Two programs, both written in the app :
+
+| account | device | day | first slot |
+| ------- | ------ | --- | ---------- |
+| maintainer | Navizone room, Chambre enfant (heating) | monday | 00:15 |
+| #210 | Naema 2 Duo 35 (heating) | every day | 05:00 |
+
+So the rule was ours, and it locked those days out : the card refused any edit
+to them, and the calendar could neither write them nor delete the midnight
+slot of the others.
+
+What holds before the first slot is read as the previous day's last setpoint,
+carried over. That is what a week that repeats implies, and it is the only
+reading under which the app's own programs are complete ; no capture has
+timed the device across such a midnight to confirm it. `in_charge_at` and
+`apply_period` take it as `carried`, the calendar runs a day's last event into
+the next day's first slot, and the card's head and new slots use it too.
+
+The rules that remain : a day keeps at least one slot, and no two slots start
+at the same time.
 
 ### A calendar exists only for a block the device reports in full
 
@@ -2390,9 +2638,10 @@ ever tied that offset to the program. Home Assistant's zone is the reading that
 matches what the app shows for anyone whose house and hub agree, which is
 everybody until somebody reports otherwise.
 
-A slot runs until the next one, and the last of the day until midnight : the
-next day's first slot starts at 00:00 — `set_schedule` refuses a day that does
-not — so nothing is left uncovered. Events are selected by overlapping the
+A slot runs until the next one, and the last of the day until the next day's
+first slot, which need not be at 00:00 (see below), so nothing is left
+uncovered. Expansion starts a day before the range asked for, since that day's
+last slot may run into it. Events are selected by overlapping the
 range rather than by being contained in it, because an event that started
 before the window is the one running at its beginning.
 
@@ -3090,6 +3339,34 @@ They are offered where an away switch is exposed to Assist, found by its
 translation key, and not otherwise : a room reports the absence but has
 nothing to set it with, and a switch kept from Assist is not a tool either.
 
+### The tools carry the domain, twice : in their name and as their integration
+
+Home Assistant 2026.11 asks three things of a tool an integration provides,
+and logged all three on a live 2026.11.1 install (2026-11-10) :
+
+- its name starts with the domain and two underscores, `cozytouch__…` ;
+  unprefixed names stop being accepted in 2027.3, the first of the three
+- it says which integration provides it, `integration = "cozytouch"`, from
+  2027.10
+- it answers with a `ToolResult` rather than a bare object, from 2027.11
+
+The names were `cozytouch_get_schedule` and the like, so the rename is the
+one visible change : a conversation agent, or an MCP client reaching Assist,
+sees `cozytouch__get_schedule`. It was agreed with the maintainer before
+being made. Nothing in the prompts names a tool, so they did not move.
+
+`integration` is a class attribute on a base the five tools share, which an
+older `Tool` simply ignores. `ToolResult` does not exist on 2026.8.3, so
+`_TOOL_RESULT` reads it off the module and `_result` answers with the bare
+object where it is absent -- the shape those releases expect. That branch
+goes when the floor passes the release that added it. `_read` stays a plain
+dictionary : the period tool reads the day through it before writing, and
+only what a tool hands back to the agent is wrapped.
+
+`tests/test_llm_tools.py` checks the name and the integration the way
+`homeassistant.components.llm` does, and unwraps every answer, asserting it
+is a `ToolResult` wherever the release has one.
+
 ## `custom_components/cozytouch/www/cozytouch-schedule-card.js`
 
 The calendar came first and is the wrong shape for this. Home Assistant's
@@ -3121,6 +3398,16 @@ while the card is closed, so redrawing on a Home Assistant state update keeps
 the head current without the card owning an interval. A card left open on a
 dirty day stays open whatever the caret says, since a hidden Save is a lost
 edit.
+
+### Its fields are sized to what they hold (issue #210)
+
+The time and setpoint fields had fixed widths, 44 and 24 px, measured on a
+desktop browser. Android's time field keeps padding of its own, and #210's
+screenshot showed `05` for `05:00` and `20,5` run into its degree sign. The
+fields now size to their content where `field-sizing` exists, and fall back
+to widths in `em` that hold `00:00` and `20,5` where it does not. The default
+title also comes from the card's own strings (`Programme chauffage`), where it
+was the program's English key with `text-transform: capitalize`.
 
 ### Why it ships inside the integration
 
@@ -3577,26 +3864,30 @@ switch keeps the reading that was there before, so the name needs an entry
 in the `switch` section *and* the `sensor` one -- which is what
 `test_every_switch_key_is_also_a_sensor_key` is for.
 
-### 103150 says whether the ambient reading means anything
+### 103150 does not hide the ambient reading
 
 `ROOM_AMBIENT_TEMPERATURE` (117) is what the climate entity shows as the
-current temperature, and it was shown whenever the model declared
-`currentTemperatureAvailable` -- a static flag, decided once per model id.
-The app asks the device instead: `isCurrentTemperatureAvailable()` reads
-capability 103150 at each poll, and shows no temperature when it is false.
+current temperature, whatever 103150 says.
 
-The difference shows up on hardware whose sensor stops reporting. The static
-flag cannot know, so the entity keeps the last good number for good, which
-on a dashboard is indistinguishable from a live one. `_climate_entity` now
-wires `currentAvailableCapabilityId = 103150` where the device reports it,
-and `current_temperature` reads None while it says no.
+103150 is `ROOM_AmbientTemperature_Status`, which the catalogue describes as
+"the temperature information of the thermal zone valid (case of sensor
+failure)". From PR #120 on, the climate hid 117 while it read 0, on the
+strength of the Android app's `isCurrentTemperatureAvailable()`. Reading
+the app again (3.31.0) showed that only the detail screen of a room calls
+it. The home screen tile shows 117 whenever it parses as a number and the
+`TEMPERATURE` bit is set in both 100002 and 100024, and never reads 103150.
+The Darwin thermostat view does not read it either.
 
-Silence is not a no, deliberately, and twice : a device that does not report
-103150 at all is believed, which is every device that predates it, and a
-poll that carries the id with no value is believed too. Only an explicit
-`"0"` hides the reading. The alternative -- treating absence as unavailable
--- would blank the temperature on every device in the fleet the day the
-capability were mistyped.
+Issue #161 is what that cost: four rooms of six behind one Navizone (559,
+560, 561, 1734) read 103150 at 0 and 117 at 26.3-27.7, refreshed within the
+same quarter-hour as the two rooms reading 1, with all six off. The climate
+showed no temperature at all, which breaks a thermostat card, for a value
+the vendor's own main screen displays. Whether 0 means a failed sensor or a
+flag the hub sets wrongly is not known ; in the corpus it reads 1 on every
+other room captured.
+
+103150 stays a diagnostic binary sensor, disabled by default, for whoever
+wants to see it.
 
 ### The third one, not taken
 
@@ -3651,6 +3942,26 @@ kilowatts from deciwatts. Naming a unit off a single zero is the failure this
 project has a rule against, so the row carries the name and waits for a
 reading. 281 and 288 are a demand and a state whose encodings nobody has
 seen; one corpus reading each, `0` and `2`.
+
+### 278 is watts
+
+The zero the row was waiting on has a reading now. This repository's #185
+reports 278 at `1681` on a Calypso Connecté 240 L, model 1658, sold as TD
+240 VS AT 1200M -- a heat pump tank whose name carries its 1200 W element.
+1681 W is that element with the compressor running beside it. As kilowatts
+it is a power station; as deciwatts it is 168 W, less than the compressor
+alone draws. Only watts survives the hardware.
+
+So the row is `POWER` in W, out of `DIAG` and on by default: it is the tank's
+live draw, which is what an energy dashboard wants, and a device that does not
+report 278 gets no entity either way. Unique ids are built from the capability
+id, so an install that had turned the string on keeps the entity and gains a
+unit.
+
+The limits. It is one non-zero reading on one model, not set beside a meter,
+and Atlantic's own name for it, `DHW_pwrElecTankEstimation`, says it is an
+estimate -- the catalogue gives no unit. Other water heaters that report 278
+are typed by the same row on the strength of this one.
 
 ### What was read and not taken
 
@@ -3924,6 +4235,10 @@ nothing" would find it just as well.
 So it stays a diagnostic. If a dump from a room behind a radiator ever shows
 16, 32 or 64 on it, the change is to skip those flags in `apply_capabilities`,
 where 100022 and 106000 are already read, and nothing else moves.
+
+That dump was gduteil/cozytouch#172 all along : four radiator rooms reading
+128, the I2G panel heater. The change is *A room driven by an electric
+heater is no air conditioner (issue #190)*, above.
 
 ### A capability the chain steers on still needs a row
 
@@ -4539,3 +4854,97 @@ Navizone's air conditioners (557-559) and the dump attached to #157 :
 
 All four rows are shared, so every device reporting the id moves with them.
 Only the Navizone's rooms were looked at.
+
+## A water heater entity for the tanks
+
+Read on 2026-11-12 from a LINEO CONNECTE VM 120L 2400W (model 1959,
+productId 47, behind a FLAT/S4 IOTHUB) : a diagnostics dump and the
+Cozytouch app's screens beside it. Nothing was written to the tank.
+
+The tanks had a select for the mode (87), a number for the setpoint (231)
+and a sensor per probe, and no entity Home Assistant draws as a water heater
+or offers to Assist and HomeKit as one. The app's main screen is those same
+three things : the setpoint (55 °C on 231), the share of hot water left
+(72 % on 271) and the Manuel / Eco+ / Prog tabs (87 at 0).
+
+- **One `water_heater` per tank, built beside the mode select.** It writes
+  87 and 231 exactly as the select and the number do, so it adds no write of
+  its own. The select and the number stay : automations use them.
+- **Its ids are on row 87, not in `water_heater.py`** : a `per_type` on
+  `WATER_HEATER` names the setpoint (231), the current temperature (265) and
+  the bounds (`_DHW_USER_TARGET_BOUNDS`, 253/252), the way row 102024 names
+  the fan's speed. A tank that keeps its setpoint elsewhere needs a row, not
+  code, and one that does not report its setpoint id gets no entity.
+- **The current temperature is the tank's middle probe (265).** The app
+  shows none ; 265 is the closest to the water drawn, and the bottom probe
+  (264) reads the cold water coming in.
+- **The 22 slider starts off on a tank.** It and 231 both read 55 on the
+  Lineo, side by side as two "Température Consigne" sliders. The entity
+  writes 231, which the catalogue marks writable and calls the manual
+  mode's setpoint ; the app reads 22 and, per its code, never writes it.
+  Which one the app's control moves is #215's question. Turned off by
+  default, so only new installs lose it.
+- **Boost and absence stay switches.** The absence goes through the setup
+  PUT and its dates (see *The setup PUT is what sets an absence*), and an
+  `away_mode` on the entity would be a second way into that path for no gain.
+
+## The hot-water modes come from 105011 (issue #206)
+
+The mode select offered the per-model `HeatingModes` table : manual,
+eco_plus and prog on every tank typed through `DHW` or `HDG2`. The device
+says which modes it has on 105011, and the vendor's app builds its list from
+it ; #206 has the Android reading and the corpus.
+
+The Lineo confirms it on hardware : 105011 reads 7941 (manual, auto, boost,
+absence, antilegionella -- no prog) and the app greys PROG out, while the
+select offered it.
+
+- The options of 87 are the writable masks 105011 sets : 1 manual (0),
+  2 eco_comfort_schedule (2), 4 eco_plus (3), 8 prog (4). Row 87 names 105011
+  as `dhwModesCapabilityId` ; the select and the water heater both read it
+  through `declared_dhw_modes`.
+- Without 105011 (model 211), or with a mask naming none of the four, the
+  table stands.
+- `eco_comfort_schedule` is new, for 1376 reading 87 = 2.
+- A value outside the list reads unknown instead of the last option the
+  select knew. That is every `CozytouchSelect`, not only this one.
+
+### Left alone
+
+- The `OVERRIDES` the mask now reproduces stay until each model's 105011 is
+  seen, 1954-1957 first : no dump of them has it.
+- 230, permanent or scheduled heating, is #207's. The Lineo adds a reading
+  for it : 105012 = 3 (permanently, schedule), a mask the corpus did not
+  have ; 230 = 0, which the app shows as "Chauffe autorisée en permanence"
+  and, on its Prog tab, "Horaires personnalisés : OFF". The prog sensors
+  (245-251) hold the slots of the second choice.
+- 105906/105907, the V40 rows, still read as °C. The catalogue says a state
+  of charge in % (0-100) and the Lineo reports 75 on both, but the app shows
+  no V40 anywhere to check a reading against.
+- Only model 1959 was seen. Other tanks get the entity from row 87.
+
+## The V40 setpoints are read-only percentages (issue #216)
+
+105906 and 105907 were writable numbers in °C, between 15 and 65 : a raw 75
+became 15 + 75 % × 50 = 52.5 °C. That conversion came with their names, off
+the Android enum, and no capture ever backed it.
+
+Read on 2026-11-12 from a LINEO CONNECTE VM 120L 2400W (model 1959),
+a dump beside the Cozytouch app, nothing written :
+
+- both read 75, and no app screen shows a V40 value, in % or in degrees ;
+- the catalogue names them `DHW_V40StateOfChargeSetpoint` and
+  `DHW_V40StateOfChargeUserSetpoint`, in %, 0-100, "the V40 state of charge
+  linked to the (user) temperature setpoint" : the setpoint restated as a
+  charge, not a setting of its own ;
+- 105906 changed at the same second as 312, the control setpoint ;
+- 271, the charge the app does show (72 %), is the same quantity in %.
+
+So both are percentage sensors, in Diagnostic and off by default. The
+catalogue's `accessType` 7 says the API takes a write ; that is not a
+control (see *`accessType` answers a different question*), the Android app
+only reads 105907, and the app offers none. `TemperaturePercentAdjustmentNumber`
+had no other row and is gone.
+
+Existing installs see the two numbers go unavailable and two sensors appear,
+off. A V40 control on an app screen would make one of them a setting again.

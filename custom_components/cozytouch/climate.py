@@ -36,6 +36,9 @@ FAN_QUIET = "quiet"
 # built with. See docs/decisions.md.
 SUPPORTED_HVAC_MODES_CAPABILITY_ID = 100022
 
+# see docs/decisions.md
+_NATIVE_TEMPERATURES = hasattr(ClimateEntity, "native_current_temperature")
+
 
 def _bound(entity, coolKey, key) -> float | None:
     """The setpoint bound in force : the cooling one while cooling, if any."""
@@ -97,6 +100,32 @@ async def async_setup_entry(
 class CozytouchClimate(ClimateEntity, CozytouchSensor):
     """Climate class."""
 
+    if _NATIVE_TEMPERATURES:
+        _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+
+        @property
+        def native_current_temperature(self):
+            """Return current temperature."""
+            return self._current_value
+
+        @property
+        def native_target_temperature(self):
+            """Return target temperature."""
+            return self._native_value
+
+    else:
+        _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+        @property
+        def current_temperature(self):
+            """Return current temperature."""
+            return self._current_value
+
+        @property
+        def target_temperature(self):
+            """Return target temperature."""
+            return self._native_value
+
     def __init__(
         self,
         capability,
@@ -130,7 +159,6 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
             if step is not None and float(step) > 0:
                 self._attr_native_step = float(step)
 
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_min_temp = 0
         self._attr_max_temp = 30
         self._attr_supported_features = (
@@ -333,10 +361,9 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
         # Current value
         currentValueId = self._capability.get("currentValueCapabilityId", None)
         if currentValueId:
-            self._current_value = (
-                float(self.coordinator.get_capability_value(currentValueId))
-                if self._ambient_temperature_is_available()
-                else None
+            # 103150 is not read here. See docs/decisions.md.
+            self._current_value = float(
+                self.coordinator.get_capability_value(currentValueId)
             )
 
         lowest = _bound(self, "lowestCoolValueCapabilityId", "lowestValueCapabilityId")
@@ -448,29 +475,6 @@ class CozytouchClimate(ClimateEntity, CozytouchSensor):
                     break
 
         await self.coordinator.async_request_refresh()
-
-    def _ambient_temperature_is_available(self) -> bool:
-        """Whether the ambient reading means anything right now.
-
-        True where the device does not say, which is every device that does
-        not report the capability. See docs/decisions.md.
-        """
-        availableId = self._capability.get("currentAvailableCapabilityId", None)
-        if not availableId:
-            return True
-
-        value = self.coordinator.get_capability_value(availableId)
-        return value is None or str(value) != "0"
-
-    @property
-    def current_temperature(self):
-        """Return current temperature."""
-        return self._current_value
-
-    @property
-    def target_temperature(self):
-        """Return target temperature."""
-        return self._native_value
 
     def _air_circulation_active(self) -> bool:
         """Tell whether air circulation is currently running."""

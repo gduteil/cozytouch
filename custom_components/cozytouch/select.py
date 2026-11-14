@@ -8,7 +8,8 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SERVICE_VALUES, narrowed_modes
+from .capability import describe_capability_value
+from .const import DOMAIN, SERVICE_VALUES, declared_dhw_modes, narrowed_modes
 from .hub import (
     CozytouchConfigEntry,
     CozytouchDeviceEntity,
@@ -90,7 +91,16 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
         else:
             self._list = {-1: "Undefined"}
 
-        self.options = list(self._list.values())
+        if "dhwModesCapabilityId" in capability:
+            self._list = declared_dhw_modes(
+                self._list,
+                self.coordinator.get_capability_value(
+                    capability.dhwModesCapabilityId, None
+                ),
+            )
+
+        self._choices = list(self._list.values())
+        self.options = self._choices
         self.current_option = self.options[0]
 
     async def async_select_option(self, option: str) -> None:
@@ -110,10 +120,21 @@ class CozytouchSelect(SelectEntity, CozytouchSensor):
             value = int(
                 self.coordinator.get_capability_value(self._capability.capabilityId)
             )
-            if value in self._list:
-                self.current_option = self._list[value]
         except ValueError:
             return
+
+        option = self._list.get(value)
+        if option is None:
+            option = describe_capability_value(self._capability.capabilityId, value)
+        self.current_option = option
+
+        # Home Assistant shows no option it does not list, so a speed the
+        # device runs but does not offer joins the list while it runs. See
+        # docs/decisions.md.
+        if option is None or option in self._choices:
+            self.options = self._choices
+        else:
+            self.options = [*self._choices, option]
 
 
 class CozytouchDurationSelect(SelectEntity, CozytouchSensor):

@@ -119,8 +119,8 @@ an automation. Everything is in **[docs/scheduling.md](docs/scheduling.md)**:
 | 🃏 **The card** | `custom:cozytouch-schedule-card`, served by the integration. |
 | 🗣️ **Your voice** | Assist can read the program and hold a temperature between two times. |
 
-A day holds ten slots at most, the first starts at `00:00`, and temperatures
-are whole degrees.
+A day holds ten slots at most, and temperatures are whole degrees. A day need
+not start at `00:00` : until its first slot, the previous day's last one holds.
 
 ## ✈️ Away mode
 

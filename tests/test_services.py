@@ -169,10 +169,28 @@ def test_two_slots_at_the_same_time_are_refused():
         )
 
 
-def test_a_day_that_does_not_start_at_midnight_is_refused():
-    """The hours before the first slot would have no target temperature."""
-    with pytest.raises(ServiceValidationError):
-        services.build_matrix([{"time": time(7, 0), "temperature": 21}])
+def test_a_day_that_does_not_start_at_midnight_is_written():
+    """The Cozytouch app writes days starting at 00:15 or 05:00 (#210) ; the
+    previous day's last slot holds until the first one.
+    """
+    value = services.build_matrix([{"time": time(7, 0), "temperature": 21}])
+
+    assert value.startswith("[[420,21],[0,0],")
+
+
+def test_a_period_before_a_late_first_slot_puts_back_what_was_carried():
+    """Before 05:00 the previous day's 17 holds, so 17 is what 03:00 restores."""
+    late = [
+        {"time": "05:00", "temperature": 20.5},
+        {"time": "21:00", "temperature": 17},
+    ]
+
+    assert clock(services.apply_period(late, "01:00", "03:00", 22, 17)) == [
+        ("01:00", 22),
+        ("03:00", 17),
+        ("05:00", 20.5),
+        ("21:00", 17),
+    ]
 
 
 def test_a_whole_degree_is_written_as_an_integer():

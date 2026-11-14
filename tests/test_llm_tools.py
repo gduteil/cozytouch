@@ -51,11 +51,14 @@ def bus(hass):
 
 
 def call(tool, hass, **args):
-    result = asyncio.run(
+    """What the tool answers, unwrapped from the result where there is one."""
+    answer = asyncio.run(
         tool.async_call(hass, ToolInput(tool.name, args), CONTEXT)
     )
-    # A ToolResult from 2026.10 on, the bare object before it.
-    return getattr(result, "data", result)
+    if llm._TOOL_RESULT is None:
+        return answer
+    assert isinstance(answer, llm._TOOL_RESULT)
+    return answer.data
 
 
 class WritingHub(FakeHub):
@@ -122,6 +125,19 @@ def test_assist_is_offered_the_two_tools(hass):
     ]
 
 
+def test_every_tool_says_it_is_ours_the_way_home_assistant_checks_it(away):
+    """Home Assistant 2026.11 wants the integration on the tool and its domain,
+    then two underscores, in front of the name: it logs both now and stops
+    accepting them in 2027.3 and 2027.10. See docs/decisions.md.
+    """
+    tools = llm.async_get_tools(away[0], CONTEXT, LLM_API_ASSIST)
+
+    assert tools.tools
+    for tool in tools.tools:
+        assert tool.integration == "cozytouch"
+        assert tool.name.startswith("cozytouch__")
+
+
 def test_another_api_is_offered_nothing(hass):
     assert llm.async_get_tools(hass[0], CONTEXT, "some-other-api") is None
 
@@ -169,6 +185,25 @@ def test_a_period_is_merged_into_the_day_rather_than_replacing_it(hass):
     assert capabilityId == FIRST
     assert json.loads(value)[:5] == [
         [0, 26], [420, 24], [540, 21], [1020, 24], [1320, 26]
+    ]
+
+
+def test_a_period_before_a_late_first_slot_puts_back_the_night(monkeypatch):
+    """Before 05:00 Sunday's last setpoint holds (#210), so that is what the
+    end of a night-time period restores.
+    """
+    late = json.dumps([[300, 20.5], [1260, 17]] + [[0, 0]] * 8)
+    hub = WritingHub({FIRST + index: late for index in range(7)})
+    registries(monkeypatch)
+    home = bus(make_hass(monkeypatch, hub))
+
+    call(llm.SetPeriod(), home, entity_id="climate.salon", program="cooling",
+         days=["monday"], start="01:00", end="03:00", temperature=22)
+
+    capabilityId, value = hub.written[0]
+    assert capabilityId == FIRST
+    assert json.loads(value)[:5] == [
+        [60, 22], [180, 17], [300, 20.5], [1260, 17], [0, 0]
     ]
 
 

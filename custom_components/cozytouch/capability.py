@@ -127,9 +127,8 @@ def _room_entity(
 ) -> None:
     # One room, whatever is in it. The vendor's own client does the same :
     # a single class behind every gateway, and the capabilities decide
-    # what it offers, because nothing the slot reports says whether the
-    # room holds a radiator or an air conditioner. Every id below is asked
-    # for rather than assumed. See docs/decisions.md.
+    # what it offers. Every id below is asked for rather than assumed. See
+    # docs/decisions.md.
     capability.name = "room"
     capability.icon = "mdi:home-thermometer"
     if 153 in availableCapabilityIds:
@@ -138,7 +137,7 @@ def _room_entity(
         capability.progCapabilityId = 184
     if 157 in availableCapabilityIds:
         _wire_override(capability)
-    if 177 in availableCapabilityIds:
+    if 177 in availableCapabilityIds and modelInfos.get("coolingAvailable", True):
         _wire_cooling(capability)
     _wire_presets(capability, modelInfos, availableCapabilityIds)
 
@@ -165,10 +164,6 @@ def _climate_entity(
         and 117 in availableCapabilityIds
     ):
         capability.currentValueCapabilityId = 117
-        # The device says, at each poll, whether that reading means anything.
-        # See docs/decisions.md.
-        if 103150 in availableCapabilityIds:
-            capability.currentAvailableCapabilityId = 103150
 
     # 181 carries the mode the device is really running, which is not always
     # the one it was asked for

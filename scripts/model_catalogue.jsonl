@@ -433,211 +433,69 @@
 {"commercialReference":"100030","id":592,"longName":"EVIDENCE 3 CONNECT 1500W PLUG","name":"EVIDENCE 3 CONNECT 1500W","productId":0,"productRange":null}
 {"commercialReference":"100041","id":593,"longName":"EVIDENCE 3 CONNECT 2000W PLUG","name":"EVIDENCE 3 CONNECT 2000W","productId":0,"productRange":null}
 {"commercialReference":"100042","id":594,"longName":"EVIDENCE 3 CONNECT 2500W PLUG","name":"EVIDENCE 3 CONNECT 2500W","productId":0,"productRange":null}
-{"commercialReference":"580509","id":595,"longName":"IPALA H 1000W BLC","name":"IPALA H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"503110","id":596,"longName":"AGILIA PI CONNECTE H 1000W CARAT","name":"AGILIA PI CONNECTE H 1000W CARAT","productId":0,"productRange":null}
-{"commercialReference":"503115","id":597,"longName":"AGILIA PI CONNECTE H 1500W CARAT","name":"AGILIA PI CONNECTE H 1500W CARAT","productId":0,"productRange":null}
-{"commercialReference":"580511","id":598,"longName":"IPALA H 1500W BLC","name":"IPALA H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"479331","id":599,"longName":"INGENIO 3 H BLC 1000W","name":"INGENIO 3 H BLC 1000W","productId":0,"productRange":null}
-{"commercialReference":"507609","id":600,"longName":"DIVALI PI CONNECTE H 1000W CARAT","name":"DIVALI PI CONNECTE H 1000W CARAT","productId":0,"productRange":null}
-{"commercialReference":"493831","id":601,"longName":"BILBAO 3 H 1000W BLC","name":"BILBAO 3 H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"503120","id":602,"longName":"AGILIA PI CONNECTE H 2000W CARAT","name":"AGILIA PI CONNECTE H 2000W CARAT","productId":0,"productRange":null}
-{"commercialReference":"479351","id":603,"longName":"INGENIO 3 H 1500W BLC GRA","name":"INGENIO 3 H 1500W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"507613","id":604,"longName":"DIVALI PI CONNECTE H 1500W CARAT","name":"DIVALI PI CONNECTE H 1500W CARAT","productId":0,"productRange":null}
-{"commercialReference":"500110","id":605,"longName":"BOLERO AUTONOME H 1000W BLC","name":"BOLERO AUTONOME H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"480231","id":606,"longName":"OVATION 3 H 1000W BLC","name":"OVATION 3 H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"503112","id":607,"longName":"AGILIA PI CONNECTE H 1250W CARAT","name":"AGILIA PI CONNECTE H 1250W CARAT","productId":0,"productRange":null}
-{"commercialReference":"503910","id":608,"longName":"ONIRIS PI CONNECTE H 1000W BLC","name":"ONIRIS PI CONNECTE H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"503107","id":609,"longName":"AGILIA PI CONNECTE H 0750W CARAT","name":"AGILIA PI CONNECTE H 0750W CARAT","productId":0,"productRange":null}
-{"commercialReference":"500610","id":610,"longName":"GALAPAGOS PI CONNECTE H 1000W BLC","name":"GALAPAGOS PI CONNECTE H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"526317","id":611,"longName":"MALAO V 2000W BLC","name":"MALAO V 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"493851","id":612,"longName":"BILBAO 3 H 1500W BLC","name":"BILBAO 3 H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"503915","id":613,"longName":"ONIRIS PI CONNECTE H 1500W BLC","name":"ONIRIS PI CONNECTE H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"480251","id":614,"longName":"OVATION 3 H 1500W BLC","name":"OVATION 3 H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"479371","id":615,"longName":"INGENIO 3 H 2000W BLC GRA","name":"INGENIO 3 H 2000W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"500615","id":616,"longName":"GALAPAGOS PI CONNECTE H 1500W BLC","name":"GALAPAGOS PI CONNECTE H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"507618","id":617,"longName":"DIVALI PI CONNECTE V 2000W CARAT","name":"DIVALI PI CONNECTE V 2000W CARAT","productId":0,"productRange":null}
-{"commercialReference":"507614","id":618,"longName":"DIVALI PI CONNECTE H 2000W CARAT","name":"DIVALI PI CONNECTE H 2000W CARAT","productId":0,"productRange":null}
-{"commercialReference":"479341","id":619,"longName":"INGENIO 3 H 1250W BLC GRA","name":"INGENIO 3 H 1250W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"580512","id":620,"longName":"IPALA H 2000W BLC","name":"IPALA H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500115","id":621,"longName":"BOLERO AUTONOME H 1500W BLC","name":"BOLERO AUTONOME H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"427233","id":622,"longName":"EQUATEUR 4 H 1000W BLC GRA","name":"EQUATEUR 4 H 1000W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"500146","id":623,"longName":"HEKLA H 1000W BLC","name":"HEKLA H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"427235","id":624,"longName":"EQUATEUR 4 H 1500W BLC GRA","name":"EQUATEUR 4 H 1500W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"479321","id":625,"longName":"INGENIO 3 H 0750W BLC GRA","name":"INGENIO 3 H 0750W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"526316","id":626,"longName":"MALAO V 1500W BLC","name":"MALAO V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"507617","id":627,"longName":"DIVALI PI CONNECTE V 1500W CARAT","name":"DIVALI PI CONNECTE V 1500W CARAT","productId":0,"productRange":null}
-{"commercialReference":"507608","id":628,"longName":"DIVALI PI CONNECTE H 0750W CARAT","name":"DIVALI PI CONNECTE H 0750W CARAT","productId":0,"productRange":null}
-{"commercialReference":"503907","id":629,"longName":"ONIRIS PI CONNECTE H 0750W BLC","name":"ONIRIS PI CONNECTE H 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"445231","id":630,"longName":"EMOTION 3 H 1000W BLC","name":"EMOTION 3 H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"507611","id":631,"longName":"DIVALI PI CONNECTE H 1250W CARAT","name":"DIVALI PI CONNECTE H 1250W CARAT","productId":0,"productRange":null}
 {"commercialReference":"157208","id":632,"longName":"LINEO CONNECTE MP 080L BLC 2250M","name":"LINEO CONNECTE MP 080L BLC 2250M","productId":0,"productRange":null}
-{"commercialReference":"503920","id":633,"longName":"ONIRIS PI CONNECTE H 2000W BLC","name":"ONIRIS PI CONNECTE H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"480271","id":634,"longName":"OVATION 3 H 2000W BLC","name":"OVATION 3 H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"503105","id":635,"longName":"AGILIA PI CONNECTE H 0500W CARAT","name":"AGILIA PI CONNECTE H 0500W CARAT","productId":0,"productRange":null}
 {"commercialReference":"251115","id":637,"longName":"MALICIO 2 MP 080L BLANC 2250M","name":"MALICIO 2 MP 080L BLANC 2250M","productId":0,"productRange":null}
-{"commercialReference":"493871","id":638,"longName":"BILBAO 3 H 2000W BLC","name":"BILBAO 3 H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"579820","id":639,"longName":"BOLERO AUTONOME V 2000W BLC","name":"BOLERO AUTONOME V 2000W BLC","productId":0,"productRange":null}
 {"commercialReference":"286041","id":640,"longName":"CALYPSO CONNECTE VS 250L","name":"CALYPSO CONNECTE VS 250L","productId":0,"productRange":null}
-{"commercialReference":"493841","id":641,"longName":"BILBAO 3 H 1250W BLC","name":"BILBAO 3 H 1250W BLC","productId":0,"productRange":null}
-{"commercialReference":"480241","id":642,"longName":"OVATION 3 H 1250W BLC","name":"OVATION 3 H 1250W BLC","productId":0,"productRange":null}
-{"commercialReference":"430271","id":643,"longName":"OVATION 3 V 2000W BLC","name":"OVATION 3 V 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"480221","id":644,"longName":"OVATION 3 H 0750W BLC","name":"OVATION 3 H 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"493821","id":645,"longName":"BILBAO 3 H 0750W BLC","name":"BILBAO 3 H 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"503912","id":646,"longName":"ONIRIS PI CONNECTE H 1250W BLC","name":"ONIRIS PI CONNECTE H 1250W BLC","productId":0,"productRange":null}
-{"commercialReference":"566210","id":647,"longName":"TATOU PI CONNECTE H 1000W BLC","name":"TATOU PI CONNECTE H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"518820","id":648,"longName":"ONIRIS PI CONNECTE V 2000W BLC","name":"ONIRIS PI CONNECTE V 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500120","id":649,"longName":"BOLERO AUTONOME H 2000W BLC","name":"BOLERO AUTONOME H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500607","id":650,"longName":"GALAPAGOS PI CONNECTE H 0750W BLC","name":"GALAPAGOS PI CONNECTE H 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"430251","id":651,"longName":"OVATION 3 V 1500W BLC","name":"OVATION 3 V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"500620","id":652,"longName":"GALAPAGOS PI CONNECTE H 2000W BLC","name":"GALAPAGOS PI CONNECTE H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"580516","id":653,"longName":"IPALA V 1800W BLC","name":"IPALA V 1800W BLC","productId":0,"productRange":null}
-{"commercialReference":"494851","id":654,"longName":"BILBAO 3 V 1500W BLC","name":"BILBAO 3 V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"580518","id":655,"longName":"IPALA BAS 1000W BLC","name":"IPALA BAS 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500612","id":656,"longName":"GALAPAGOS PI CONNECTE H 1250W BLC","name":"GALAPAGOS PI CONNECTE H 1250W BLC","productId":0,"productRange":null}
-{"commercialReference":"494871","id":657,"longName":"BILBAO 3 V 1800W BLC","name":"BILBAO 3 V 1800W BLC","productId":0,"productRange":null}
-{"commercialReference":"518815","id":658,"longName":"ONIRIS PI CONNECTE V 1500W BLC","name":"ONIRIS PI CONNECTE V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"580514","id":659,"longName":"IPALA V 1500W BLC","name":"IPALA V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"427236","id":660,"longName":"EQUATEUR 4 H 2000W BLC GRA","name":"EQUATEUR 4 H 2000W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"427239","id":661,"longName":"EQUATEUR 4 V 2000W BLC GRA","name":"EQUATEUR 4 V 2000W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"500166","id":662,"longName":"HEKLA H 1500W BLC","name":"HEKLA H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"445251","id":663,"longName":"EMOTION 3 H 1500W BLC","name":"EMOTION 3 H 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"232514","id":664,"longName":"CALYPSO SPLIT VS 270L","name":"CALYPSO SPLIT VS 270L","productId":0,"productRange":null}
-{"commercialReference":"450331","id":665,"longName":"OVATION 3 PLI 1000W BLC","name":"OVATION 3 PLI 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"518220","id":666,"longName":"AGILIA PI CONNECTE V 2000W CARAT","name":"AGILIA PI CONNECTE V 2000W CARAT","productId":0,"productRange":null}
 {"commercialReference":"412259","id":667,"longName":"OPTIMOCOSY HR PLUS","name":"OPTIMOCOSY HR PLUS","productId":0,"productRange":null}
-{"commercialReference":"566205","id":668,"longName":"TATOU PI CONNECTE H 0500W BLC","name":"TATOU PI CONNECTE H 0500W BLC","productId":0,"productRange":null}
-{"commercialReference":"579815","id":669,"longName":"BOLERO AUTONOME V 1500W BLC","name":"BOLERO AUTONOME V 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"286039","id":670,"longName":"AEROMAX 5 VS 250L","name":"AEROMAX 5 VS 250L","productId":0,"productRange":null}
-{"commercialReference":"566215","id":671,"longName":"TATOU PI CONNECTE H 1500W BLC","name":"TATOU PI CONNECTE H 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"351042","id":672,"longName":"SAUTER GUELMA CO MP 080L BLC 2250M","name":"SAUTER GUELMA CO MP 080L BLC 2250M","productId":0,"productRange":null}
-{"commercialReference":"518215","id":673,"longName":"AGILIA PI CONNECTE V 1500W CARAT","name":"AGILIA PI CONNECTE V 1500W CARAT","productId":0,"productRange":null}
-{"commercialReference":"500171","id":674,"longName":"HEKLA V 2000W BLC","name":"HEKLA V 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"479311","id":675,"longName":"INGENIO 3 H 0500W BLC GRA","name":"INGENIO 3 H 0500W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"271105","id":676,"longName":"MALICIO 2 VM 120L BLANC 2400M","name":"MALICIO 2 VM 120L BLANC 2400M","productId":0,"productRange":null}
-{"commercialReference":"423886","id":678,"longName":"EMOTION 4 H 1000W BLC","name":"EMOTION 4 H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"445241","id":679,"longName":"EMOTION 3 H 1250W BLC","name":"EMOTION 3 H 1250W BLC","productId":0,"productRange":null}
-{"commercialReference":"427238","id":680,"longName":"EQUATEUR 4 V 1500W BLC GRA","name":"EQUATEUR 4 V 1500W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"427234","id":681,"longName":"EQUATEUR 4 H 1250W BLC GRA","name":"EQUATEUR 4 H 1250W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"580508","id":682,"longName":"IPALA H 0500W BLC","name":"IPALA H 0500W BLC","productId":0,"productRange":null}
-{"commercialReference":"501315","id":684,"longName":"GALAPAGOS PI CONNECTE V 1500W BLC","name":"GALAPAGOS PI CONNECTE V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"501320","id":685,"longName":"GALAPAGOS PI CONNECTE V 1800W BLC","name":"GALAPAGOS PI CONNECTE V 1800W BLC","productId":0,"productRange":null}
 {"commercialReference":"157206","id":686,"longName":"LINEO CONNECTE MP 065L BLC 2250M","name":"LINEO CONNECTE MP 065L BLC 2250M","productId":0,"productRange":null}
-{"commercialReference":"495831","id":687,"longName":"BILBAO 3 BAS 1000W BLC","name":"BILBAO 3 BAS 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"427232","id":689,"longName":"EQUATEUR 4 H 0750W BLC GRA","name":"EQUATEUR 4 H 0750W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"602110","id":690,"longName":"ONIRIS CONNECTE PLI 1000W BLC","name":"ONIRIS CONNECTE PLI 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"494831","id":691,"longName":"BILBAO 3 V 1000W BLC","name":"BILBAO 3 V 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500168","id":692,"longName":"HEKLA H 2000W BLC","name":"HEKLA H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"507616","id":693,"longName":"DIVALI PI CONNECTE V 1000W CARAT","name":"DIVALI PI CONNECTE V 1000W CARAT","productId":0,"productRange":null}
-{"commercialReference":"423888","id":695,"longName":"EMOTION 4 H 1500W BLC","name":"EMOTION 4 H 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"157212","id":696,"longName":"LINEO CONNECTE VM 120L BLC 2400M","name":"LINEO CONNECTE VM 120L BLC 2400M","productId":0,"productRange":null}
-{"commercialReference":"430231","id":697,"longName":"OVATION 3 V 1000W BLC","name":"OVATION 3 V 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"518810","id":698,"longName":"ONIRIS PI CONNECTE V 1000W BLC","name":"ONIRIS PI CONNECTE V 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"445271","id":699,"longName":"EMOTION 3 H 2000W BLC","name":"EMOTION 3 H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500180","id":700,"longName":"HEKLA PLI 1000W BLC","name":"HEKLA PLI 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"429371","id":701,"longName":"INGENIO 3 V 2000W BLC GRA","name":"INGENIO 3 V 2000W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"230175","id":702,"longName":"ASAMA 1750W BLC","name":"ASAMA 1750W BLC","productId":0,"productRange":null}
-{"commercialReference":"580410","id":703,"longName":"BOLERO CONNECTE BAS 1000W BLC","name":"BOLERO CONNECTE BAS 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500170","id":704,"longName":"HEKLA V 1500W BLC","name":"HEKLA V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"429351","id":705,"longName":"INGENIO 3 V BLC 1500W","name":"INGENIO 3 V BLC 1500W","productId":0,"productRange":null}
-{"commercialReference":"666423","id":706,"longName":"TATOU PI CONNECTE H 2000W BLC","name":"TATOU PI CONNECTE H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"450351","id":707,"longName":"OVATION 3 PLI 1500W BLC","name":"OVATION 3 PLI 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"233179","id":709,"longName":"ASAMA CO 1750W BLC","name":"ASAMA CO 1750W BLC","productId":0,"productRange":null}
-{"commercialReference":"445221","id":710,"longName":"EMOTION 3 H 0750W BLC","name":"EMOTION 3 H 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"502910","id":711,"longName":"GALAPAGOS CONECTE BAS 1000W BLC","name":"GALAPAGOS CONECTE BAS 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"286040","id":712,"longName":"CALYPSO CONNECTE VS 200L","name":"CALYPSO CONNECTE VS 200L","productId":0,"productRange":null}
 {"commercialReference":"157210","id":713,"longName":"LINEO CONNECTE VM 100L BLC 2400M","name":"LINEO CONNECTE VM 100L BLC 2400M","productId":0,"productRange":null}
 {"commercialReference":"241105","id":714,"longName":"MALICIO 2 MP 065L BLANC 2250M","name":"MALICIO 2 MP 065L BLANC 2250M","productId":0,"productRange":null}
 {"commercialReference":"396007","id":715,"longName":"SAUTER PAGOSA GREEN VS 270L","name":"SAUTER PAGOSA GREEN VS 270L","productId":0,"productRange":null}
-{"commercialReference":"580415","id":716,"longName":"BOLERO CONNECTE BAS 1500W BLC","name":"BOLERO CONNECTE BAS 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"580519","id":717,"longName":"IPALA BAS 1400W BLC","name":"IPALA BAS 1400W BLC","productId":0,"productRange":null}
-{"commercialReference":"566207","id":719,"longName":"TATOU PI CONNECTE H 0750W BLC","name":"TATOU PI CONNECTE H 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"230075","id":720,"longName":"ASAMA 0750W BLC","name":"ASAMA 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"579810","id":721,"longName":"BOLERO AUTONOME V 1000W BLC","name":"BOLERO AUTONOME V 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"814117","id":722,"longName":"SENSIUM MATD 1750W BLC/GRIS","name":"SENSIUM MATD 1750W BLC/GRIS","productId":0,"productRange":null}
-{"commercialReference":"490601","id":723,"longName":"SYMPHONIK MATD 1750W BLC GRA/CHENE","name":"SYMPHONIK MATD 1750W BLC GRA/CHENE","productId":0,"productRange":null}
-{"commercialReference":"602115","id":724,"longName":"ONIRIS CONNECTE PLI 1500W BLC","name":"ONIRIS CONNECTE PLI 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"261118","id":725,"longName":"MALICIO 2 VM 100L BLANC 2400M","name":"MALICIO 2 VM 100L BLANC 2400M","productId":0,"productRange":null}
 {"commercialReference":"817117","id":726,"longName":"SENSIUM MATG 1750W BLC/GRIS","name":"SENSIUM MATG 1750W BLC/GRIS","productId":0,"productRange":null}
-{"commercialReference":"423889","id":727,"longName":"EMOTION 4 H 2000W BLC","name":"EMOTION 4 H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"423887","id":728,"longName":"EMOTION 4 H 1250W BLC","name":"EMOTION 4 H 1250W BLC","productId":0,"productRange":null}
-{"commercialReference":"500183","id":729,"longName":"HEKLA PLI 1500W BLC","name":"HEKLA PLI 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"296514","id":730,"longName":"AEROMAX SPLIT 2 VS 270L","name":"AEROMAX SPLIT 2 VS 270L","productId":0,"productRange":null}
-{"commercialReference":"501310","id":731,"longName":"GALAPAGOS PI CONNECTE V 1000W BLC","name":"GALAPAGOS PI CONNECTE V 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"666421","id":732,"longName":"TATOU PI CONNECTE H 1250W BLC","name":"TATOU PI CONNECTE H 1250W BLC","productId":0,"productRange":null}
 {"commercialReference":"850513","id":733,"longName":"SERENIS STAND MATD 1750W CARAT","name":"SERENIS STAND MATD 1750W CARAT","productId":0,"productRange":null}
 {"commercialReference":"233177","id":735,"longName":"ASAMA CO 0750W BLC","name":"ASAMA CO 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"230050","id":736,"longName":"ASAMA 0500W BLC","name":"ASAMA 0500W BLC","productId":0,"productRange":null}
 {"commercialReference":"233176","id":738,"longName":"ASAMA CO 0500W BLC","name":"ASAMA CO 0500W BLC","productId":0,"productRange":null}
-{"commercialReference":"526314","id":739,"longName":"MALAO V 1000W BLC","name":"MALAO V 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"286038","id":740,"longName":"AEROMAX 5 VS 200L","name":"AEROMAX 5 VS 200L","productId":0,"productRange":null}
-{"commercialReference":"495851","id":741,"longName":"BILBAO 3 BAS 1400W BLC","name":"BILBAO 3 BAS 1400W BLC","productId":0,"productRange":null}
 {"commercialReference":"592123","id":742,"longName":"ALUTU MATD 1750W BLC","name":"ALUTU MATD 1750W BLC","productId":0,"productRange":null}
 {"commercialReference":"492601","id":743,"longName":"SYMPHONIK MATG 1750W BLC GRA/CHENE","name":"SYMPHONIK MATG 1750W BLC GRA/CHENE","productId":0,"productRange":null}
-{"commercialReference":"580513","id":744,"longName":"IPALA V 1000W BLC","name":"IPALA V 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"483178","id":746,"longName":"ALLURE 3 CLASS MATD 1750W BLC GRA","name":"ALLURE 3 CLASS MATD 1750W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"427241","id":747,"longName":"EQUATEUR 4 PLI 1000W BLC GRA","name":"EQUATEUR 4 PLI 1000W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"230150","id":748,"longName":"ASAMA 1500W BLC","name":"ASAMA 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"850512","id":749,"longName":"SERENIS STAND MATG 1750W CARAT","name":"SERENIS STAND MATG 1750W CARAT","productId":0,"productRange":null}
 {"commercialReference":"850437","id":750,"longName":"SERENIS PREMIUM MATD 1750W CARAT","name":"SERENIS PREMIUM MATD 1750W CARAT","productId":0,"productRange":null}
 {"commercialReference":"233178","id":751,"longName":"ASAMA CO 1500W BLC","name":"ASAMA CO 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"341046","id":752,"longName":"SAUTER GUELMA CO MP 065L BLC 2250M","name":"SAUTER GUELMA CO MP 065L BLC 2250M","productId":0,"productRange":null}
-{"commercialReference":"427237","id":753,"longName":"EQUATEUR 4 V 1000W BLC GRA","name":"EQUATEUR 4 V 1000W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"232515","id":754,"longName":"CALYPSO SPLIT VM 200L","name":"CALYPSO SPLIT VM 200L","productId":0,"productRange":null}
-{"commercialReference":"450321","id":755,"longName":"OVATION 3 PLI 0750W BLC","name":"OVATION 3 PLI 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"427242","id":756,"longName":"EQUATEUR 4 PLI 1500W BLC GRA","name":"EQUATEUR 4 PLI 1500W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"483177","id":757,"longName":"ALLURE 3 CLASS MATG 1750W BLC GRA","name":"ALLURE 3 CLASS MATG 1750W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"850435","id":758,"longName":"SERENIS PREMIUM MATG 1750W CARAT","name":"SERENIS PREMIUM MATG 1750W CARAT","productId":0,"productRange":null}
-{"commercialReference":"666425","id":759,"longName":"TATOU PI CONNECTE V 1500W BLC","name":"TATOU PI CONNECTE V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"602107","id":761,"longName":"ONIRIS CONNECTE PLI 0750W BLC","name":"ONIRIS CONNECTE PLI 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"592125","id":762,"longName":"ALUTU MATG 1750W BLC","name":"ALUTU MATG 1750W BLC","productId":0,"productRange":null}
 {"commercialReference":"850493","id":763,"longName":"SERENIS STAND MATD 1500W CARAT","name":"SERENIS STAND MATD 1500W CARAT","productId":0,"productRange":null}
-{"commercialReference":"580517","id":764,"longName":"IPALA BAS 0700W BLC","name":"IPALA BAS 0700W BLC","productId":0,"productRange":null}
-{"commercialReference":"500169","id":765,"longName":"HEKLA V 1000W BLC","name":"HEKLA V 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"445211","id":767,"longName":"EMOTION 3 H 0500W BLC","name":"EMOTION 3 H 0500W BLC","productId":0,"productRange":null}
 {"commercialReference":"861916","id":768,"longName":"ADELIS DIGIT 1750W BLC","name":"ADELIS DIGIT 1750W BLC","productId":0,"productRange":null}
-{"commercialReference":"502915","id":769,"longName":"GALAPAGOS CONECTE BAS 1400W BLC","name":"GALAPAGOS CONECTE BAS 1400W BLC","productId":0,"productRange":null}
-{"commercialReference":"423651","id":770,"longName":"EMOTION 3 V 1500W BLC","name":"EMOTION 3 V 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"850492","id":771,"longName":"SERENIS STAND MATG 1500W CARAT","name":"SERENIS STAND MATG 1500W CARAT","productId":0,"productRange":null}
-{"commercialReference":"495821","id":773,"longName":"BILBAO 3 BAS 0700W BLC","name":"BILBAO 3 BAS 0700W BLC","productId":0,"productRange":null}
-{"commercialReference":"423671","id":774,"longName":"EMOTION 3 V 2000W BLC","name":"EMOTION 3 V 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"507641","id":775,"longName":"DIVALI PREMIUM V 2000W BLC","name":"DIVALI PREMIUM V 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"507636","id":776,"longName":"DIVALI PREMIUM H 1000W BLC","name":"DIVALI PREMIUM H 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"503210","id":777,"longName":"AGILIA DIGIT H 1000W CARAT","name":"AGILIA DIGIT H 1000W CARAT","productId":0,"productRange":null}
-{"commercialReference":"423885","id":778,"longName":"EMOTION 4 H 0750W BLC","name":"EMOTION 4 H 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"483162","id":779,"longName":"ALLURE 3 CLASS MATD 1500W BLC GRA","name":"ALLURE 3 CLASS MATD 1500W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"507637","id":780,"longName":"DIVALI PREMIUM H 1500W BLC","name":"DIVALI PREMIUM H 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"592118","id":781,"longName":"ALUTU MATD 0750W BLC","name":"ALUTU MATD 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"986087","id":782,"longName":"AT CV4E VS 270L SP","name":"AT CV4E VS 270L SP","productId":0,"productRange":null}
-{"commercialReference":"423891","id":783,"longName":"EMOTION 4 V 1500W BLC","name":"EMOTION 4 V 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"850559","id":784,"longName":"SERENIS STAND MATD 0750W CARAT","name":"SERENIS STAND MATD 0750W CARAT","productId":0,"productRange":null}
-{"commercialReference":"666426","id":785,"longName":"TATOU PI CONNECTE V 2000W BLC","name":"TATOU PI CONNECTE V 2000W BLC","productId":0,"productRange":null}
 {"commercialReference":"483161","id":786,"longName":"ALLURE 3 CLASS MATG 1500W BLC GRA","name":"ALLURE 3 CLASS MATG 1500W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"423631","id":787,"longName":"EMOTION 3 V 1000W BLC","name":"EMOTION 3 V 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"296515","id":788,"longName":"AEROMAX SPLIT 2 VM 200L","name":"AEROMAX SPLIT 2 VM 200L","productId":0,"productRange":null}
 {"commercialReference":"592121","id":789,"longName":"ALUTU MATG 0750W BLC","name":"ALUTU MATG 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"157204","id":790,"longName":"LINEO CONNECTE MP 040L BLC 2250M","name":"LINEO CONNECTE MP 040L BLC 2250M","productId":0,"productRange":null}
 {"commercialReference":"296115","id":792,"longName":"AEROMAX 5 VM 150L","name":"AEROMAX 5 VM 150L","productId":0,"productRange":null}
 {"commercialReference":"861914","id":793,"longName":"ADELIS DIGIT 1500W BLC","name":"ADELIS DIGIT 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"666410","id":796,"longName":"TATOU PI CONNECTE V 1000W BLC","name":"TATOU PI CONNECTE V 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"850558","id":797,"longName":"SERENIS STAND MATG 0750W CARAT","name":"SERENIS STAND MATG 0750W CARAT","productId":0,"productRange":null}
-{"commercialReference":"423892","id":798,"longName":"EMOTION 4 V 2000W BLC","name":"EMOTION 4 V 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"423884","id":801,"longName":"EMOTION 4 H 0500W BLC","name":"EMOTION 4 H 0500W BLC","productId":0,"productRange":null}
-{"commercialReference":"502907","id":802,"longName":"GALAPAGOS CONECTE BAS 0700W BLC","name":"GALAPAGOS CONECTE BAS 0700W BLC","productId":0,"productRange":null}
 {"commercialReference":"862769","id":803,"longName":"ADELIS DIGIT ETROIT 0750W BLC","name":"ADELIS DIGIT ETROIT 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"498219","id":804,"longName":"RIVIERA 2 1750W BLC SAT","name":"RIVIERA 2 1750W BLC SAT","productId":0,"productRange":null}
-{"commercialReference":"507640","id":805,"longName":"DIVALI PREMIUM V 1500W BLC","name":"DIVALI PREMIUM V 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"231052","id":806,"longName":"MALICIO 2 MP 040L BLANC 2250M","name":"MALICIO 2 MP 040L BLANC 2250M","productId":0,"productRange":null}
-{"commercialReference":"460132","id":808,"longName":"MYTHIK H 1000W BLC GRA","name":"MYTHIK H 1000W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"483218","id":810,"longName":"ALLURE 3 CLASS MATG 0750W BLC GRA","name":"ALLURE 3 CLASS MATG 0750W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"986086","id":812,"longName":"AT CV4E VS 200L SP","name":"AT CV4E VS 200L SP","productId":0,"productRange":null}
-{"commercialReference":"427240","id":813,"longName":"EQUATEUR 4 PLI 0750W BLC GRA","name":"EQUATEUR 4 PLI 0750W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"861911","id":814,"longName":"ADELIS DIGIT 0500W BLC","name":"ADELIS DIGIT 0500W BLC","productId":0,"productRange":null}
 {"commercialReference":"850532","id":815,"longName":"SERENIS STAND MATG 0500W CARAT","name":"SERENIS STAND MATG 0500W CARAT","productId":0,"productRange":null}
-{"commercialReference":"507638","id":817,"longName":"DIVALI PREMIUM H 1900W BLC","name":"DIVALI PREMIUM H 1900W BLC","productId":0,"productRange":null}
 {"commercialReference":"850533","id":818,"longName":"SERENIS STAND MATD 0500W CARAT","name":"SERENIS STAND MATD 0500W CARAT","productId":0,"productRange":null}
 {"commercialReference":"483219","id":819,"longName":"ALLURE 3 CLASS MATD 0750W BLC GRA","name":"ALLURE 3 CLASS MATD 0750W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"234515","id":820,"longName":"CALYPSO CONNECTE VM 150L","name":"CALYPSO CONNECTE VM 150L","productId":0,"productRange":null}
-{"commercialReference":"423890","id":822,"longName":"EMOTION 4 V 1000W BLC","name":"EMOTION 4 V 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"503215","id":823,"longName":"AGILIA DIGIT H 1500W CARAT","name":"AGILIA DIGIT H 1500W CARAT","productId":0,"productRange":null}
 {"commercialReference":"498507","id":826,"longName":"RIVIERA 2 1500W BLC GRA","name":"RIVIERA 2 1500W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"296162","id":827,"longName":"AEROMAX VMC 4 VM 200L","name":"AEROMAX VMC 4 VM 200L","productId":0,"productRange":null}
@@ -650,13 +508,10 @@
 {"commercialReference":"503212","id":841,"longName":"AGILIA DIGIT H 1250W CARAT","name":"AGILIA DIGIT H 1250W CARAT","productId":0,"productRange":null}
 {"commercialReference":"861913","id":843,"longName":"ADELIS DIGIT 1000W BLC","name":"ADELIS DIGIT 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"483193","id":844,"longName":"ALLURE 3 CLASS MATG 0500W BLC GRA","name":"ALLURE 3 CLASS MATG 0500W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"507643","id":846,"longName":"DIVALI PREMIUM PLI 1500W BLC","name":"DIVALI PREMIUM PLI 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"862770","id":847,"longName":"ADELIS DIGIT ETROIT 1500W BLC","name":"ADELIS DIGIT ETROIT 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"503207","id":848,"longName":"AGILIA DIGIT H 0750W CARAT","name":"AGILIA DIGIT H 0750W CARAT","productId":0,"productRange":null}
 {"commercialReference":"497519","id":849,"longName":"RIVIERA 2 0500W BLC GRA","name":"RIVIERA 2 0500W BLC GRA","productId":0,"productRange":null}
-{"commercialReference":"460252","id":857,"longName":"MYTHIK V 1250W BLC GRA","name":"MYTHIK V 1250W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"862771","id":859,"longName":"ADELIS DIGIT ETROIT 1750W BLC","name":"ADELIS DIGIT ETROIT 1750W BLC","productId":0,"productRange":null}
-{"commercialReference":"507639","id":861,"longName":"DIVALI PREMIUM V 1000W BLC","name":"DIVALI PREMIUM V 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"498619","id":862,"longName":"RIVIERA 2 2000W BLC GRA","name":"RIVIERA 2 2000W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"862768","id":863,"longName":"ADELIS DIGIT ETROIT 0500W BLC","name":"ADELIS DIGIT ETROIT 0500W BLC","productId":0,"productRange":null}
 {"commercialReference":"503205","id":868,"longName":"AGILIA DIGIT H 0500W CARAT","name":"AGILIA DIGIT H 0500W CARAT","productId":0,"productRange":null}
@@ -664,65 +519,33 @@
 {"commercialReference":"497552","id":874,"longName":"RIVIERA 2 ETROIT 0500W BLC GRA","name":"RIVIERA 2 ETROIT 0500W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"498225","id":875,"longName":"RIVIERA 2 ETROIT 1750W BLC SAT","name":"RIVIERA 2 ETROIT 1750W BLC SAT","productId":0,"productRange":null}
 {"commercialReference":"861912","id":879,"longName":"ADELIS DIGIT 0750W BLC","name":"ADELIS DIGIT 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"666416","id":882,"longName":"TATOU PI CONNECTE H 0300W BLC","name":"TATOU PI CONNECTE H 0300W BLC","productId":0,"productRange":null}
 {"commercialReference":"234510","id":884,"longName":"CALYPSO CONNECTE VM 100L","name":"CALYPSO CONNECTE VM 100L","productId":0,"productRange":null}
-{"commercialReference":"423883","id":885,"longName":"EMOTION 4 H 0300W BLC","name":"EMOTION 4 H 0300W BLC","productId":0,"productRange":null}
 {"commercialReference":"497545","id":887,"longName":"RIVIERA 2 ETROIT 0750W BLC GRA","name":"RIVIERA 2 ETROIT 0750W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"592141","id":890,"longName":"ALUTU MUSIC MATD 1750W BLC","name":"ALUTU MUSIC MATD 1750W BLC","productId":0,"productRange":null}
 {"commercialReference":"414726","id":897,"longName":"KENYA 4 V 1500W BLC","name":"KENYA 4 V 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"500315","id":901,"longName":"GYALI PLI 1500W BLC","name":"GYALI PLI 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"414727","id":902,"longName":"KENYA 4 V 2000W BLC","name":"KENYA 4 V 2000W BLC","productId":0,"productRange":null}
 {"commercialReference":"497537","id":904,"longName":"RIVIERA 2 1000W BLC GRA","name":"RIVIERA 2 1000W BLC GRA","productId":0,"productRange":null}
 {"commercialReference":"861959","id":905,"longName":"ADELIS MIXTE 1750W BLC BRI","name":"ADELIS MIXTE 1750W BLC BRI","productId":0,"productRange":null}
-{"commercialReference":"500310","id":907,"longName":"GYALI PLI 1000W BLC","name":"GYALI PLI 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"526310","id":909,"longName":"MALAO H 1000W BLC","name":"MALAO H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500715","id":910,"longName":"GYALI H 1500W BLC","name":"GYALI H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"526315","id":911,"longName":"MALAO H 1500W BLC","name":"MALAO H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"500710","id":914,"longName":"GYALI H 1000W BLC","name":"GYALI H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"507610","id":915,"longName":"MARADJA PI CONNECTE H 1000W BLC","name":"MARADJA PI CONNECTE H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"482231","id":916,"longName":"EQUATEUR 3 H 1000W BLC","name":"EQUATEUR 3 H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"414541","id":917,"longName":"KENYA 3 H 1250W BLC","name":"KENYA 3 H 1250W BLC","productId":0,"productRange":null}
 {"commercialReference":"296079","id":919,"longName":"AEROMAX ACCESS VS 250L","name":"AEROMAX ACCESS VS 250L","productId":0,"productRange":null}
-{"commercialReference":"529914","id":920,"longName":"NIRVANA NEO H 750W BLC","name":"NIRVANA NEO H 750W BLC","productId":0,"productRange":null}
-{"commercialReference":"482241","id":922,"longName":"EQUATEUR 3 H 1250W BLC","name":"EQUATEUR 3 H 1250W BLC","productId":0,"productRange":null}
-{"commercialReference":"507615","id":923,"longName":"MARADJA PI CONNECTE H 1500W BLC","name":"MARADJA PI CONNECTE H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"507620","id":927,"longName":"MARADJA PI CONNECTE H 2000W BLC","name":"MARADJA PI CONNECTE H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"482271","id":929,"longName":"EQUATEUR 3 H 2000W BLC","name":"EQUATEUR 3 H 2000W BLC","productId":0,"productRange":null}
 {"commercialReference":"592143","id":931,"longName":"ALUTU MUSIC MATG 1750W BLC","name":"ALUTU MUSIC MATG 1750W BLC","productId":0,"productRange":null}
-{"commercialReference":"414521","id":933,"longName":"KENYA 3 H 0750W BLC","name":"KENYA 3 H 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"524910","id":934,"longName":"ACCESSIO DIGIT 2 H 1000W BLC","name":"ACCESSIO DIGIT 2 H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"529916","id":935,"longName":"NIRVANA NEO H 1000W BLC","name":"NIRVANA NEO H 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"414723","id":937,"longName":"KENYA 4 PLI 1000W BLC","name":"KENYA 4 PLI 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"500720","id":942,"longName":"GYALI H 2000W BLC","name":"GYALI H 2000W BLC","productId":0,"productRange":null}
-{"commercialReference":"414718","id":945,"longName":"KENYA 4 H 1000W BLC","name":"KENYA 4 H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"529918","id":949,"longName":"NIRVANA NEO H 1500W BLC","name":"NIRVANA NEO H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"414720","id":950,"longName":"KENYA 4 H 1500W BLC","name":"KENYA 4 H 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"529919","id":954,"longName":"NIRVANA NEO H 2000W BLC","name":"NIRVANA NEO H 2000W BLC","productId":0,"productRange":null}
 {"commercialReference":"232516","id":957,"longName":"EGEO VS 200L","name":"EGEO VS 200L","productId":0,"productRange":null}
-{"commercialReference":"529807","id":959,"longName":"CALISSIA CONNECTE H 0750W BLC","name":"CALISSIA CONNECTE H 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"414725","id":962,"longName":"KENYA 4 V 1000W BLC","name":"KENYA 4 V 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"529812","id":964,"longName":"CALISSIA CONNECTE H 1250W BLC","name":"CALISSIA CONNECTE H 1250W BLC","productId":0,"productRange":null}
 {"commercialReference":"444427","id":971,"longName":"RSCD 2 H 2000W BLC COND RETOURNABLE","name":"RSCD 2 H 2000W BLC COND RETOURNABLE","productId":0,"productRange":null}
-{"commercialReference":"526320","id":974,"longName":"MALAO H 2000W BLC","name":"MALAO H 2000W BLC","productId":0,"productRange":null}
 {"commercialReference":"592137","id":977,"longName":"ALUTU MUSIC MATD 0750W BLC","name":"ALUTU MUSIC MATD 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"592139","id":978,"longName":"ALUTU MUSIC MATG 0750W BLC","name":"ALUTU MUSIC MATG 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"490235","id":979,"longName":"RIVIERA 2 MIXTE 2000W BLC SAT","name":"RIVIERA 2 MIXTE 2000W BLC SAT","productId":0,"productRange":null}
-{"commercialReference":"414717","id":983,"longName":"KENYA 4 H 0750W BLC","name":"KENYA 4 H 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"414722","id":984,"longName":"KENYA 4 PLI 0750W BLC","name":"KENYA 4 PLI 0750W BLC","productId":0,"productRange":null}
-{"commercialReference":"529917","id":987,"longName":"NIRVANA NEO H 1250W BLC","name":"NIRVANA NEO H 1250W BLC","productId":0,"productRange":null}
-{"commercialReference":"414719","id":988,"longName":"KENYA 4 H 1250W BLC","name":"KENYA 4 H 1250W BLC","productId":0,"productRange":null}
 {"commercialReference":"414724","id":993,"longName":"KENYA 4 PLI 1500W BLC","name":"KENYA 4 PLI 1500W BLC","productId":0,"productRange":null}
-{"commercialReference":"414721","id":999,"longName":"KENYA 4 H 2000W BLC","name":"KENYA 4 H 2000W BLC","productId":0,"productRange":null}
 {"commercialReference":"490234","id":1008,"longName":"RIVIERA 2 MIXTE 1750W BLC SAT","name":"RIVIERA 2 MIXTE 1750W BLC SAT","productId":0,"productRange":null}
 {"commercialReference":"232517","id":1010,"longName":"EGEO VS 250L","name":"EGEO VS 250L","productId":0,"productRange":null}
 {"commercialReference":"524903","id":1014,"longName":"ACCESSIO DIGIT 2 H 0300W BLC","name":"ACCESSIO DIGIT 2 H 0300W BLC","productId":0,"productRange":null}
 {"commercialReference":"423533","id":1015,"longName":"SOLIUS DIGIT H 0500W BLC","name":"SOLIUS DIGIT H 0500W BLC","productId":0,"productRange":null}
-{"commercialReference":"500307","id":1018,"longName":"GYALI PLI 0750W BLC","name":"GYALI PLI 0750W BLC","productId":0,"productRange":null}
 {"commercialReference":"500144","id":1019,"longName":"MARADJA BAS 0750W GRIS","name":"MARADJA BAS 0750W GRIS","productId":0,"productRange":null}
 {"commercialReference":"500103","id":1023,"longName":"ATL F127 PROG 1000W FP","name":"ATL F127 PROG 1000W FP","productId":0,"productRange":null}
 {"commercialReference":"500712","id":1025,"longName":"SIBAYAK H 1000W BLC","name":"SIBAYAK H 1000W BLC","productId":0,"productRange":null}
 {"commercialReference":"492431","id":1026,"longName":"BALEARES 2 H 1000W BLC","name":"BALEARES 2 H 1000W BLC","productId":0,"productRange":null}
-{"commercialReference":"507612","id":1037,"longName":"MARADJA PI CONNECTE H 1250W BLC","name":"MARADJA PI CONNECTE H 1250W BLC","productId":0,"productRange":null}
 {"commercialReference":"524915","id":1042,"longName":"ACCESSIO DIGIT 2 H 1500W BLC","name":"ACCESSIO DIGIT 2 H 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"447015","id":1043,"longName":"SUNDORO H 1500W BLC","name":"SUNDORO H 1500W BLC","productId":0,"productRange":null}
 {"commercialReference":"479471","id":1051,"longName":"INGENIO PROG H 2000W BLC GRA","name":"INGENIO PROG H 2000W BLC GRA","productId":0,"productRange":null}
@@ -970,9 +793,6 @@
 {"commercialReference":"471656","id":1633,"longName":"RIVA 5 ETROIT 0500W CARBONE","name":"RIVA 5 ETROIT 0500W CARBONE","productId":53,"productRange":null}
 {"commercialReference":"471657","id":1634,"longName":"RIVA 5 ETROIT 1300W CARBONE","name":"RIVA 5 ETROIT 1300W CARBONE","productId":53,"productRange":null}
 {"commercialReference":"471658","id":1635,"longName":"RIVA 5 ETROIT 1500W CARBONE","name":"RIVA 5 ETROIT 1500W CARBONE","productId":53,"productRange":null}
-{"commercialReference":"530511","id":1636,"longName":"TAHUAL H 1000W BLC","name":"TAHUAL H 1000W BLC","productId":53,"productRange":null}
-{"commercialReference":"530512","id":1637,"longName":"TAHUAL H 1500W BLC","name":"TAHUAL H 1500W BLC","productId":53,"productRange":null}
-{"commercialReference":"530513","id":1638,"longName":"TAHUAL H 2000W BLC","name":"TAHUAL H 2000W BLC","productId":53,"productRange":null}
 {"commercialReference":"530514","id":1639,"longName":"TAHUAL V 1500W BLC","name":"TAHUAL V 1500W BLC","productId":53,"productRange":null}
 {"commercialReference":"530516","id":1640,"longName":"TAHUAL V 2000W BLC","name":"TAHUAL V 2000W BLC","productId":53,"productRange":null}
 {"commercialReference":"886115","id":1641,"longName":"TD 200 VS ATE 1200M TYB V5S","name":"Atlantic - Explorer","productId":62,"productRange":null}
@@ -2340,3 +2160,36 @@
 {"commercialReference":"831351","id":3696,"longName":"THE ONIX CONNECT MP 080L S 2500M PE","name":"ONIX CONNECT 100","productId":0,"productRange":null}
 {"commercialReference":"831352","id":3697,"longName":"THE ONIX CONNECT MP 100L S 2500M PE","name":"ONIX CONNECT 120","productId":0,"productRange":null}
 {"commercialReference":"NULL","id":3701,"longName":"WATERDROP 2 DEFAULT","name":"WATER HEATER","productId":0,"productRange":null}
+{"commercialReference":"240057","id":3702,"longName":"GORELI 2 500W BLANC","name":"VITI 500W","productId":0,"productRange":null}
+{"commercialReference":"240058","id":3703,"longName":"GORELI 2 750W BLC","name":"VITI 750W","productId":0,"productRange":null}
+{"commercialReference":"240059","id":3704,"longName":"GORELI 2 500W ETROIT BLC","name":"VITI 500W","productId":0,"productRange":null}
+{"commercialReference":"240060","id":3705,"longName":"GORELI 2 500W NOIR","name":"VITI 500W","productId":0,"productRange":null}
+{"commercialReference":"240061","id":3706,"longName":"GORELI 2 750W NOIR","name":"VITI 750W","productId":0,"productRange":null}
+{"commercialReference":"240062","id":3707,"longName":"GORELI 2 500W ETROIT NOIR","name":"VITI 500W","productId":0,"productRange":null}
+{"commercialReference":"024324","id":3708,"longName":"MH ISILIA S R32/ISILIA S R32 NEO MONO","name":"ISILIA S","productId":0,"productRange":null}
+{"commercialReference":"024325","id":3709,"longName":"MH ISILIA S R32/ISILIA S R32 NEO TRI","name":"ISILIA S","productId":0,"productRange":null}
+{"commercialReference":"524906","id":3710,"longName":"ACCESSIO + H 0500W BLC","name":"ACCESSIO + 500W","productId":0,"productRange":null}
+{"commercialReference":"524908","id":3711,"longName":"ACCESSIO + H 0750W BLC","name":"ACCESSIO + 750W","productId":0,"productRange":null}
+{"commercialReference":"524909","id":3712,"longName":"ACCESSIO + H 1000W BLC","name":"ACCESSIO + 1000W","productId":0,"productRange":null}
+{"commercialReference":"524911","id":3713,"longName":"ACCESSIO + H 1250W BLC","name":"ACCESSIO + 1250W","productId":0,"productRange":null}
+{"commercialReference":"524913","id":3714,"longName":"ACCESSIO + H 1500W BLC","name":"ACCESSIO + 1500W","productId":0,"productRange":null}
+{"commercialReference":"524914","id":3715,"longName":"ACCESSIO + H 2000W BLC","name":"ACCESSIO + 2000W","productId":0,"productRange":null}
+{"commercialReference":"611627","id":3716,"longName":"NARIA + H 0500W BLC","name":"NARIA + 500W","productId":0,"productRange":null}
+{"commercialReference":"611628","id":3717,"longName":"NARIA + H 0750W BLC","name":"NARIA + 750W","productId":0,"productRange":null}
+{"commercialReference":"611629","id":3718,"longName":"NARIA + H 1000W BLC","name":"NARIA + 1000W","productId":0,"productRange":null}
+{"commercialReference":"611630","id":3719,"longName":"NARIA + H 1250W BLC","name":"NARIA + 1250W","productId":0,"productRange":null}
+{"commercialReference":"611631","id":3720,"longName":"NARIA + H 1500W BLC","name":"NARIA + 1500W","productId":0,"productRange":null}
+{"commercialReference":"611632","id":3721,"longName":"NARIA + H 2000W BLC","name":"NARIA + 2000W","productId":0,"productRange":null}
+{"commercialReference":"492412","id":3722,"longName":"BALEARES 3 H BLC 0500W","name":"BALEARES 3 500W","productId":0,"productRange":null}
+{"commercialReference":"492413","id":3723,"longName":"BALEARES 3 H BLC 0750W","name":"BALEARES 3 750W","productId":0,"productRange":null}
+{"commercialReference":"492414","id":3724,"longName":"BALEARES 3 H BLC 1000W","name":"BALEARES 3 1000W","productId":0,"productRange":null}
+{"commercialReference":"492415","id":3725,"longName":"BALEARES 3 H BLC 1250W","name":"BALEARES 3 1250W","productId":0,"productRange":null}
+{"commercialReference":"492416","id":3726,"longName":"BALEARES 3 H BLC 1500W","name":"BALEARES 3 1500W","productId":0,"productRange":null}
+{"commercialReference":"492417","id":3727,"longName":"BALEARES 3 H BLC 2000W","name":"BALEARES 3 2000W","productId":0,"productRange":null}
+{"commercialReference":"443887","id":3728,"longName":"LISBONNE 3 H BLC 500W","name":"LISBONNE 3 500W","productId":0,"productRange":null}
+{"commercialReference":"443888","id":3729,"longName":"LISBONNE 3 H BLC 0750W","name":"LISBONNE 3 750W","productId":0,"productRange":null}
+{"commercialReference":"443889","id":3730,"longName":"LISBONNE 3 H BLC 1000W","name":"LISBONNE 3 1000W","productId":0,"productRange":null}
+{"commercialReference":"443890","id":3731,"longName":"LISBONNE 3 H BLC 1250W","name":"LISBONNE 3 1250W","productId":0,"productRange":null}
+{"commercialReference":"443891","id":3732,"longName":"LISBONNE 3 H BLC 1500W","name":"LISBONNE 3 1500W","productId":0,"productRange":null}
+{"commercialReference":"443892","id":3733,"longName":"LISBONNE 3 H BLC 2000W","name":"LISBONNE 3 2000W","productId":0,"productRange":null}
+{"commercialReference":null,"id":3734,"longName":"TD0W DEFAULT","name":"TD0W DEFAULT","productId":0,"productRange":null}

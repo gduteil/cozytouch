@@ -71,19 +71,26 @@ Write to one person who owns the hardware. "Your boiler", not "users'
 boilers". Say what they will see in Home Assistant, in the words the
 Home Assistant UI uses.
 
-Be specific and be honest about the edges. "631 model ids that used to read
-as `Unknown product` are named" beats "improved device support", and if a
-fix only lands on one model family, name the family. If a thing is still
-broken and somebody will hit it, say so — that is what ⚠️ is for.
+Say what changed by the kind of thing, never by the hardware. The
+integration reads what a device declares rather than knowing models, so a
+change reaches every device of that shape : "a room heated by a radiator",
+"a hot water tank", "a heating circuit" -- not a model name, a range, a
+model id, a capability id or an issue number. Which unit a finding was
+checked on belongs in the pull request and `docs/decisions.md`, not here.
+Concrete beats vague ("no longer offers a cool mode" beats "improved
+support"), but concrete means what the reader sees, not where it came from.
+
+If a thing is still broken and somebody will hit it, say so -- that is what
+⚠️ is for. Otherwise leave the limits out.
 
 Never thank anybody for their patience, never call a release exciting, and
 never end on a line about what is coming next.
 
 ## Length
 
-Around 200 words. Four sections is plenty ; six is too many, and means two
-of them are the same theme. A release with one real change gets one
-paragraph and no headings at all.
+One or two sentences per change, around 80 words in all. Four sections is
+plenty ; six is too many, and means two of them are the same theme. A
+release with one real change gets one paragraph and no headings at all.
 
 ## Finish
 

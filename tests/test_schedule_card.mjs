@@ -32,6 +32,12 @@ test("nothing is in charge before the first slot", () => {
   assert.equal(inChargeAt([{ time: "06:00", temperature: 19 }], 0), null);
 });
 
+test("before the first slot, the previous day's last one holds", () => {
+  // The Cozytouch app writes days starting at 00:15 or 05:00 (#210).
+  assert.equal(inChargeAt([{ time: "06:00", temperature: 19 }], 0, 17), 17);
+  assert.equal(inChargeAt([{ time: "06:00", temperature: 19 }], 360, 17), 19);
+});
+
 test("a slot keeps its temperature when it is moved", () => {
   assert.deepEqual(writeSlot(DAY, 1, { time: "06:15" }), [
     { time: "00:00", temperature: 17 },
@@ -62,13 +68,26 @@ test("dropping a slot leaves the rest alone", () => {
   ]);
 });
 
-test("the day must keep a slot at 00:00", () => {
-  assert.throws(() => writeSlot(DAY, 0, null), { code: "midnight" });
-  assert.throws(() => writeSlot(DAY, 0, { time: "01:00" }), { code: "midnight" });
+test("a day need not start at 00:00", () => {
+  assert.deepEqual(writeSlot(DAY, 0, null), [
+    { time: "07:30", temperature: 21 },
+    { time: "22:00", temperature: 17 },
+  ]);
+  assert.equal(writeSlot(DAY, 0, { time: "01:00" })[0].time, "01:00");
 });
 
-test("00:00 can still be given another setpoint", () => {
-  assert.equal(writeSlot(DAY, 0, { temperature: 16 })[0].temperature, 16);
+test("a day that starts later can still be edited (#210)", () => {
+  const app = [
+    { time: "05:00", temperature: 20.5 },
+    { time: "21:00", temperature: 17 },
+  ];
+  assert.equal(writeSlot(app, 0, { temperature: 21.5 })[0].temperature, 21.5);
+});
+
+test("a day keeps at least one slot", () => {
+  assert.throws(() => writeSlot([{ time: "05:00", temperature: 19 }], 0, null), {
+    code: "empty",
+  });
 });
 
 test("two slots cannot start at the same time", () => {
@@ -88,6 +107,23 @@ test("a new slot after the last one still lands inside the day", () => {
   const [, added] = addSlot(evening);
   assert.equal(added.time, "12:00");
   assert.equal(added.temperature, 19);
+});
+
+test("a new slot can land in a morning carried over from the day before", () => {
+  // 00:00 to 10:00 is the widest gap, held at 17 from the night before.
+  const late = [
+    { time: "10:00", temperature: 21 },
+    { time: "14:00", temperature: 17 },
+  ];
+  assert.deepEqual(addSlot(late, 17)[0], { time: "05:00", temperature: 17 });
+});
+
+test("without anything carried, the morning is not offered", () => {
+  const late = [
+    { time: "10:00", temperature: 21 },
+    { time: "14:00", temperature: 17 },
+  ];
+  assert.equal(addSlot(late)[2].time, "19:00");
 });
 
 test("a day refuses an eleventh slot", () => {

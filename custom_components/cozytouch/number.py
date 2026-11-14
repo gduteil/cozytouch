@@ -29,9 +29,6 @@ async def async_setup_entry(
         async_add_entities,
         {
             CapabilityType.TEMPERATURE_ADJUSTMENT_NUMBER: TemperatureAdjustmentNumber,
-            CapabilityType.TEMPERATURE_PERCENT_ADJUSTMENT_NUMBER: (
-                TemperaturePercentAdjustmentNumber
-            ),
             CapabilityType.MINUTES_ADJUSTMENT_NUMBER: MinutesAdjustmentNumber,
         },
     )
@@ -146,33 +143,6 @@ class TemperatureAdjustmentNumber(CozytouchAdjustmentNumber):
             )
             if highestValue:
                 self._attr_native_max_value = float(highestValue)
-
-
-class TemperaturePercentAdjustmentNumber(CozytouchAdjustmentNumber):
-    """Temperature percent adjustment class."""
-
-    def __init__(self, coordinator: Hub, capability, **kwargs) -> None:
-        """Initialize a Number entity."""
-        super().__init__(coordinator=coordinator, capability=capability, **kwargs)
-        self._attr_device_class = NumberDeviceClass.TEMPERATURE
-        self._attr_native_step = 0.5
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-
-        self._attr_native_min_value = 0.0
-        if "temperatureMin" in capability:
-            self._attr_native_min_value = capability.temperatureMin
-
-        self._attr_native_max_value = 60.0
-        if "temperatureMax" in capability:
-            self._attr_native_max_value = capability.temperatureMax
-
-        self._range = self._attr_native_max_value - self._attr_native_min_value
-
-    def _from_api(self, value: float) -> float:
-        return self._attr_native_min_value + (value * self._range / 100.0)
-
-    def _to_api(self, value: float) -> str:
-        return str((value - self._attr_native_min_value) * 100 / self._range)
 
 
 class MinutesAdjustmentNumber(CozytouchAdjustmentNumber):

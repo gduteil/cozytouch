@@ -24,7 +24,7 @@ from .infos import (
     ModelInfos,
     TimestampInfos,
 )
-from .model import CozytouchDeviceType
+from .model import SPEED_SETS, CozytouchDeviceType
 
 # Both report the same ids and mean the same things by them, so the rows that
 # differ from the default differ together. See capability.py for why the API
@@ -104,13 +104,7 @@ _VENTILATION_CONTROL_BITS = (
 # The speed selectors name a whole set rather than one speed, so each value
 # spells its set out. A third mechanism next to the two tables above, and the
 # app's own: `buildListFromValue`. See docs/decisions.md.
-_SPEED_SETS = {
-    "0": "low, medium, high",
-    "1": "low, high",
-    "2": "low, medium, high, auto",
-    "3": "low, high, auto",
-    "4": "auto",
-}
+_SPEED_SETS = {str(value): ", ".join(speeds) for value, speeds in SPEED_SETS.items()}
 
 
 def hidden_by_a_calendar(capabilityId: int, availableCapabilityIds: set[int]) -> bool:
@@ -397,7 +391,12 @@ CAPABILITIES: dict[int, Entity] = {
         type=CapabilityType.TEMPERATURE_ADJUSTMENT_NUMBER,
         enabled_by_default=True,
         extra={"lowestValueCapabilityId": 160, "highestValueCapabilityId": 161},
-        per_type={(CozytouchDeviceType.WATER_HEATER,): _DHW_USER_TARGET_BOUNDS},
+        per_type={
+            (CozytouchDeviceType.WATER_HEATER,): {
+                **_DHW_USER_TARGET_BOUNDS,
+                "enabled_by_default": False,
+            }
+        },
     ),
     23: Entity(
         name="dhw_comfort_setpoint",
@@ -830,6 +829,14 @@ CAPABILITIES: dict[int, Entity] = {
         icon="mdi:water-boiler",
         extra={
             "modelList": "HeatingModes",
+            "dhwModesCapabilityId": 105011,
+        },
+        per_type={
+            (CozytouchDeviceType.WATER_HEATER,): {
+                "setpointCapabilityId": 231,
+                "currentValueCapabilityId": 265,
+                **_DHW_USER_TARGET_BOUNDS,
+            }
         },
     ),
     88: Entity(
@@ -1265,6 +1272,7 @@ CAPABILITIES: dict[int, Entity] = {
         type=CapabilityType.TEMPERATURE_ADJUSTMENT_NUMBER,
         enabled_by_default=True,
         absent_on=(CozytouchDeviceType.GAZ_BOILER,),
+        needs_flag="coolingAvailable",
         extra={"lowestValueCapabilityId": 162, "highestValueCapabilityId": 163},
     ),
     178: Entity(
@@ -1847,14 +1855,12 @@ CAPABILITIES: dict[int, Entity] = {
         enabled_by_default=True,
     ),
     278: Entity(
-        # Atlantic names it "puissance electrique instantanee du ballon". One
-        # corpus reading, and it is 0, so the unit is not claimed yet. See
-        # docs/decisions.md.
+        # Watts, from a reading of 1681 on model 1658. See docs/decisions.md.
         name="dhw_instant_power",
-        type=CapabilityType.STRING,
-        category=CapabilityCategory.DIAG,
-        enabled_by_default=False,
+        type=CapabilityType.POWER,
+        enabled_by_default=True,
         icon="mdi:flash",
+        extra={"displayed_unit_of_measurement": UnitOfPower.WATT},
     ),
     280: Entity(
         name="cold_water_temperature",
@@ -2415,6 +2421,12 @@ CAPABILITIES: dict[int, Entity] = {
         category=CapabilityCategory.DIAG,
         enabled_by_default=False,
     ),
+    371: Entity(
+        name="boost_duration_supported",
+        type=CapabilityType.BINARY,
+        category=CapabilityCategory.DIAG,
+        enabled_by_default=False,
+    ),
     380: Entity(
         name="outdoor_unit_error_code_cesa",
         type=CapabilityType.INT,
@@ -2940,6 +2952,7 @@ CAPABILITIES: dict[int, Entity] = {
         type=CapabilityType.SWITCH,
         enabled_by_default=True,
         icon="mdi:fan-minus",
+        needs_flag="quietModeAvailable",
     ),
     100803: Entity(
         # Six flap positions on a Fujitsu indoor unit, plus a zero the vendor
@@ -2963,6 +2976,7 @@ CAPABILITIES: dict[int, Entity] = {
         type=CapabilityType.SWITCH,
         enabled_by_default=True,
         icon="mdi:arrow-oscillating",
+        needs_flag="swingModeAvailable",
     ),
     101302: Entity(
         name="outside_temperature_available",
@@ -2977,6 +2991,7 @@ CAPABILITIES: dict[int, Entity] = {
         # and arrives switched off. See docs/decisions.md.
         enabled_by_default=False,
         icon="mdi:fan",
+        reads_as={"1": "low", "2": "medium", "3": "high", "4": "quiet", "5": "auto"},
         extra={
             "modelList": "AirCirculationSpeeds",
         },
@@ -3250,22 +3265,17 @@ CAPABILITIES: dict[int, Entity] = {
         enabled_by_default=False,
     ),
     105906: Entity(
+        # see docs/decisions.md
         name="v40_applied_setpoint",
-        type=CapabilityType.TEMPERATURE_PERCENT_ADJUSTMENT_NUMBER,
-        enabled_by_default=True,
-        extra={
-            "temperatureMin": 15.0,
-            "temperatureMax": 65.0,
-        },
+        type=CapabilityType.PERCENTAGE,
+        category=CapabilityCategory.DIAG,
+        enabled_by_default=False,
     ),
     105907: Entity(
         name="v40_setpoint_filled_by_user",
-        type=CapabilityType.TEMPERATURE_PERCENT_ADJUSTMENT_NUMBER,
-        enabled_by_default=True,
-        extra={
-            "temperatureMin": 15.0,
-            "temperatureMax": 65.0,
-        },
+        type=CapabilityType.PERCENTAGE,
+        category=CapabilityCategory.DIAG,
+        enabled_by_default=False,
     ),
     # Whether a room slot holds this circuit's setpoint. Named from what it
     # coincides with rather than from anything the vendor says -- see
@@ -3273,8 +3283,9 @@ CAPABILITIES: dict[int, Entity] = {
     # off by default: it is read to decide whether the circuit is a device of
     # its own, and it is nobody's control.
     106000: Entity(
-        name="circuit_driven_by_room",
-        type=CapabilityType.BINARY,
+        # TESC_RoomPresent : how many rooms the circuit manages, not a flag.
+        name="circuit_room_count",
+        type=CapabilityType.INT,
         category=CapabilityCategory.DIAG,
         enabled_by_default=False,
         icon="mdi:home-thermometer",

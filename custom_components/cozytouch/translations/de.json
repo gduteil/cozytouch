@@ -73,6 +73,9 @@
         }
     },
     "entity": {
+        "binary_sensor": {
+            "device_availability": { "name": "Verfügbar" }
+        },
         "calendar": {
             "heating_program":         { "name": "Heizprogramm" },
             "cooling_program":         { "name": "Kühlprogramm" },
@@ -224,9 +227,7 @@
             "target_temperature":         { "name": "Solltemperatur" },
             "target_temperature_dhw":     { "name": "Solltemperatur Warmwasser" },
             "target_temperature_eco_z1":  { "name": "Solltemperatur Eco Z1" },
-            "target_temperature_comfort_z2":{ "name": "Komfort-Sollwert Z2" },
-            "v40_applied_setpoint":       { "name": "Angewendeter V40-Sollwert" },
-            "v40_setpoint_filled_by_user": { "name": "Vom Benutzer eingegebener V40-Sollwert" }
+            "target_temperature_comfort_z2":{ "name": "Komfort-Sollwert Z2" }
         },
         "select": {
             "air_circulation_speed":
@@ -236,7 +237,9 @@
                 {
                     "low": "Niedrig",
                     "medium": "Mittel",
-                    "high": "Hoch"
+                    "high": "Hoch",
+                    "quiet": "Leise",
+                    "auto": "Auto"
                 }
             },
             "air_circulation_total_time": { "name": "Gesamtdauer der Luftumwälzung" },
@@ -249,6 +252,7 @@
                 "state":
                 {
                     "manual": "Manuell",
+                    "eco_comfort_schedule": "Eco/Komfort-Zeitplan",
                     "eco_plus": "Eco+",
                     "prog": "Prog"
                 }
@@ -287,6 +291,7 @@
             "boost_duration_max":             { "name": "Maximale Boost-Dauer" },
             "boost_duration_min":             { "name": "Minimale Boost-Dauer" },
             "boost_duration_step":            { "name": "Schrittweite der Boost-Dauer" },
+            "boost_duration_supported":       { "name": "Boost-Dauer einstellbar" },
             "boost_end_time":                 { "name": "Ende des Boosts" },
             "boost_with_fan":                 { "name": "Boost mit Lüfter" },
             "boost_with_fan_duration":        { "name": "Dauer des Boosts mit Lüfter" },
@@ -476,7 +481,7 @@
             "away_mode_start":          { "name": "Beginn Abwesenheitsmodus" },
             "away_mode_stop":           { "name": "Ende Abwesenheitsmodus" },
             "ble_pairing_compatibility": { "name": "BLE-Kopplungskompatibilität" },
-            "circuit_driven_by_room":   { "name": "Kreis von einem Raum gesteuert" },
+            "circuit_room_count":       { "name": "Räume am Kreis" },
             "product_type":             { "name": "Produkttyp" },
             "boiler_water_temperature": { "name": "Kesselwassertemperatur" },
             "boost_mode":               { "name": "Boost-Modus" },
@@ -675,6 +680,8 @@
             "timezone":                 { "name": "Zeitzone" },
             "total_power_consumption":  { "name": "Gesamtstromverbrauch" },
             "unexpected_events":        { "name": "Unerwartete Ereignisse" },
+            "v40_applied_setpoint":     { "name": "V40-Ladeziel" },
+            "v40_setpoint_filled_by_user": { "name": "V40-Ladeziel vom Benutzer" },
             "v40_water_available":      { "name": "Verfügbares V40-Wasser"},
             "v40_water_capacity":       { "name": "V40-Wasserkapazität"},
             "version":                  { "name": "Version" },
@@ -707,6 +714,17 @@
             "quiet_mode":         { "name": "Leisemodus" },
             "schedule_anticipation": { "name": "Zeitplan-Vorlauf" },
             "swing_mode":         { "name": "Schwenkmodus" }
+        },
+        "water_heater": {
+            "hot_water": {
+                "name": "Warmwasser",
+                "state": {
+                    "eco_comfort_schedule": "Eco/Komfort-Zeitplan",
+                    "eco_plus": "Eco+",
+                    "manual":   "Manuell",
+                    "prog":     "Prog"
+                }
+            }
         }
     },
     "device_automation": {
@@ -803,7 +821,7 @@
             "fields": {
                 "program":  { "name": "Programm", "description": "Heizen oder Kühlen." },
                 "days":     { "name": "Tage", "description": "Die Tage, die dieses Programm erhalten. Jeden Tag, Wochentage und Wochenende stehen für die Tage, die sie benennen." },
-                "slots":    { "name": "Abschnitte", "description": "Liste von Uhrzeit/Temperatur-Paaren. Der erste Abschnitt muss um 00:00 beginnen, höchstens zehn." }
+                "slots":    { "name": "Abschnitte", "description": "Liste von Uhrzeit/Temperatur-Paaren. Bis zum ersten Abschnitt gilt der letzte des Vortags. Höchstens zehn." }
             }
         }
     }

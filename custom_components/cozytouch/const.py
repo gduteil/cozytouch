@@ -149,3 +149,23 @@ def narrowed_modes[T](modes: dict[int, T], supported: str | None) -> dict[int, T
         if value not in HVAC_MODE_MASKS or HVAC_MODE_MASKS[value] & mask
     }
     return narrowed or modes
+
+
+# What 105011 declares, as (mask bit, value written to 87, option). The
+# other bits are states, never written to 87. See docs/decisions.md.
+DHW_MODE_MASKS = (
+    (1, 0, "manual"),
+    (2, 2, "eco_comfort_schedule"),
+    (4, 3, "eco_plus"),
+    (8, 4, "prog"),
+)
+
+
+def declared_dhw_modes(modes: dict[int, str], declared: str | None) -> dict[int, str]:
+    """The hot-water modes 105011 declares, the model's table where it is absent."""
+    if declared is None:
+        return modes
+
+    mask = int(float(declared))
+    found = {value: option for bit, value, option in DHW_MODE_MASKS if bit & mask}
+    return found or modes

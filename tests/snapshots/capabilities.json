@@ -877,21 +877,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1381,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1381,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -2011,12 +2009,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 1381,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -2707,6 +2705,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1381,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -2999,7 +3005,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "heatingActiveCapabilityId": 153,
     "highestValueCapabilityId": 161,
@@ -3101,7 +3106,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "heatingActiveCapabilityId": 153,
     "highestValueCapabilityId": 161,
@@ -3154,6 +3158,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 1381,
     "modelList": "HeatingModes",
@@ -4139,21 +4144,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1457,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1457,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -5258,12 +5261,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 1457,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -5954,6 +5957,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1457,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -6246,7 +6257,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -6346,7 +6356,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -6397,6 +6406,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 1457,
     "modelList": "HeatingModes",
@@ -7375,21 +7385,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1505,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1505,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -8501,12 +8509,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 1505,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -9197,6 +9205,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1505,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -9489,7 +9505,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -9589,7 +9604,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -9640,6 +9654,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 1505,
     "modelList": "HeatingModes",
@@ -10625,21 +10640,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1641,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1641,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -11363,6 +11376,7 @@
    "22": {
     "capabilityId": 22,
     "category": "sensor",
+    "enabled_by_default": false,
     "highestValueCapabilityId": 252,
     "lowestValueCapabilityId": 253,
     "modelId": 1641,
@@ -11761,12 +11775,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 1641,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -12457,6 +12471,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1641,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -12749,7 +12771,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -12849,7 +12870,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -12900,10 +12920,16 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "currentValueCapabilityId": 265,
+    "dhwModesCapabilityId": 105011,
+    "highestValueCapabilityId": 252,
     "icon": "mdi:water-boiler",
+    "lowestValueCapabilityId": 253,
     "modelId": 1641,
     "modelList": "HeatingModes",
     "name": "domestic_hot_water_mode",
+    "setpointCapabilityId": 231,
+    "step": 1,
     "type": "select"
    },
    "88": {
@@ -13878,21 +13904,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1734,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 1734,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -14997,12 +15021,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 1734,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -15693,6 +15717,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 1734,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -15987,7 +16019,6 @@
     "boostCapabilityId": 100505,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "fanModeCapabilityId": 100801,
     "heatingActiveCapabilityId": 153,
@@ -16098,7 +16129,6 @@
     "boostCapabilityId": 100505,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "fanModeCapabilityId": 100801,
     "heatingActiveCapabilityId": 153,
@@ -16158,6 +16188,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 1734,
     "modelList": "HeatingModes",
@@ -16267,7 +16298,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 1,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "hvacActionCapabilityId": 181,
     "icon": "mdi:heat-pump",
@@ -17161,21 +17191,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 211,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 211,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -17718,7 +17746,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 2,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 118,
     "hvacActionCapabilityId": 181,
     "icon": "mdi:heat-pump",
@@ -18309,12 +18336,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 211,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -19005,6 +19032,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 211,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -19410,6 +19445,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 211,
     "modelList": "HeatingModes",
@@ -20395,21 +20431,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 2374,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 2374,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -21133,6 +21167,7 @@
    "22": {
     "capabilityId": 22,
     "category": "sensor",
+    "enabled_by_default": false,
     "highestValueCapabilityId": 252,
     "lowestValueCapabilityId": 253,
     "modelId": 2374,
@@ -21531,12 +21566,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 2374,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -22227,6 +22262,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 2374,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -22519,7 +22562,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -22619,7 +22661,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -22670,10 +22711,16 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "currentValueCapabilityId": 265,
+    "dhwModesCapabilityId": 105011,
+    "highestValueCapabilityId": 252,
     "icon": "mdi:water-boiler",
+    "lowestValueCapabilityId": 253,
     "modelId": 2374,
     "modelList": "HeatingModes",
     "name": "domestic_hot_water_mode",
+    "setpointCapabilityId": 231,
+    "step": 1,
     "type": "select"
    },
    "88": {
@@ -23655,21 +23702,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 418,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 418,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -24789,12 +24834,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 418,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -25485,6 +25530,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 418,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -25777,7 +25830,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -25877,7 +25929,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -25928,6 +25979,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 418,
     "modelList": "HeatingModes",
@@ -26906,21 +26958,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 557,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 557,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -28025,12 +28075,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 557,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -28721,6 +28771,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 557,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -29015,7 +29073,6 @@
     "boostCapabilityId": 100505,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "fanModeCapabilityId": 100801,
     "heatingActiveCapabilityId": 153,
@@ -29126,7 +29183,6 @@
     "boostCapabilityId": 100505,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "fanModeCapabilityId": 100801,
     "heatingActiveCapabilityId": 153,
@@ -29186,6 +29242,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 557,
     "modelList": "HeatingModes",
@@ -30171,21 +30228,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 56,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 56,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -31297,12 +31352,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 56,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -31993,6 +32048,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 56,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -32285,7 +32348,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -32386,7 +32448,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -32438,6 +32499,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 56,
     "modelList": "HeatingModes",
@@ -33423,21 +33485,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 562,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 562,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -34557,12 +34617,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 562,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -35253,6 +35313,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 562,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -35545,7 +35613,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -35645,7 +35712,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -35696,6 +35762,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 562,
     "modelList": "HeatingModes",
@@ -36681,21 +36748,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 76,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 76,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -37811,12 +37876,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 76,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -38507,6 +38572,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 76,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -38799,7 +38872,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": null,
     "hvacActionCapabilityId": 181,
     "icon": "mdi:heat-pump",
@@ -38898,7 +38970,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 118,
     "hvacActionCapabilityId": 181,
     "icon": "mdi:heat-pump",
@@ -38948,6 +39019,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 76,
     "modelList": "HeatingModes",
@@ -39933,21 +40005,19 @@
    },
    "105906": {
     "capabilityId": 105906,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 999999,
     "name": "v40_applied_setpoint",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "105907": {
     "capabilityId": 105907,
-    "category": "sensor",
+    "category": "diag",
+    "enabled_by_default": false,
     "modelId": 999999,
     "name": "v40_setpoint_filled_by_user",
-    "temperatureMax": 65.0,
-    "temperatureMin": 15.0,
-    "type": "temperature_percent_adjustment_number"
+    "type": "percentage"
    },
    "106": {
     "capabilityId": 106,
@@ -41067,12 +41137,12 @@
    },
    "278": {
     "capabilityId": 278,
-    "category": "diag",
-    "enabled_by_default": false,
+    "category": "sensor",
+    "displayed_unit_of_measurement": "W",
     "icon": "mdi:flash",
     "modelId": 999999,
     "name": "dhw_instant_power",
-    "type": "string"
+    "type": "power"
    },
    "28": {
     "capabilityId": 28,
@@ -41763,6 +41833,14 @@
     "name": "hub_movable_subproducts",
     "type": "binary"
    },
+   "371": {
+    "capabilityId": 371,
+    "category": "diag",
+    "enabled_by_default": false,
+    "modelId": 999999,
+    "name": "boost_duration_supported",
+    "type": "binary"
+   },
    "38": {
     "capabilityId": 38,
     "category": "diag",
@@ -42055,7 +42133,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 7,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -42155,7 +42232,6 @@
     "airCirculationCapabilityId": 102024,
     "capabilityId": 8,
     "category": "sensor",
-    "currentAvailableCapabilityId": 103150,
     "currentValueCapabilityId": 117,
     "highestValueCapabilityId": 161,
     "hvacActionCapabilityId": 181,
@@ -42206,6 +42282,7 @@
    "87": {
     "capabilityId": 87,
     "category": "sensor",
+    "dhwModesCapabilityId": 105011,
     "icon": "mdi:water-boiler",
     "modelId": 999999,
     "modelList": "HeatingModes",

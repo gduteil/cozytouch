@@ -73,6 +73,9 @@
         }
     },
     "entity": {
+        "binary_sensor": {
+            "device_availability": { "name": "Disponible" }
+        },
         "calendar": {
             "heating_program":         { "name": "Programme Chauffage" },
             "cooling_program":         { "name": "Programme Refroidissement" },
@@ -224,9 +227,7 @@
             "target_temperature":         { "name": "Température Consigne" },
             "target_temperature_dhw":     { "name": "Température Consigne DHW" },
             "target_temperature_eco_z1":  { "name": "Température Consigne Eco Z1" },
-            "target_temperature_comfort_z2":{ "name": "Consigne confort Z2" },
-            "v40_applied_setpoint":       { "name": "Consigne V40 Appliquée" },
-            "v40_setpoint_filled_by_user": { "name": "Consigne V40 Saisie" }
+            "target_temperature_comfort_z2":{ "name": "Consigne confort Z2" }
         },
         "select": {
             "air_circulation_speed":
@@ -236,7 +237,9 @@
                 {
                     "low": "Lente",
                     "medium": "Moyenne",
-                    "high": "Rapide"
+                    "high": "Rapide",
+                    "quiet": "Silence",
+                    "auto": "Auto"
                 }
             },
             "air_circulation_total_time": { "name": "Durée Brassage Totale" },
@@ -249,6 +252,7 @@
                 "state":
                 {
                     "manual": "Manuel",
+                    "eco_comfort_schedule": "Programme Éco/Confort",
                     "eco_plus": "Eco+",
                     "prog": "Prog"
                 }
@@ -287,6 +291,7 @@
             "boost_duration_max":             { "name": "Durée maximale du boost" },
             "boost_duration_min":             { "name": "Durée minimale du boost" },
             "boost_duration_step":            { "name": "Pas de durée du boost" },
+            "boost_duration_supported":       { "name": "Durée du boost réglable" },
             "boost_end_time":                 { "name": "Heure de fin du boost" },
             "boost_with_fan":                 { "name": "Boost avec ventilation" },
             "boost_with_fan_duration":        { "name": "Durée du boost avec ventilation" },
@@ -476,7 +481,7 @@
             "away_mode_start":          { "name": "Absence Début" },
             "away_mode_stop":           { "name": "Absence Fin" },
             "ble_pairing_compatibility": { "name": "Compatibilité d'appairage BLE" },
-            "circuit_driven_by_room":   { "name": "Circuit piloté par une pièce" },
+            "circuit_room_count":       { "name": "Pièces sur le circuit" },
             "product_type":             { "name": "Type de produit" },
             "boiler_water_temperature": { "name": "Température Chaudière" },
             "boost_mode":               { "name": "Mode Boost" },
@@ -518,7 +523,7 @@
             "heating_period_max_duration": { "name": "Durée maximale de période de chauffe" },
             "heating_period_min_duration": { "name": "Durée minimale de période de chauffe" },
             "home_services":            { "name": "Services du logement" },
-            "hot_water_available":      { "name": "Hot Water Available" },
+            "hot_water_available":      { "name": "Eau chaude disponible" },
             "hot_water_showers_expected": { "name": "Douches attendues" },
             "hot_water_showers_remaining": { "name": "Douches restantes" },
             "hub_movable_subproducts":  { "name": "Déplacement des sous-produits par le hub" },
@@ -675,6 +680,8 @@
             "timezone":                 { "name": "Fuseau Horaire" },
             "total_power_consumption":  { "name": "Consommation Totale" },
             "unexpected_events":        { "name": "Événements imprévus" },
+            "v40_applied_setpoint":     { "name": "Charge V40 visée" },
+            "v40_setpoint_filled_by_user": { "name": "Charge V40 visée saisie" },
             "v40_water_available":      { "name": "Eau V40 Disponible"},
             "v40_water_capacity":       { "name": "Eau V40 Capacité"},
             "version":                  { "name": "Version" },
@@ -707,6 +714,17 @@
             "quiet_mode":         { "name": "Mode Silence" },
             "schedule_anticipation": { "name": "Anticipation du programme" },
             "swing_mode":         { "name": "Mode Oscillation" }
+        },
+        "water_heater": {
+            "hot_water": {
+                "name": "Eau chaude",
+                "state": {
+                    "eco_comfort_schedule": "Programme Éco/Confort",
+                    "eco_plus": "Eco+",
+                    "manual":   "Manuel",
+                    "prog":     "Prog"
+                }
+            }
         }
     },
     "device_automation": {
@@ -803,7 +821,7 @@
             "fields": {
                 "program":  { "name": "Programme", "description": "Chauffage ou refroidissement." },
                 "days":     { "name": "Jours", "description": "Les jours qui recevront ce programme. Tous les jours, Jours de semaine et Week-end désignent les jours qu'ils nomment." },
-                "slots":    { "name": "Créneaux", "description": "Liste de paires heure/température. Le premier créneau doit commencer à 00:00, dix au maximum." }
+                "slots":    { "name": "Créneaux", "description": "Liste de paires heure/température. Jusqu'au premier créneau, le dernier de la veille s'applique. Dix au maximum." }
             }
         }
     }

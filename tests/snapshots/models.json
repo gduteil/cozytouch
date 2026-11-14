@@ -466,7 +466,7 @@
    8
   ],
   "modelId": 1388,
-  "name": "Heating circuit (#1)",
+  "name": "Water circuit (#1)",
   "type": "zone"
  },
  "1389": {
@@ -476,7 +476,7 @@
    8
   ],
   "modelId": 1389,
-  "name": "Heating circuit (#2)",
+  "name": "Water circuit (#2)",
   "type": "zone"
  },
  "1390": {
@@ -486,7 +486,7 @@
    8
   ],
   "modelId": 1390,
-  "name": "Heating circuit (#3)",
+  "name": "Water circuit (#3)",
   "type": "zone"
  },
  "1391": {
